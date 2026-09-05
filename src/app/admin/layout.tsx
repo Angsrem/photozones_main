@@ -8,6 +8,7 @@ import {
   Inbox,
   CalendarDays,
   Images,
+  Tag,
   LogOut,
   Menu,
   ShieldCheck,
@@ -23,6 +24,7 @@ const NAV = [
   { href: '/admin/leads', label: 'Заявки', icon: Inbox },
   { href: '/admin/calendar', label: 'Календарь', icon: CalendarDays },
   { href: '/admin/photozones', label: 'Фотозоны', icon: Images },
+  { href: '/admin/promo', label: 'Акции', icon: Tag },
 ];
 
 function initials(name: string) {

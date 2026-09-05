@@ -446,6 +446,12 @@ function PhotozoneEditor({
       hit,
       sortOrder: Number(sortOrder) || 100,
       isActive,
+      elements: elements.map((e) => ({
+        id: (e as any).id,
+        name: e.name,
+        price: Number(e.price) || 0,
+        isActive: (e as any).isActive !== false,
+      })),
     };
     setSaving(true);
     try {

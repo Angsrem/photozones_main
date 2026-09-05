@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Camera, Truck, Wrench, Phone, Star, ArrowRight, Clock, ShieldCheck, Heart, Gift, Baby, GraduationCap, Building2, Snowflake } from 'lucide-react';
 import { OrderButton } from '@/components/site/quick-order-modal';
+import { PromoStrip } from '@/components/site/promo-strip';
 
 export const metadata = {
   title: 'Аренда фотозон в Красноярске — свадебные, детские, корпоративные | ФотоЗона24',
@@ -94,6 +95,9 @@ export default async function HomePage() {
       <section className="container mx-auto max-w-7xl px-4 -mt-8 relative z-10">
         <TrustBadges />
       </section>
+
+      {/* ===== PROMO ===== */}
+      <PromoStrip page="/" />
 
       {/* ===== OCCASIONS ===== */}
       <section className="container mx-auto max-w-7xl px-4 py-16">

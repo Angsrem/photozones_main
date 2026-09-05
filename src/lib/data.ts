@@ -45,12 +45,21 @@ export async function getReviews(limit = 50) {
 
 export async function getPromosForPage(page: string) {
   const now = new Date();
-  return db.promo.findMany({
+  const promos = await db.promo.findMany({
     where: {
       isActive: true,
-      OR: [{ activeFrom: null }, { activeFrom: { lte: now } }],
-      OR2: [{ activeTo: null }, { activeTo: { gte: now } }],
+      AND: [
+        { OR: [{ activeFrom: null }, { activeFrom: { lte: now } }] },
+        { OR: [{ activeTo: null }, { activeTo: { gte: now } }] },
+      ],
     },
+    orderBy: { createdAt: 'desc' },
+  });
+  // фильтруем по pages (Json-массив строк) — берём промо для конкретной страницы или без привязки
+  return promos.filter((p) => {
+    const pages = asStringArray(p.pages);
+    if (!pages.length) return true; // без привязки — показываем везде
+    return pages.includes(page);
   });
 }
 

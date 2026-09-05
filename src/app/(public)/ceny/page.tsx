@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/table';
 import { OrderButton } from '@/components/site/quick-order-modal';
 import { CtaBand } from '@/components/site/cta-band';
+import { PromoStrip } from '@/components/site/promo-strip';
 import { FaqAccordion } from '@/components/site/faq-accordion';
 import { JsonLd } from '@/components/seo/json-ld';
 import { localBusinessLd, breadcrumbsLd, faqLd } from '@/lib/seo';
@@ -199,6 +200,8 @@ export default function CenyPage() {
           faqLd(FAQ),
         ]}
       />
+
+      <PromoStrip page="/ceny" />
 
       {/* HERO + ХЛЕБНЫЕ КРОШКИ */}
       <section className="container mx-auto max-w-7xl px-4 pt-6 pb-8">
