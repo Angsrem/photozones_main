@@ -12,7 +12,7 @@ export function PhotozoneGallery({
   title: string;
 }) {
   const [active, setActive] = useState(0);
-  const safeImages = images.length ? images : ['/images/photozones/love.png'];
+  const safeImages = images.length ? images : ['/images/photozones/love.jpg'];
   const current = safeImages[active] ?? safeImages[0];
 
   return (

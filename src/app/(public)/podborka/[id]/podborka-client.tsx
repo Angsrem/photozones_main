@@ -94,7 +94,7 @@ export function PODBORKA_SHEET({
       <div className="grid gap-4 sm:grid-cols-3 mb-6">
         {zones.slice(0, 3).map((z, i) => {
           const role = ROLES[i] || ROLES[1];
-          const img = z.images?.[0] || '/images/photozones/love.png';
+          const img = z.images?.[0] || '/images/photozones/love.jpg';
           return (
             <div key={z.id} className="relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card">
               <div className="relative aspect-[4/3] overflow-hidden">

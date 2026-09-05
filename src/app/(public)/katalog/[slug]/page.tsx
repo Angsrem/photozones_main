@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { PhotozoneCard } from '@/components/site/photozone-card';
+import { TransparentPricing } from '@/components/site/transparent-pricing';
 import { OrderButton } from '@/components/site/quick-order-modal';
 import { CtaBand } from '@/components/site/cta-band';
 import { JsonLd } from '@/components/seo/json-ld';
@@ -24,9 +25,7 @@ import { CATEGORIES, OCCASIONS, SITE } from '@/lib/constants';
 import { formatPrice, formatPriceFrom } from '@/lib/format';
 import {
   Sparkles,
-  Check,
   Ruler,
-  Layers,
   Phone,
   ShieldCheck,
   Clock,
@@ -87,7 +86,7 @@ export default async function PhotozonePage({ params }: { params: Params }) {
   const orderPrefill = {
     photozoneId: pz.id,
     photozoneTitle: pz.title,
-    photozoneImage: images[0] ?? '/images/photozones/love.png',
+    photozoneImage: images[0] ?? '/images/photozones/love.jpg',
     photozonePrice: pz.basePrice,
     source: 'photozone-card',
     sourcePage: `/katalog/${pz.slug}`,
@@ -180,21 +179,9 @@ export default async function PhotozonePage({ params }: { params: Params }) {
               <p className="text-muted-foreground leading-relaxed">{pz.description}</p>
             </div>
 
-            {/* ЧТО ВХОДИТ */}
+            {/* ПРОЗРАЧНАЯ ЦЕНА */}
             {includes.length > 0 && (
-              <div className="rounded-xl border border-border bg-card/50 p-4">
-                <h2 className="font-display text-lg mb-3 flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-gold" /> Что входит в стоимость
-                </h2>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-3 text-sm">
-                  {includes.map((inc) => (
-                    <li key={inc} className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-gold mt-0.5 shrink-0" />
-                      <span>{inc}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <TransparentPricing includes={includes} basePrice={pz.basePrice} />
             )}
 
             {/* ЭЛЕМЕНТЫ */}

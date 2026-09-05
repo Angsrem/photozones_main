@@ -16,7 +16,7 @@ const catLabel = (c: string) => CATEGORIES.find((x) => x.value === c)?.label ?? 
 export function PhotozoneCard({ pz, index = 0 }: { pz: PhotoZone; index?: number }) {
   const openOrder = useQuickOrder((s) => s.openOrder);
   const images = (pz.images as string[]) ?? [];
-  const img = images[0] || '/images/photozones/love.png';
+  const img = images[0] || '/images/photozones/love.jpg';
   const badge = pz.badge === 'HIT' ? 'Хит' : pz.badge === 'NEW' ? 'Новинка' : null;
 
   return (

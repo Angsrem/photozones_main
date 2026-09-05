@@ -60,7 +60,7 @@ export default async function ArticlePage({
 
   const tags = asStringArray(article.tags);
   const publishedISO = article.publishedAt.toISOString();
-  const coverUrl = article.cover ?? '/images/hero.png';
+  const coverUrl = article.cover ?? '/images/hero.jpg';
   const coverUrlAbsolute = coverUrl.startsWith('http') ? coverUrl : `${SITE.url}${coverUrl}`;
 
   return (
@@ -79,7 +79,7 @@ export default async function ArticlePage({
             publisher: {
               '@type': 'Organization',
               name: SITE.name,
-              logo: { '@type': 'ImageObject', url: `${SITE.url}/images/hero.png` },
+              logo: { '@type': 'ImageObject', url: `${SITE.url}/images/hero.jpg` },
             },
             mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE.url}/blog/${article.slug}` },
           },

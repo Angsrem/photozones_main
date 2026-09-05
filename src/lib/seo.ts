@@ -8,7 +8,7 @@ export function localBusinessLd() {
     '@id': `${SITE.url}/#business`,
     name: SITE.name,
     legalName: SITE.legalName,
-    image: `${SITE.url}/images/hero.png`,
+    image: `${SITE.url}/images/hero.jpg`,
     url: SITE.url,
     telephone: SITE.phoneRaw,
     email: SITE.email,

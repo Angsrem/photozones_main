@@ -627,7 +627,7 @@ function PhotozoneEditor({
               rows={3}
               value={imagesText}
               onChange={(e) => setImagesText(e.target.value)}
-              placeholder="/images/photozones/love.png"
+              placeholder="/images/photozones/love.jpg"
               className="font-mono text-xs"
             />
             <div className="text-xs text-muted-foreground">

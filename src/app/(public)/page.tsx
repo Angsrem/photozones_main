@@ -13,6 +13,7 @@ import { Sparkles, Camera, Truck, Wrench, Phone, Star, ArrowRight, Clock, Shield
 import { OrderButton } from '@/components/site/quick-order-modal';
 import { PromoStrip } from '@/components/site/promo-strip';
 import { QuizButton } from '@/components/site/quiz-button';
+import { WhyCheaperBlock, ComparisonTable } from '@/components/site/transparent-pricing';
 
 export const metadata = {
   title: 'Аренда фотозон в Красноярске — свадебные, детские, корпоративные | ФотоЗона24',
@@ -58,7 +59,7 @@ export default async function HomePage() {
       {/* ===== HERO ===== */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          <Image src="/images/hero.png" alt="Аренда фотозон в Красноярске" fill priority sizes="100vw" className="object-cover" />
+          <Image src="/images/hero.jpg" alt="Аренда фотозон в Красноярске" fill priority sizes="100vw" className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-background/60 to-background" />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />
         </div>
@@ -164,6 +165,16 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
+      </section>
+
+      {/* ===== WHY CHEAPER ===== */}
+      <section className="container mx-auto max-w-5xl px-4 py-12">
+        <WhyCheaperBlock />
+      </section>
+
+      {/* ===== COMPARISON ===== */}
+      <section className="container mx-auto max-w-4xl px-4 pb-12">
+        <ComparisonTable />
       </section>
 
       {/* ===== REVIEWS ===== */}

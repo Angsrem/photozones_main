@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     siteName: "ФотоЗона24",
     locale: "ru_RU",
     type: "website",
-    images: [{ url: "/images/hero.png", width: 1344, height: 768 }],
+    images: [{ url: "/images/hero.jpg", width: 1344, height: 768 }],
   },
   twitter: {
     card: "summary_large_image",

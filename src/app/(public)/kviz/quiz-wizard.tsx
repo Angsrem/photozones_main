@@ -124,7 +124,7 @@ function RecCard({ z, role, date, quizAnswers, sessionId }: {
   z: Recommended; role: 'economy' | 'hit' | 'premium'; date?: string; quizAnswers: Answers; sessionId?: string;
 }) {
   const openOrder = useQuickOrder((s) => s.openOrder);
-  const img = (z.images?.[0]) || '/images/photozones/love.png';
+  const img = (z.images?.[0]) || '/images/photozones/love.jpg';
   const roleMeta = {
     economy: { label: '💚 Выгодно', desc: 'Оптимально по цене' },
     hit: { label: '💛 Наш хит', desc: 'Самая заказываемая' },

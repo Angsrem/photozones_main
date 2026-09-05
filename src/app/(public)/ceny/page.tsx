@@ -29,6 +29,8 @@ import {
 import { OrderButton } from '@/components/site/quick-order-modal';
 import { CtaBand } from '@/components/site/cta-band';
 import { PromoStrip } from '@/components/site/promo-strip';
+import { WhyCheaperBlock, ComparisonTable } from '@/components/site/transparent-pricing';
+import { QuizStrip } from '@/components/site/quiz-button';
 import { FaqAccordion } from '@/components/site/faq-accordion';
 import { JsonLd } from '@/components/seo/json-ld';
 import { localBusinessLd, breadcrumbsLd, faqLd } from '@/lib/seo';
@@ -202,6 +204,8 @@ export default function CenyPage() {
       />
 
       <PromoStrip page="/ceny" />
+
+      <QuizStrip />
 
       {/* HERO + ХЛЕБНЫЕ КРОШКИ */}
       <section className="container mx-auto max-w-7xl px-4 pt-6 pb-8">
@@ -429,6 +433,23 @@ export default function CenyPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ПОЧЕМУ У НАС ДЕШЕВЛЕ */}
+      <section className="container mx-auto max-w-5xl px-4 py-12">
+        <WhyCheaperBlock />
+      </section>
+
+      {/* МЫ vs КОНКУРЕНТЫ */}
+      <section className="container mx-auto max-w-4xl px-4 py-8">
+        <div className="text-center mb-6">
+          <span className="inline-block text-xs font-semibold uppercase tracking-widest text-gold mb-2">Честное сравнение</span>
+          <h2 className="font-display text-3xl sm:text-4xl mb-2">Мы vs типичные конкуренты</h2>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            Прозрачная цена «всё включено» против низкой базы со скрытыми доплатами
+          </p>
+        </div>
+        <ComparisonTable />
       </section>
 
       {/* CTA-BAND */}
