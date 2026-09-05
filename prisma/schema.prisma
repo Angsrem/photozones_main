@@ -1,0 +1,192 @@
+// Prisma schema — аренда фотозон в Красноярске
+// SQLite-провайдер (песочница). Массивы и JSON хранятся как Json (TEXT).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ===== Менеджеры (админы) =====
+model Manager {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  phone        String?
+  passwordHash String
+  role         String   @default("MANAGER") // MANAGER | ADMIN
+  telegramId   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  leads     Lead[]     @relation("ManagerLeads")
+  bookings  Booking[]
+  blocks    DateBlock[]
+}
+
+// ===== Фотозоны =====
+model PhotoZone {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  category    String   // FRAME | PRESSWALL | TEXTILE | THEME
+  occasions   Json     // string[]: WEDDING, BIRTHDAY, GRADUATION, CORPORATE, NEW_YEAR, MARCH_8, FEB_23
+  basePrice   Int      // рублей, "от"
+  sizeW       Float?   // ширина, м
+  sizeH       Float?   // высота, м
+  images      Json     // string[] (URL)
+  includes    Json     // string[] — что входит (доставка/монтаж/демонтаж/срок)
+  badge       String?  // HIT | NEW | null
+  hit         Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(100)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  elements  Element[]
+  leads     Lead[]
+  bookings  Booking[]
+  blocks    DateBlock[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+// ===== Отдельно сдаваемые элементы (буквы, шары, подсветка, реквизит) =====
+model Element {
+  id          String   @id @default(cuid())
+  name        String
+  price       Int
+  photozoneId String?
+  photozone   PhotoZone? @relation(fields: [photozoneId], references: [id], onDelete: Cascade)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([photozoneId])
+}
+
+// ===== Заявки =====
+model Lead {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  name        String
+  phone       String
+  eventDate   String   // желаемая дата (ISO yyyy-mm-dd) — строка для SQLite-совместимости
+  occasion    String?  // повод
+  comment     String?
+
+  // источник
+  source      String?  // страница/путь
+  sourcePage  String?  // например /katalog/love
+  utm         Json?    // {source, medium, campaign, content, term}
+  referrer    String?
+
+  // состав заказа
+  photozoneId String?
+  photozone   PhotoZone? @relation(fields: [photozoneId], references: [id], onDelete: SetNull)
+  config      Json?    // полная конфигурация (калькулятор/конструктор)
+  priceEstimate Int?  // ориентировочная цена
+
+  // обработка
+  status      String   @default("NEW") // NEW | CALLED | CONFIRMED | DECLINED | DONE
+  managerId   String?
+  manager     Manager?   @relation("ManagerLeads", fields: [managerId], references: [id], onDelete: SetNull)
+  managerNote String?
+
+  bookings Booking[]
+
+  @@index([status])
+  @@index([eventDate])
+  @@index([createdAt])
+}
+
+// ===== Бронирование (создаётся при CONFIRMED или ручная блокировка) =====
+model Booking {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  leadId      String?
+  lead        Lead?     @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  managerId   String?
+  manager     Manager?  @relation(fields: [managerId], references: [id], onDelete: SetNull)
+
+  photozoneId String?
+  photozone   PhotoZone? @relation(fields: [photozoneId], references: [id], onDelete: Cascade)
+  elementIds  Json?    // string[] — id элементов (читаем вручную, relation на Json не поддерживается)
+
+  date        String   // ISO yyyy-mm-dd
+  status      String   @default("RESERVED") // RESERVED | DONE | CANCELED
+  note        String?
+
+  @@index([date])
+  @@index([photozoneId])
+  @@index([leadId])
+}
+
+// ===== Ручная блокировка дат (техобслуживание, выкуп) =====
+model DateBlock {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  date        String   // ISO yyyy-mm-dd
+  photozoneId String?
+  photozone   PhotoZone? @relation(fields: [photozoneId], references: [id], onDelete: Cascade)
+  managerId   String?
+  manager     Manager?  @relation(fields: [managerId], references: [id], onDelete: SetNull)
+  reason      String?  // service | reserved | other
+
+  @@unique([date, photozoneId])
+  @@index([date])
+}
+
+// ===== Акции / сезонные офферы =====
+model Promo {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  discount    Int?     // %
+  activeFrom  DateTime?
+  activeTo    DateTime?
+  pages       Json?    // string[] — на каких страницах показывать
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ===== Отзывы =====
+model Review {
+  id          String   @id @default(cuid())
+  author      String
+  event       String?  // повод
+  text        String
+  photos      Json?    // string[] (URL)
+  rating      Int      @default(5) // 1..5
+  publishedAt DateTime @default(now())
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished])
+}
+
+// ===== Блог-статьи =====
+model Article {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  excerpt     String
+  content     String   // markdown
+  cover       String?
+  tags        Json?    // string[]
+  isPublished Boolean  @default(true)
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
