@@ -297,3 +297,22 @@ Stage Summary:
 - Элементы фотозон сохраняются через UI админки (CRUD через PATCH)
 - Добавлен раздел /admin/promo (CRUD акций) + пункт в навигации
 - 6 AI-изображений (hero + 5 ключевых фотозон), остальные — placeholder'ы
+
+---
+Task ID: ORCHESTRATOR-3 (изображения)
+Agent: main (Z.ai Code)
+Task: Доделать AI-изображения для всех фотозон
+
+Work Log:
+- Убита нестабильная фоновая генерация (падала/убивалась системой между вызовами)
+- Сгенерированы 2 партии по 5 изображений в foreground (последовательно, без rate-limit 429):
+  - Batch 1: stilyagi (30s), bukvy-tsifry (28s), korporativ-brand (29s), 8-marta (63s), 23-fevralya (30s)
+  - Batch 2: vypusknoj (57s), tekstilnaya-uzhur (29s), neon-party (66s), rustic-garden (52s), shary-arka (29s)
+- Итог: 16/16 AI-изображений (hero + 15 фотозон), все с .ai-маркером
+- Проверка: все 16 PNG отдаются HTTP 200 (76–225 KB), в dev.log нет ошибок/404
+- Скриншоты главной и каталога сохранены (verify-home-ai.png, verify-catalog-ai.png) — AI-изображения рендерятся корректно
+
+Stage Summary:
+- Все 16 изображений сайта теперь AI-сгенерированы (раньше 6 AI + 10 placeholder)
+- Брендовые градиентные placeholder'ы полностью заменены на тематические изображения фотозон
+- Сайт визуально завершён
