@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Flower, Tag } from 'lucide-react';
 import { PageBreadcrumbs, PageHero, WhyUs, EmptyPhotozones } from '../../_components/landing-sections';
 import { PromoStrip } from '@/components/site/promo-strip';
+import { QuizStrip } from '@/components/site/quiz-button';
 
 export const metadata: Metadata = {
   title: 'Фотозона на 8 марта в Красноярске — весенний оффер',
@@ -91,6 +92,8 @@ export default async function Marta8Page() {
       />
 
       <PromoStrip page="/prazdniki/8-marta" />
+
+      <QuizStrip />
 
       {/* Промо-блок */}
       <section className="container mx-auto max-w-7xl px-4 py-6">

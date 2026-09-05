@@ -55,7 +55,7 @@ export function PhotozoneCard({ pz, index = 0 }: { pz: PhotoZone; index?: number
         {pz.sizeW && pz.sizeH && (
           <p className="text-xs text-muted-foreground">Размер: {pz.sizeW} × {pz.sizeH} м</p>
         )}
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button
             onClick={() => openOrder({
               photozoneId: pz.id,
@@ -65,11 +65,11 @@ export function PhotozoneCard({ pz, index = 0 }: { pz: PhotoZone; index?: number
               source: 'catalog-card',
               sourcePage: `/katalog/${pz.slug}`,
             })}
-            className="flex-1 bg-gold text-primary-foreground hover:bg-gold/90"
+            className="h-12 sm:h-9 sm:flex-1 bg-gold text-primary-foreground hover:bg-gold/90 text-base sm:text-sm"
           >
             <Sparkles className="w-4 h-4 mr-1.5" /> Заказать
           </Button>
-          <Button asChild variant="outline" className="px-3">
+          <Button asChild variant="outline" className="h-12 sm:h-9 sm:px-3 hidden sm:inline-flex">
             <Link href={`/katalog/${pz.slug}`} aria-label={`Подробнее: ${pz.title}`}>
               <ArrowRight className="w-4 h-4" />
             </Link>

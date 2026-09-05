@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sparkles, Camera, Truck, Wrench, Phone, Star, ArrowRight, Clock, ShieldCheck, Heart, Gift, Baby, GraduationCap, Building2, Snowflake } from 'lucide-react';
 import { OrderButton } from '@/components/site/quick-order-modal';
 import { PromoStrip } from '@/components/site/promo-strip';
+import { QuizButton } from '@/components/site/quiz-button';
 
 export const metadata = {
   title: 'Аренда фотозон в Красноярске — свадебные, детские, корпоративные | ФотоЗона24',
@@ -98,6 +99,24 @@ export default async function HomePage() {
 
       {/* ===== PROMO ===== */}
       <PromoStrip page="/" />
+
+      {/* ===== QUIZ CTA ===== */}
+      <section className="container mx-auto max-w-7xl px-4 py-6">
+        <div className="relative overflow-hidden rounded-2xl border border-gold/30 bg-gradient-to-br from-card via-card to-gold/10 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5 justify-between">
+          <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-gold/10 blur-3xl" />
+          <div className="relative flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-gold/15 flex items-center justify-center shrink-0">
+              <Sparkles className="w-6 h-6 text-gold" />
+            </div>
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">Не знаете, что выбрать?</div>
+              <h2 className="font-display text-xl sm:text-2xl mb-1">Подберём фотозону за 30 секунд</h2>
+              <p className="text-sm text-muted-foreground">Ответьте на 5 вопросов — покажем 3 варианта под ваш повод и бюджет. Бонус: промокод на скидку 5%.</p>
+            </div>
+          </div>
+          <QuizButton className="h-12 px-6 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold shrink-0" />
+        </div>
+      </section>
 
       {/* ===== OCCASIONS ===== */}
       <section className="container mx-auto max-w-7xl px-4 py-16">

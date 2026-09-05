@@ -44,6 +44,10 @@ model PhotoZone {
   hit         Boolean  @default(false)
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(100)
+  // теги для квиза (мэтчинг)
+  styles      Json?    // string[]: romantic, minimal, neon, party, rustic, retro, brand, kids-fairytale, classic, disco
+  sizeClass   String?  // S | M | L | XL (по размеру → числу гостей)
+  childAge    Json?    // string[] для детских: 1-3, 4-7, 8-12, 13-17
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -152,12 +156,33 @@ model Promo {
   title       String
   description String?
   discount    Int?     // %
+  code        String?  // промокод (например QUIZ5)
   activeFrom  DateTime?
   activeTo    DateTime?
   pages       Json?    // string[] — на каких страницах показывать
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ===== Сессии квиза (/podborka/[id]) =====
+model QuizSession {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  expiresAt       DateTime // живёт 90 дней
+  answers         Json     // {occasion, childAge?, style, guests, budget, date?}
+  recommendedIds  Json     // string[] — id фотозон [эконом, хит, премиум]
+  promoCode       String?  // QUIZ5
+  // контакт (если отправили себе)
+  contact         String?  // телефон или email
+  channel         String?  // whatsapp | telegram | phone | email
+  // метрики виральности
+  views           Int      @default(0)
+  orders          Int      @default(0)
+  source          String?  // откуда запущен квиз (страница)
+
+  @@index([expiresAt])
 }
 
 // ===== Отзывы =====

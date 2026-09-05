@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Shield, Award } from 'lucide-react';
 import { PageBreadcrumbs, PageHero, WhyUs, EmptyPhotozones } from '../../_components/landing-sections';
 import { PromoStrip } from '@/components/site/promo-strip';
+import { QuizStrip } from '@/components/site/quiz-button';
 
 export const metadata: Metadata = {
   title: 'Фотозона на 23 февраля в Красноярске — мужская тематика',
@@ -91,6 +92,8 @@ export default async function Fevralya23Page() {
       />
 
       <PromoStrip page="/prazdniki/23-fevralya" />
+
+      <QuizStrip />
 
       {/* Промо-блок */}
       <section className="container mx-auto max-w-7xl px-4 py-6">

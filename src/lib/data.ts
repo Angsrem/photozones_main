@@ -11,7 +11,7 @@ export async function getPhotozones(opts: {
   const { category, occasion, isActive = true, search, sort = 'hit', limit } = opts;
   const where: any = { isActive };
   if (category) where.category = category;
-  if (occasion) where.occasions = { string_contains: JSON.stringify(occasion) };
+  // SQLite не поддерживает string_contains для Json-надёжно → фильтруем occasion в JS
   if (search) where.title = { contains: search };
 
   let orderBy: any = { sortOrder: 'asc' };
@@ -20,12 +20,19 @@ export async function getPhotozones(opts: {
   else if (sort === 'new') orderBy = { createdAt: 'desc' };
   else if (sort === 'hit') orderBy = [{ hit: 'desc' }, { sortOrder: 'asc' }];
 
-  return db.photoZone.findMany({
+  let items = await db.photoZone.findMany({
     where,
     orderBy,
-    ...(limit ? { take: limit } : {}),
     include: { elements: true },
   });
+
+  // JS-фильтр по occasion (массив строк в Json)
+  if (occasion) {
+    items = items.filter((z) => Array.isArray(z.occasions) && (z.occasions as string[]).includes(occasion));
+  }
+
+  if (limit) items = items.slice(0, limit);
+  return items;
 }
 
 export async function getPhotozoneBySlug(slug: string) {

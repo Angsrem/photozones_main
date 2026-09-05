@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getPhotozones } from '@/lib/data';
 import { PhotozoneCard, SectionHeading } from '@/components/site/photozone-card';
 import { CtaBand } from '@/components/site/cta-band';
+import { QuizStrip } from '@/components/site/quiz-button';
 import { FaqAccordion } from '@/components/site/faq-accordion';
 import { JsonLd } from '@/components/seo/json-ld';
 import { localBusinessLd, breadcrumbsLd, faqLd } from '@/lib/seo';
@@ -100,6 +101,8 @@ export default async function SvadbyPage() {
           </p>
         </div>
       </section>
+
+      <QuizStrip />
 
       {/* Сетка фотозон */}
       <section className="container mx-auto max-w-7xl px-4 py-10">

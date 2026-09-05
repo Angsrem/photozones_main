@@ -5,6 +5,7 @@ import { CatalogFilters } from './catalog-filters';
 import { OrderButton } from '@/components/site/quick-order-modal';
 import { CtaBand } from '@/components/site/cta-band';
 import { PromoStrip } from '@/components/site/promo-strip';
+import { QuizStrip } from '@/components/site/quiz-button';
 import { JsonLd } from '@/components/seo/json-ld';
 import { localBusinessLd, breadcrumbsLd } from '@/lib/seo';
 import { getPhotozones } from '@/lib/data';
@@ -77,6 +78,8 @@ export default async function CatalogPage({ searchParams }: { searchParams: Sear
       />
 
       <PromoStrip page="/katalog" />
+
+      <QuizStrip />
 
       {/* HERO + ХЛЕБНЫЕ КРОШКИ */}
       <section className="container mx-auto max-w-7xl px-4 pt-6 pb-4">
