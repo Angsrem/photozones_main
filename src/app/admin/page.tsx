@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { toast } from 'sonner';
 import {
   Inbox,
   PhoneIncoming,
@@ -11,6 +12,10 @@ import {
   Loader2,
   ArrowRight,
   AlertCircle,
+  Send,
+  Bell,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -47,17 +52,21 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = React.useState(true);
   const [err, setErr] = React.useState<string | null>(null);
   const [partials, setPartials] = React.useState<any[]>([]);
+  const [notifyStatus, setNotifyStatus] = React.useState<{ telegram: { configured: boolean; chatId: string | null }; email: { configured: boolean; to: string } } | null>(null);
+  const [testingNotify, setTestingNotify] = React.useState(false);
 
   const load = React.useCallback(async () => {
     setLoading(true);
     setErr(null);
     try {
-      const [data, pData] = await Promise.all([
+      const [data, pData, nStatus] = await Promise.all([
         api<Stats>('/api/admin/stats'),
         api<{ items: any[] }>('/api/quiz-partial?limit=10'),
+        api<any>('/api/admin/notify-status').catch(() => null),
       ]);
       setStats(data);
       setPartials(pData.items || []);
+      if (nStatus) setNotifyStatus(nStatus);
     } catch (e: any) {
       setErr(e?.message || 'Не удалось загрузить статистику');
     } finally {
@@ -68,6 +77,22 @@ export default function AdminDashboardPage() {
   React.useEffect(() => {
     load();
   }, [load]);
+
+  const testNotify = async () => {
+    setTestingNotify(true);
+    try {
+      const res = await api<any>('/api/admin/notify-test', { method: 'POST' });
+      if (res.telegram?.ok) {
+        toast.success('Тест отправлен в Telegram — проверьте чат с ботом');
+      } else {
+        toast.error('Telegram не настроен. Добавьте TELEGRAM_BOT_TOKEN и TELEGRAM_MANAGER_CHAT_ID в .env');
+      }
+    } catch (e: any) {
+      toast.error(e?.message || 'Ошибка');
+    } finally {
+      setTestingNotify(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -122,6 +147,68 @@ export default function AdminDashboardPage() {
         <KpiCard title="Подтверждены" value={confirmedCount} icon={<CheckCircle2 className="size-5" />} tint="bg-emerald-100 text-emerald-700" hint={`Выполнено: ${doneCount}`} />
         <KpiCard title="Конверсия" value={`${stats.conversion}%`} icon={<Percent className="size-5" />} tint="bg-violet-100 text-violet-700" hint="подтв. + выполнено / всего" />
       </div>
+
+      {/* Статус уведомлений (Telegram/email) */}
+      <Card>
+        <div className="p-5">
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                <Bell className="size-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-display text-base">Уведомления о заявках</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Куда падают новые заявки — менеджер должен получать их за 15 минут</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={testNotify} disabled={testingNotify} className="gap-2 shrink-0">
+              {testingNotify ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              Тест уведомления
+            </Button>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3 mt-4">
+            {/* Telegram */}
+            <div className={`rounded-lg border p-3 ${notifyStatus?.telegram.configured ? 'border-emerald-300 bg-emerald-50' : 'border-amber-300 bg-amber-50'}`}>
+              <div className="flex items-center gap-2 mb-1">
+                {notifyStatus?.telegram.configured ? <CheckCircle className="size-4 text-emerald-600" /> : <XCircle className="size-4 text-amber-600" />}
+                <span className="text-sm font-medium">Telegram</span>
+                <Badge variant="outline" className={notifyStatus?.telegram.configured ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-amber-100 text-amber-700 border-amber-300'}>
+                  {notifyStatus?.telegram.configured ? 'Активен' : 'Не настроен'}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {notifyStatus?.telegram.configured
+                  ? `Уведомления идут в чат …${notifyStatus?.telegram.chatId}`
+                  : 'Добавьте TELEGRAM_BOT_TOKEN и TELEGRAM_MANAGER_CHAT_ID в .env'}
+              </p>
+            </div>
+            {/* Email */}
+            <div className={`rounded-lg border p-3 ${notifyStatus?.email.configured ? 'border-emerald-300 bg-emerald-50' : 'border-amber-300 bg-amber-50'}`}>
+              <div className="flex items-center gap-2 mb-1">
+                {notifyStatus?.email.configured ? <CheckCircle className="size-4 text-emerald-600" /> : <XCircle className="size-4 text-amber-600" />}
+                <span className="text-sm font-medium">Email (Resend)</span>
+                <Badge variant="outline" className={notifyStatus?.email.configured ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-amber-100 text-amber-700 border-amber-300'}>
+                  {notifyStatus?.email.configured ? 'Активен' : 'Не настроен'}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {notifyStatus?.email.configured ? `Дублирование на ${notifyStatus?.email.to}` : 'Добавьте RESEND_API_KEY в .env'}
+              </p>
+            </div>
+          </div>
+          {!notifyStatus?.telegram.configured && (
+            <div className="mt-3 text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+              <b>Как подключить Telegram за 5 минут:</b>
+              <ol className="list-decimal list-inside mt-1 space-y-0.5">
+                <li>Откройте <code className="bg-background px-1 rounded">@BotFather</code> → /newbot → получите токен</li>
+                <li>Узнайте свой chat_id через <code className="bg-background px-1 rounded">@userinfobot</code></li>
+                <li>Отправьте боту любое сообщение (иначе он не сможет писать первым)</li>
+                <li>Впишите значения в <code className="bg-background px-1 rounded">.env</code> и перезапустите сервер</li>
+              </ol>
+            </div>
+          )}
+        </div>
+      </Card>
 
       {/* Брошенные квизы (partial-лиды) */}
       {partials.length > 0 && (
