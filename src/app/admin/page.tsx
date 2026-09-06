@@ -10,6 +10,7 @@ import {
   Images,
   Loader2,
   ArrowRight,
+  AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -45,13 +46,18 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = React.useState<Stats | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [err, setErr] = React.useState<string | null>(null);
+  const [partials, setPartials] = React.useState<any[]>([]);
 
   const load = React.useCallback(async () => {
     setLoading(true);
     setErr(null);
     try {
-      const data = await api<Stats>('/api/admin/stats');
+      const [data, pData] = await Promise.all([
+        api<Stats>('/api/admin/stats'),
+        api<{ items: any[] }>('/api/quiz-partial?limit=10'),
+      ]);
       setStats(data);
+      setPartials(pData.items || []);
     } catch (e: any) {
       setErr(e?.message || 'Не удалось загрузить статистику');
     } finally {
@@ -116,6 +122,48 @@ export default function AdminDashboardPage() {
         <KpiCard title="Подтверждены" value={confirmedCount} icon={<CheckCircle2 className="size-5" />} tint="bg-emerald-100 text-emerald-700" hint={`Выполнено: ${doneCount}`} />
         <KpiCard title="Конверсия" value={`${stats.conversion}%`} icon={<Percent className="size-5" />} tint="bg-violet-100 text-violet-700" hint="подтв. + выполнено / всего" />
       </div>
+
+      {/* Брошенные квизы (partial-лиды) */}
+      {partials.length > 0 && (
+        <Card>
+          <div className="p-5 border-b">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-display text-base flex items-center gap-2">
+                  <AlertCircle className="size-4 text-amber-500" /> Брошенные квизы ({partials.length})
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Люди начали квиз, но не дошли до результата — потенциальные лиды для дозвона</p>
+              </div>
+              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">{partials.filter((p) => !p.converted).length} активных</Badge>
+            </div>
+          </div>
+          <div className="divide-y max-h-64 overflow-y-auto">
+            {partials.slice(0, 8).map((p) => {
+              const a = p.answers || {};
+              return (
+                <div key={p.id} className="px-5 py-2.5 flex items-center justify-between gap-3 text-sm">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium">{a.occasion || '—'}</span>
+                      {a.style && <Badge variant="outline" className="text-[10px]">{a.style}</Badge>}
+                      {a.guests && <Badge variant="outline" className="text-[10px]">{a.guests}</Badge>}
+                      {a.budget && <Badge variant="outline" className="text-[10px]">{a.budget}</Badge>}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      Шаг {p.step} · {new Date(p.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })} · {(p.source || '?').slice(0, 30)}
+                    </div>
+                  </div>
+                  {p.converted ? (
+                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300 shrink-0">Дошёл</Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 shrink-0">Бросил</Badge>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* График по статусам — CSS-бары */}

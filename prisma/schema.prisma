@@ -215,3 +215,31 @@ model Article {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// ===== Редактируемые страницы (контентные блоки) =====
+// slug = ключ страницы (например "home", "ceny", "svadby-hero")
+// blocks = JSON-массив блоков: [{type:'heading', text, level}, {type:'paragraph', text}, {type:'list', items}, {type:'image', src, alt}, {type:'cta', text, href}, {type:'quote', text, author}, {type:'faq', items:[{q,a}]}]
+model Page {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String   // название для админки
+  description String?  // что это за страница
+  blocks      Json     // JSON-массив контентных блоков
+  isPublished Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}
+
+// ===== Partial-лиды (брошенные квизы) =====
+model QuizPartial {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  answers     Json     // частичные ответы {occasion?, childAge?, style?, guests?, budget?, step}
+  step        Int      // на каком шаге бросил (1..6)
+  source      String?  // страница запуска
+  utm         Json?    // utm-метки
+  converted   Boolean  @default(false) // дошёл ли до результата
+  sessionId   String?  // если дошёл — id QuizSession
+}
+

@@ -9,6 +9,7 @@ import {
   CalendarDays,
   Images,
   Tag,
+  FileText,
   LogOut,
   Menu,
   ShieldCheck,
@@ -25,6 +26,7 @@ const NAV = [
   { href: '/admin/calendar', label: 'Календарь', icon: CalendarDays },
   { href: '/admin/photozones', label: 'Фотозоны', icon: Images },
   { href: '/admin/promo', label: 'Акции', icon: Tag },
+  { href: '/admin/pages', label: 'Страницы', icon: FileText },
 ];
 
 function initials(name: string) {

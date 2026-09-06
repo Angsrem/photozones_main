@@ -29,6 +29,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Если был partialId — пометить как сконвертированный
+    if (body.partialId) {
+      await db.quizPartial.update({
+        where: { id: body.partialId },
+        data: { converted: true, sessionId: session.id },
+      }).catch(() => {});
+    }
+
     return NextResponse.json({
       sessionId: session.id,
       promoCode: QUIZ_PROMO_CODE,

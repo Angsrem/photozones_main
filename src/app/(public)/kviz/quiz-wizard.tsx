@@ -17,6 +17,7 @@ import {
 import { useQuickOrder } from '@/components/site/quick-order-store';
 import { formatPriceFrom } from '@/lib/format';
 import { SITE } from '@/lib/constants';
+import { track } from '@/lib/analytics';
 
 type Answers = {
   occasion: string;
@@ -150,17 +151,20 @@ function RecCard({ z, role, date, quizAnswers, sessionId }: {
         <div className="text-gold font-semibold mb-2">{formatPriceFrom(z.basePrice)}</div>
         {z.sizeW && z.sizeH && <div className="text-xs text-muted-foreground mb-3">Размер: {z.sizeW} × {z.sizeH} м</div>}
         <Button
-          onClick={() => openOrder({
-            photozoneId: z.id,
-            photozoneTitle: z.title,
-            photozoneImage: img,
-            photozonePrice: z.basePrice,
-            source: 'quiz',
-            sourcePage: sessionId ? `/podborka/${sessionId}` : '/kviz',
-            occasion: quizAnswers.occasion,
-            priceEstimate: z.basePrice,
-            config: { quizAnswers, recommendedId: z.id, role, sessionId, promoCode: 'QUIZ5' },
-          })}
+          onClick={() => {
+            if (sessionId) track({ event: 'quiz_card_click', cardId: z.id, role, sessionId });
+            openOrder({
+              photozoneId: z.id,
+              photozoneTitle: z.title,
+              photozoneImage: img,
+              photozonePrice: z.basePrice,
+              source: 'quiz',
+              sourcePage: sessionId ? `/podborka/${sessionId}` : '/kviz',
+              occasion: quizAnswers.occasion,
+              priceEstimate: z.basePrice,
+              config: { quizAnswers, recommendedId: z.id, role, sessionId, promoCode: 'QUIZ5' },
+            });
+          }}
           className="mt-auto h-11 bg-gold text-primary-foreground hover:bg-gold/90 w-full"
         >
           <Sparkles className="w-4 h-4 mr-1.5" /> Заказать
@@ -183,13 +187,60 @@ export function QuizWizard() {
   const [result, setResult] = React.useState<{ sessionId: string; promoCode: string; recommended: Recommended[] } | null>(null);
   const [saveContact, setSaveContact] = React.useState('');
   const [saving, setSaving] = React.useState(false);
+  const [partialId, setPartialId] = React.useState<string | null>(null);
+  const partialSentRef = React.useRef(false);
 
   // Если есть presetOccasion — пропускаем Q1, начинаем с Q2 (или сразу Q3 для не-детских)
   React.useEffect(() => {
     if (presetOccasion && OCCASIONS.some((o) => o.value === presetOccasion)) {
       setStep(presetOccasion === 'BIRTHDAY' ? 2 : 3);
+      // частичный старт уже на шаге 2/3 — фиксируем partial
+      track({ event: 'quiz_start', source: presetSource });
     }
-  }, [presetOccasion]);
+  }, [presetOccasion, presetSource]);
+
+  // Tracking шагов + сохранение partial при достижении шага >= 2
+  React.useEffect(() => {
+    if (step >= 1) {
+      track({ event: 'quiz_step', step, source: presetSource });
+    }
+    // сохраняем partial начиная с шага 2 (есть occasion)
+    if (step >= 2 && !partialId && !partialSentRef.current && answers.occasion) {
+      partialSentRef.current = true;
+      fetch('/api/quiz-partial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers, step, source: presetSource }),
+      })
+        .then((r) => r.json())
+        .then((d) => { if (d.id) setPartialId(d.id); })
+        .catch(() => {});
+    }
+  }, [step]);
+
+  // Сохранить обновлённые ответы в существующем partial (debounce)
+  React.useEffect(() => {
+    if (!partialId || step < 2) return;
+    const t = setTimeout(() => {
+      fetch('/api/quiz-partial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers, step, source: presetSource }),
+      }).catch(() => {});
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [answers, step, partialId, presetSource]);
+
+  // При размонтировании (закрытии вкладки) — отправить событие abandoned
+  React.useEffect(() => {
+    const onUnload = () => {
+      if (step >= 2 && step < 7 && !result) {
+        track({ event: 'quiz_abandoned', step, source: presetSource });
+      }
+    };
+    window.addEventListener('beforeunload', onUnload);
+    return () => window.removeEventListener('beforeunload', onUnload);
+  }, [step, result, presetSource]);
 
   const occasionObj = OCCASIONS.find((o) => o.value === answers.occasion);
   const styles = answers.occasion ? STYLES_BY_OCCASION[answers.occasion] || STYLES_BY_OCCASION.OTHER : [];
@@ -207,12 +258,13 @@ export function QuizWizard() {
       const res = await fetch('/api/quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers, source: presetSource }),
+        body: JSON.stringify({ answers, source: presetSource, partialId }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Ошибка');
       setResult(data);
       setStep(7);
+      track({ event: 'quiz_result_viewed', sessionId: data.sessionId, source: presetSource });
     } catch (e: any) {
       toast.error(e?.message || 'Не удалось подобрать фотозоны');
     } finally {
@@ -244,6 +296,7 @@ export function QuizWizard() {
     try {
       await navigator.clipboard.writeText(url);
       toast.success('Ссылка скопирована!');
+      track({ event: 'quiz_saved', sessionId: result.sessionId, channel: 'link' });
     } catch {
       toast.error('Не удалось скопировать');
     }
@@ -262,6 +315,7 @@ export function QuizWizard() {
       });
       toast.success('Подборка отправлена!');
       setSaveContact('');
+      track({ event: 'quiz_saved', sessionId: result.sessionId, channel: channel as any });
     } catch {
       toast.error('Не удалось отправить');
     } finally {
@@ -306,7 +360,7 @@ export function QuizWizard() {
                 Ответьте на 5 простых вопросов — покажем 3 варианта под ваш повод и бюджет.
                 Результат сразу на экране, без обязательств. Бонус за прохождение: <b className="text-gold">промокод на скидку 5%</b> 🎁
               </p>
-              <Button onClick={() => setStep(1)} className="h-14 px-8 bg-gold text-primary-foreground hover:bg-gold/90 text-base font-semibold">
+              <Button onClick={() => { track({ event: 'quiz_start', source: presetSource }); setStep(1); }} className="h-14 px-8 bg-gold text-primary-foreground hover:bg-gold/90 text-base font-semibold">
                 Начать подбор <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
               <div className="flex items-center justify-center gap-4 mt-6 text-xs text-muted-foreground">
