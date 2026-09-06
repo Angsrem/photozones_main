@@ -10,6 +10,7 @@ import {
   Images,
   Tag,
   FileText,
+  Star,
   LogOut,
   Menu,
   ShieldCheck,
@@ -26,6 +27,7 @@ const NAV = [
   { href: '/admin/calendar', label: 'Календарь', icon: CalendarDays },
   { href: '/admin/photozones', label: 'Фотозоны', icon: Images },
   { href: '/admin/promo', label: 'Акции', icon: Tag },
+  { href: '/admin/reviews', label: 'Отзывы', icon: Star },
   { href: '/admin/pages', label: 'Страницы', icon: FileText },
 ];
 

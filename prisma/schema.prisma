@@ -199,9 +199,10 @@ model Review {
   event       String?  // повод
   text        String
   photos      Json?    // string[] (URL)
+  videos      Json?    // string[] (URL видео)
   rating      Int      @default(5) // 1..5
   publishedAt DateTime @default(now())
-  isPublished Boolean  @default(true)
+  isPublished Boolean  @default(false) // false = на модерации
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

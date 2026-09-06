@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, Quote, ArrowRight } from 'lucide-react';
 import { PageBreadcrumbs, PageHero } from '../_components/landing-sections';
+import { ReviewForm } from '@/components/site/review-form';
 
 export const metadata: Metadata = {
   title: 'Отзывы об аренде фотозон в Красноярске — ФотоЗона24',
@@ -129,6 +130,24 @@ export default async function OtzyvyPage() {
                 <p className="text-sm text-muted-foreground flex-1 leading-relaxed">
                   «{r.text}»
                 </p>
+                {/* Фото */}
+                {Array.isArray(r.photos) && (r.photos as string[]).length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {(r.photos as string[]).slice(0, 4).map((src, i) => (
+                      <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block w-16 h-16 rounded-lg overflow-hidden border border-border">
+                        <img src={src} alt={`Фото от ${r.author}`} className="w-full h-full object-cover" loading="lazy" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+                {/* Видео */}
+                {Array.isArray(r.videos) && (r.videos as string[]).length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {(r.videos as string[]).slice(0, 2).map((src, i) => (
+                      <video key={i} src={src} controls className="w-full h-32 rounded-lg border border-border object-cover" preload="metadata" />
+                    ))}
+                  </div>
+                )}
                 <div className="mt-4 pt-4 border-t border-border/60 flex items-center justify-between gap-2">
                   <span className="font-medium">{r.author}</span>
                   {r.event && (
@@ -148,6 +167,12 @@ export default async function OtzyvyPage() {
             </Link>
           </Button>
         </div>
+      </section>
+
+      {/* ФОРМА ОТЗЫВА */}
+      <section className="container mx-auto max-w-2xl px-4 py-12">
+        <SectionHeading eyebrow="Поделитесь впечатлениями" title="Оставить отзыв" subtitle="Фото и видео с мероприятия приветствуются — появятся на сайте после модерации" />
+        <ReviewForm />
       </section>
 
       <section className="container mx-auto max-w-7xl px-4 pb-16">
