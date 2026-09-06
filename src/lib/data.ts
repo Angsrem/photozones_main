@@ -61,6 +61,15 @@ export async function getReviews(limit = 50) {
   });
 }
 
+// Отзывы по конкретной фотозоне
+export async function getReviewsByPhotozone(photozoneId: string, limit = 20) {
+  return db.review.findMany({
+    where: { isPublished: true, photozoneId },
+    orderBy: { publishedAt: 'desc' },
+    take: limit,
+  });
+}
+
 export async function getPromosForPage(page: string) {
   const now = new Date();
   const promos = await db.promo.findMany({

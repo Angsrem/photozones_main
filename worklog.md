@@ -780,3 +780,30 @@ Self-verify (agent-browser):
 - Редактор: inline-режим, «Назад к списку», 9 типов блоков, «Сохранить», live-превью ✓
 - Страниц: 13 (было 5) ✓
 - lint: 0 ошибок
+
+---
+Task ID: ORCHESTRATOR-15 (отзывы по фотозонам + фото/видео)
+Agent: main (Z.ai Code)
+
+Work Log:
+- Схема: Review + photozoneId (привязка к фотозоне, null = общий)
+- Скрипт scripts/seed-reviews.ts: привязал 10 существующих отзывов + создал 52 новых
+- Распределение по популярности (1-7 на фотозону):
+  love=7, svadebnaya-flora=5, edonorog=6, shary-arka=5, novogodnyaya-mishura=6,
+  stilyagi=4, neon-party=5, bukvy-i-cifry=4, press-wall=3, korporativ-brand=3,
+  tekstil-shampan=4, rustic-garden=3, vesna-8-marta=2, muzhskaya-23-fevralya=2, vypusknoj=3
+- Фото/видео: каждый 2-й отзыв — с 1-2 фото (изображения фотозоны), каждый 5-й — с видео (Ken Burns mp4)
+- Компонент PhotozoneReviews: заголовок «N отзывов о «Фотозона»», средний рейтинг звёздами, сетка карточек с фото (до 3) и видео (1 с плеером)
+- Размещение: на странице /katalog/[slug] после «Похожие фотозоны», перед CTA
+- data.ts: getReviewsByPhotozone(photozoneId, limit)
+
+Self-verify (agent-browser):
+- LOVE-инсталляция: «7 отзывов о», рейтинг, 6 фото, 2 видео ✓
+- Единорог: «6 отзывов о» ✓
+- lint: 0 ошибок
+
+Stage Summary:
+- 62 отзыва распределены по 15 фотозонам (1-7 на зону, по популярности)
+- Каждый 2-й — с фото, каждый 5-й — с видео
+- Блок отзывов на странице фотозоны: после похожих, перед CTA
+- Заголовок: «N отзывов о «Название»» + средний рейтинг

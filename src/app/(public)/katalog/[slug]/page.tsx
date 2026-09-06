@@ -20,8 +20,9 @@ import { JsonLd } from '@/components/seo/json-ld';
 import { PhotozoneGallery } from './gallery';
 import { OptionsWithStickyBar } from './options-with-sticky';
 import type { Option } from './options-selector';
+import { PhotozoneReviews } from '@/components/site/photozone-reviews';
 import { db } from '@/lib/db';
-import { getPhotozoneBySlug, getPhotozoneWithOptions, getPhotozones, asStringArray } from '@/lib/data';
+import { getPhotozoneBySlug, getPhotozoneWithOptions, getPhotozones, getReviewsByPhotozone, asStringArray } from '@/lib/data';
 import { localBusinessLd, productLd, breadcrumbsLd } from '@/lib/seo';
 import { CATEGORIES, OCCASIONS, SITE } from '@/lib/constants';
 import { formatPrice, formatPriceFrom } from '@/lib/format';
@@ -89,6 +90,9 @@ export default async function PhotozonePage({ params }: { params: Params }) {
   // Похожие фотозоны той же категории
   const similarRaw = await getPhotozones({ category: pz.category, sort: 'hit', limit: 4 });
   const similar = similarRaw.filter((s) => s.id !== pz.id).slice(0, 3);
+
+  // Отзывы по этой фотозоне
+  const reviews = await getReviewsByPhotozone(pz.id, 12);
 
   const orderPrefill = {
     photozoneId: pz.id,
@@ -224,6 +228,9 @@ export default async function PhotozonePage({ params }: { params: Params }) {
             </div>
           </section>
         )}
+
+        {/* ОТЗЫВЫ */}
+        <PhotozoneReviews reviews={reviews.map((r) => ({ ...r, publishedAt: new Date(r.publishedAt) }))} photozoneTitle={pz.title} />
 
         {/* CTA */}
         <section className="mt-14">
