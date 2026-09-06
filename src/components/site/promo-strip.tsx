@@ -9,7 +9,7 @@ export async function PromoStrip({ page }: { page: string }) {
   if (!promos.length) return null;
 
   return (
-    <section className="container mx-auto max-w-7xl px-4 -mt-2 mb-2">
+    <section className="container mx-auto max-w-7xl px-4 mt-4 mb-2">
       <div className="space-y-2">
         {promos.map((p) => (
           <div

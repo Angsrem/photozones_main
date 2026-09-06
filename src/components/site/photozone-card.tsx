@@ -64,26 +64,25 @@ export function PhotozoneCard({ pz, index = 0 }: { pz: PhotoZone; index?: number
       onMouseLeave={() => setHovered(false)}
     >
       <Link href={`/katalog/${pz.slug}`} className="relative block aspect-[4/3] overflow-hidden" aria-label={pz.title}>
-        {/* Картинка (всегда — как poster) */}
+        {/* Картинка — зум при наведении только если видео нет */}
         <Image
           src={img}
           alt={pz.title}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover transition-transform duration-700 group-hover:scale-110"
+          className={`object-cover transition-transform duration-700 ${hasVideo ? '' : 'group-hover:scale-110'}`}
         />
         {/* Видео поверх картинки при наведении */}
         {hasVideo && hovered && (
           <video
             ref={videoRef}
-            key={currentVideo}
             src={videos[currentVideo]}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
             muted
             loop
             playsInline
             autoPlay
-            preload="metadata"
+            preload="auto"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80" />
