@@ -29,13 +29,13 @@ export function SiteHeader() {
           </Link>
 
           {/* Десктоп-навигация */}
-          <nav className="hidden lg:flex items-center gap-1 text-sm">
+          <nav className="hidden lg:flex items-center gap-0.5 text-sm">
             {NAV_LINKS.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 className={cn(
-                  'px-3 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors',
+                  'px-2.5 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors whitespace-nowrap',
                   pathname === l.href && 'text-foreground bg-accent'
                 )}
               >
@@ -45,13 +45,13 @@ export function SiteHeader() {
           </nav>
 
           {/* Правый блок: телефон + CTA */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-auto">
             <a
               href={`tel:${SITE.phoneRaw}`}
-              className="hidden md:flex items-center gap-2 text-sm font-medium hover:text-gold transition-colors"
+              className="hidden md:flex items-center gap-2 text-sm font-medium hover:text-gold transition-colors whitespace-nowrap"
             >
-              <Phone className="w-4 h-4 text-gold" />
-              {SITE.phone}
+              <Phone className="w-4 h-4 text-gold shrink-0" />
+              <span className="whitespace-nowrap">{SITE.phone}</span>
             </a>
             <OrderButton
               prefill={{ source: 'header', sourcePage: '/' }}

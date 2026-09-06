@@ -30,7 +30,6 @@ export const NAV_LINKS = [
   { href: '/detskie-prazdniki', label: 'Детские' },
   { href: '/vypusknie', label: 'Выпускные' },
   { href: '/korporativy', label: 'Корпоративы' },
-  { href: '/ceny', label: 'Цены' },
   { href: '/kalkulyator', label: 'Калькулятор' },
   { href: '/otzyvy', label: 'Отзывы' },
   { href: '/kontakty', label: 'Контакты' },
