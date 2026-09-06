@@ -17,11 +17,6 @@ export function TransparentPricing({
     'Доставка по Красноярску',
     'Использование своих инструментов',
   ];
-  const attention = [
-    { label: 'Доп. сутки хранения', value: '1 500 ₽/день' },
-    { label: 'Срочный заказ (за 48 ч)', value: '+15% к пакету' },
-    { label: 'Выезд в пригород', value: '+1 000 ₽' },
-  ];
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -66,20 +61,21 @@ export function TransparentPricing({
         </ul>
       </div>
 
-      {/* ⚠️ Обратите внимание */}
+      {/* ⚠️ Информация о надбавках (не опции — процентные/условные) */}
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-2">
           <AlertTriangle className="w-4 h-4 text-amber-400" />
-          <span className="text-sm font-semibold">Дополнительные опции (прозрачно):</span>
+          <span className="text-sm font-semibold">Надбавки (применяет менеджер):</span>
         </div>
-        <ul className="space-y-1.5">
-          {attention.map((item, i) => (
-            <li key={i} className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{item.label}</span>
-              <span className="font-medium text-foreground">{item.value}</span>
-            </li>
-          ))}
+        <ul className="space-y-1 text-sm text-muted-foreground">
+          <li className="flex items-center justify-between">
+            <span>Срочный заказ (за 48 ч)</span>
+            <span className="font-medium text-foreground">+15% к пакету</span>
+          </li>
         </ul>
+        <p className="text-xs text-muted-foreground mt-2 italic">
+          Доп. сутки хранения и выезд в пригород — выберите ниже в «Дополнительных опциях», цена добавится автоматически.
+        </p>
       </div>
     </div>
   );
