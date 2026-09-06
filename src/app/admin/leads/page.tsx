@@ -484,12 +484,12 @@ function LeadDetailDialog({
 
                 <div className="space-y-1.5">
                   <Label>Фотозона</Label>
-                  <Select value={photozoneId} onValueChange={setPhotozoneId}>
+                  <Select value={photozoneId || '__none__'} onValueChange={(v) => setPhotozoneId(v === '__none__' ? '' : v)}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Не выбрана" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">— Не выбрана —</SelectItem>
+                      <SelectItem value="__none__">— Не выбрана —</SelectItem>
                       {photozones.map((p) => (
                         <SelectItem key={p.id} value={p.id}>
                           {p.title} ({formatPrice(p.basePrice)})

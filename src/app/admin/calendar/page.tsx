@@ -702,14 +702,14 @@ function DayDetailDialog({
                   <Sparkles className="size-4 text-primary" /> Свободные аналоги на {formatDateShort(date)}
                 </h3>
                 <Select
-                  value={alternativesFor || ''}
-                  onValueChange={(v) => setAlternativesFor(v || null)}
+                  value={alternativesFor || '__none__'}
+                  onValueChange={(v) => setAlternativesFor(v === '__none__' ? null : v)}
                 >
                   <SelectTrigger className="w-[240px] h-8 text-xs">
                     <SelectValue placeholder="Выбрать занятую фотозону" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">— Сбросить —</SelectItem>
+                    <SelectItem value="__none__">— Сбросить —</SelectItem>
                     {[...occupiedPzIds].map((id) => {
                       const pz = photozones.find((p) => p.id === id);
                       return (
@@ -820,12 +820,12 @@ function BlockForm({
       <div className="grid sm:grid-cols-2 gap-2">
         <div className="space-y-1">
           <Label className="text-xs">Фотозона</Label>
-          <Select value={photozoneId} onValueChange={setPhotozoneId}>
+          <Select value={photozoneId || '__all__'} onValueChange={(v) => setPhotozoneId(v === '__all__' ? '' : v)}>
             <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Все фотозоны" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">— Все фотозоны —</SelectItem>
+              <SelectItem value="__all__">— Все фотозоны —</SelectItem>
               {photozones.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.title}
@@ -925,12 +925,12 @@ function AddBookingForm({
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Заявка (необязательно)</Label>
-          <Select value={leadId} onValueChange={setLeadId}>
+          <Select value={leadId || '__none__'} onValueChange={(v) => setLeadId(v === '__none__' ? '' : v)}>
             <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Без заявки" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">— Без заявки —</SelectItem>
+              <SelectItem value="__none__">— Без заявки —</SelectItem>
               {leads.map((l) => (
                 <SelectItem key={l.id} value={l.id}>
                   {l.name} · {l.phone}
