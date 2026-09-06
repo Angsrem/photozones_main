@@ -101,7 +101,7 @@ export function PhotozoneCard({ pz, index = 0 }: { pz: PhotoZone; index?: number
         </div>
         <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
           <h3 className="font-display text-lg sm:text-xl text-white drop-shadow leading-tight">{pz.title}</h3>
-          <span className="text-gold font-semibold text-sm whitespace-nowrap drop-shadow">
+          <span className="text-gold font-semibold font-nums text-sm whitespace-nowrap drop-shadow">
             {formatPriceFrom(pz.basePrice)}
           </span>
         </div>

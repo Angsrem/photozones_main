@@ -666,3 +666,36 @@ Stage Summary:
 - 4 SelectItem с value="" исправлены (calendar ×3, leads ×1) — Radix требует непустое value
 - 5 контентных страниц главной восстановлены после db reset
 - Все 3 проблемы решены и проверены в браузере
+
+---
+Task ID: ORCHESTRATOR-12 (шрифты Unbounded + Inter)
+Agent: main (Z.ai Code)
+Task: Обновить шрифты по рекомендации (Unbounded для заголовков, Inter для текста) — поспорил с 3-м шрифтом
+
+Work Log:
+- Пользователь предложил 3 шрифта: Unbounded (заголовки) + Inter (текст) + Rubik (цены)
+- Поспорил с 3-м шрифтом: 3 шрифта = лишний вес. Вместо Rubik — Inter с tabular-nums (моноширинные цифры), стандартный приём в продуктовом дизайне
+- Итого: 2 шрифта вместо 3 (было 3: Geist + Geist Mono + Playfair)
+
+РЕАЛИЗАЦИЯ:
+- layout.tsx: заменил Geist/Geist_Mono/Playfair_Display на Inter + Unbounded (next/font/google, subsets latin+cyrillic, display swap)
+- CSS-переменные: --font-inter, --font-unbounded (избегаю конфликта имён с @theme inline)
+- globals.css @theme inline: --font-sans: var(--font-inter), --font-display: var(--font-unbounded), --font-mono: системный monospace fallback (для админки)
+- utility .font-display: font-family Unbounded + letter-spacing -0.01em
+- utility .font-nums: tabular-nums + cv01 (моноширинные цифры для цен)
+- ФИКС инжекции: шрифтовые классы перенесены с <body> на <html> — иначе @theme inline :root не видит --font-inter (каскад: переменные body не видны в :root)
+- Применил .font-nums к ценам в PhotozoneCard (каталог)
+
+Self-verify (agent-browser, computed styles):
+- H1: Unbounded ✓
+- Body: Inter ✓
+- Цены: Inter + tabular-nums ✓ («от 14 900 ₽»)
+- document.fonts.check('16px Inter') → YES
+- document.fonts.check('16px Unbounded') → YES
+- lint: 0 ошибок
+
+Stage Summary:
+- 2 шрифта вместо 3: Unbounded (заголовки, современная геометрика, отличная кириллица) + Inter (основной текст + цены с tabular-nums)
+- Убран Playfair (serif, плохо на кириллице) и Geist (хорош, но Inter лучше для кириллицы)
+- Цены — Inter с tabular-nums, без доп. шрифта (спор с Rubik выигран)
+- Шрифты подгружаются через next/font (self-hosted, без Google Fonts CDN в runtime)
