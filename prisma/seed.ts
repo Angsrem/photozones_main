@@ -1,7 +1,7 @@
 import { db } from '../src/lib/db';
 import { hashPassword } from '../src/lib/auth';
 
-const IMG = (n: string) => `/images/photozones/${n}.png`;
+const IMG = (n: string) => `/images/photozones/${n}.jpg`;
 
 async function main() {
   console.log('Seeding...');
