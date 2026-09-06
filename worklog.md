@@ -807,3 +807,33 @@ Stage Summary:
 - Каждый 2-й — с фото, каждый 5-й — с видео
 - Блок отзывов на странице фотозоны: после похожих, перед CTA
 - Заголовок: «N отзывов о «Название»» + средний рейтинг
+
+---
+Task ID: ORCHESTRATOR-16 (промокоды за отзывы — реферальная механика)
+Agent: main (Z.ai Code)
+
+Work Log:
+- Схема: новая модель PromoCode (code FOTO-XXXX, discountPct, type, leadId, singleUse, transferable, expiresAt +12мес, status ACTIVE/USED/EXPIRED, usedByLeadId, usedAt, note)
+- Lead + relation promoCodes
+- lib/promo-codes.ts: generatePromoCode (4 символа A-Z0-9 без I/O/0/1), issuePromoCode, validatePromoCode, redeemPromoCode, waTemplate (6 сценариев)
+- API: POST /api/admin/promo-codes (выдать код лиду), GET /api/admin/leads/[id]/promo-codes (коды лида + WhatsApp-шаблоны), POST /api/promo-code-validate (публичная проверка)
+- API /api/leads: принимает promoCode + promoDiscount, сохраняет в config
+- Компонент LeadPromoCodes в карточке лида: кнопка «Выдать промокод», список кодов (статус/срок), кнопки «Копировать» и «В WhatsApp» для отправки кода клиенту, 4 шаблона WhatsApp (День X+1, Напоминание, Фото без отзыва, Недоволен) с подстановкой имени клиента и названия фотозоны
+- QuickOrderModal: поле «Промокод» с кнопкой «Проверить» → валидация через API → показ скидки или ошибки
+- Блок ReviewForPromoBlock на /otzyvy: «Отзыв → скидка 5%», 3 карточки (Любой отзыв / Промокод 5% / Можно подарить), срок 12 месяцев
+
+Self-verify (API, полный цикл):
+- validate FOTO-TEST → {"valid":false,"reason":"Промокод не найден"} ✓
+- login → ok ✓
+- issue promo code → {"ok":true,"code":"FOTO-FZXZ","expiresAt":"2027-09-06","discountPct":5} ✓
+- get lead promo-codes → code: FOTO-FZXZ ✓
+- validate FOTO-FZXZ → {"valid":true,"discountPct":5} ✓
+- /otzyvy: «Отзыв → скидка», «FOTO-XXXX», «Можно подарить», форма отзыва ✓
+- lint: 0 ошибок
+
+Stage Summary:
+- Промокоды за отзывы: менеджер выдаёт в карточке лида → код FOTO-XXXX, 5%, 12 мес
+- Клиент: вводит код в форме заказа → проверка → скидка 5% → код гасится при CONFIRMED
+- WhatsApp-шаблоны: 6 сценариев (день X+1, напоминание, выдача кода, фото без отзыва, недоволен, сезонное) с подстановкой данных — кнопка «В WhatsApp» с предзаполненным сообщением
+- Блок на /otzyvy: объясняет механику «Отзыв → промокод 5% → можно передать другу»
+- Реферальная виральность: каждый код transferable, source у нового лида = referral

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Star, Quote, ArrowRight } from 'lucide-react';
 import { PageBreadcrumbs, PageHero } from '../_components/landing-sections';
 import { ReviewForm } from '@/components/site/review-form';
+import { ReviewForPromoBlock } from '@/components/site/review-for-promo';
 
 export const metadata: Metadata = {
   title: 'Отзывы об аренде фотозон в Красноярске — ФотоЗона24',
@@ -168,6 +169,9 @@ export default async function OtzyvyPage() {
           </Button>
         </div>
       </section>
+
+      {/* ПРОМОКОД ЗА ОТЗЫВ */}
+      <ReviewForPromoBlock />
 
       {/* ФОРМА ОТЗЫВА */}
       <section className="container mx-auto max-w-2xl px-4 py-12">

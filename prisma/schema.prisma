@@ -112,6 +112,7 @@ model Lead {
   managerNote String?
 
   bookings Booking[]
+  promoCodes PromoCode[]  // выданные этому клиенту промокоды
 
   @@index([status])
   @@index([eventDate])
@@ -170,6 +171,31 @@ model Promo {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ===== Персональные промокоды за отзывы (реферальная механика) =====
+// code вида FOTO-XXXX, генерируется менеджером после подтверждения отзыва
+// singleUse=true, transferable=true (можно передать другу), срок 12 мес.
+model PromoCode {
+  id          String   @id @default(cuid())
+  code        String   @unique  // FOTO-A7KX
+  discountPct Int      @default(5)  // %
+  type        String   @default("review")  // review | referral | campaign
+  leadId      String?  // кому выдан (клиент)
+  lead        Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  singleUse   Boolean  @default(true)
+  transferable Boolean @default(true)  // можно передать другу
+  expiresAt   DateTime  // +12 мес от выдачи
+  status      String   @default("ACTIVE")  // ACTIVE | USED | EXPIRED
+  usedByLeadId String? // кем использован (если передали другу)
+  usedAt      DateTime?
+  note        String?  // комментарий менеджера
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([code])
+  @@index([leadId])
+  @@index([status])
 }
 
 // ===== Сессии квиза (/podborka/[id]) =====

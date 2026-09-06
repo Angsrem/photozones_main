@@ -15,9 +15,16 @@ export type CreateLeadInput = {
   referrer?: string | null;
   config?: Record<string, unknown> | null;
   priceEstimate?: number | null;
+  promoCode?: string | null;
+  promoDiscount?: number | null;
 };
 
 export async function createLead(input: CreateLeadInput) {
+  // если есть промокод — добавляем в config для сохранения
+  const config = input.promoCode
+    ? { ...(input.config || {}), promoCode: input.promoCode, promoDiscount: input.promoDiscount }
+    : input.config;
+
   const lead = await db.lead.create({
     data: {
       name: input.name,
@@ -30,7 +37,7 @@ export async function createLead(input: CreateLeadInput) {
       sourcePage: input.sourcePage ?? null,
       utm: (input.utm ?? null) as any,
       referrer: input.referrer ?? null,
-      config: (input.config ?? null) as any,
+      config: (config ?? null) as any,
       priceEstimate: input.priceEstimate ?? null,
       status: 'NEW',
     },

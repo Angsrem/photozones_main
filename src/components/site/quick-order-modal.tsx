@@ -30,18 +30,40 @@ function captureUtm(): Record<string, string> {
 export function QuickOrderModal() {
   const { open, prefill, close } = useQuickOrder();
   const [status, setStatus] = useState<Status>('idle');
-  const [form, setForm] = useState({ name: '', phone: '', date: '', comment: '' });
+  const [form, setForm] = useState({ name: '', phone: '', date: '', comment: '', promoCode: '' });
+  const [promoStatus, setPromoStatus] = useState<{ checked: boolean; valid: boolean; discountPct?: number; reason?: string } | null>(null);
+  const [checkingPromo, setCheckingPromo] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (open) {
       setStatus('idle');
       setErrorMsg('');
-      setForm({ name: '', phone: '', date: '', comment: '' });
+      setForm({ name: '', phone: '', date: '', comment: '', promoCode: '' });
+      setPromoStatus(null);
     }
   }, [open, prefill]);
 
   const minDate = todayISO();
+
+  async function checkPromo() {
+    if (!form.promoCode.trim()) return;
+    setCheckingPromo(true);
+    setPromoStatus(null);
+    try {
+      const res = await fetch('/api/promo-code-validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: form.promoCode.trim() }),
+      });
+      const data = await res.json();
+      setPromoStatus(data);
+    } catch {
+      setPromoStatus({ checked: true, valid: false, reason: 'Ошибка проверки' });
+    } finally {
+      setCheckingPromo(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,6 +90,8 @@ export function QuickOrderModal() {
           referrer: typeof document !== 'undefined' ? document.referrer : null,
           priceEstimate: prefill.priceEstimate ?? prefill.photozonePrice ?? null,
           config: prefill.config ?? null,
+          promoCode: form.promoCode.trim() || null,
+          promoDiscount: promoStatus?.valid ? promoStatus.discountPct : null,
         }),
       });
       if (!res.ok) throw new Error('Ошибка отправки');
@@ -161,6 +185,25 @@ export function QuickOrderModal() {
                     <Textarea id="qo-comment" value={form.comment} rows={2}
                       onChange={(e) => setForm({ ...form, comment: e.target.value })}
                       placeholder="Повод, количество гостей, адрес" className="resize-none" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="qo-promo">Промокод</Label>
+                    <div className="flex gap-2">
+                      <Input id="qo-promo" value={form.promoCode}
+                        onChange={(e) => { setForm({ ...form, promoCode: e.target.value.toUpperCase() }); setPromoStatus(null); }}
+                        onBlur={checkPromo}
+                        placeholder="FOTO-XXXX" className="font-mono uppercase" />
+                      <Button type="button" variant="outline" size="sm" onClick={checkPromo} disabled={checkingPromo || !form.promoCode.trim()}>
+                        {checkingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Проверить'}
+                      </Button>
+                    </div>
+                    {promoStatus?.checked && (
+                      <p className={`text-xs ${promoStatus.valid ? 'text-emerald-400' : 'text-coral'}`}>
+                        {promoStatus.valid
+                          ? `✓ Промокод принят: скидка ${promoStatus.discountPct}%`
+                          : `✗ ${promoStatus.reason}`}
+                      </p>
+                    )}
                   </div>
                 </div>
 

@@ -54,6 +54,7 @@ import {
   telLink,
 } from '../_lib';
 import { formatDateShort, formatDateRu, formatPrice } from '@/lib/format';
+import { LeadPromoCodes } from './lead-promo-codes';
 
 type Filters = {
   status: string; // 'ALL' | LeadStatus
@@ -509,6 +510,9 @@ function LeadDetailDialog({
                   placeholder="Позвонил, обсудили детали, ждём предоплату…"
                 />
               </div>
+
+              {/* ПРОМОКОДЫ ЗА ОТЗЫВЫ */}
+              <LeadPromoCodes leadId={lead.id} leadName={lead.name} leadPhone={lead.phone} />
 
               {status === 'CONFIRMED' && !photozoneId && (
                 <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2">

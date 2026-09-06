@@ -33,6 +33,9 @@ export async function POST(req: NextRequest) {
       referrer: body.referrer ?? null,
       config: body.config ?? null,
       priceEstimate: typeof body.priceEstimate === 'number' ? body.priceEstimate : null,
+      // промокод
+      promoCode: body.promoCode ? String(body.promoCode).toUpperCase().trim() : null,
+      promoDiscount: typeof body.promoDiscount === 'number' ? body.promoDiscount : null,
     });
 
     return NextResponse.json({ ok: true, id: lead.id }, { status: 201 });
