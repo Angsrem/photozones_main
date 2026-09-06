@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { getPhotozones, getReviews } from '@/lib/data';
+import { getPageBlocks, extractFaq, PageBlocks } from '@/components/site/page-blocks';
 import { PhotozoneCard, TrustBadges, SectionHeading } from '@/components/site/photozone-card';
 import { CtaBand } from '@/components/site/cta-band';
 import { FaqAccordion } from '@/components/site/faq-accordion';
@@ -46,11 +47,39 @@ const faq = [
 ];
 
 export default async function HomePage() {
-  const [zones, reviews] = await Promise.all([
+  const [zones, reviews, heroBlocks, howBlocks, faqBlocks, ctaBlocks] = await Promise.all([
     getPhotozones({ sort: 'hit', limit: 6 }),
     getReviews(6),
+    getPageBlocks('home-hero'),
+    getPageBlocks('home-how-we-work'),
+    getPageBlocks('home-faq'),
+    getPageBlocks('home-cta-text'),
   ]);
   const avgRating = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : '4.9';
+
+  // FAQ из БД (если есть) — иначе fallback на захардкоженный
+  const dbFaq = faqBlocks ? extractFaq(faqBlocks) : [];
+  const faq = dbFaq.length > 0 ? dbFaq : [
+    { q: 'Сколько стоит аренда фотозоны в Красноярске?', a: 'Аренда фотозоны начинается от 8 900 ₽ с доставкой, монтажом и демонтажом. Итоговая цена зависит от типа фотозоны, размера и дополнительных элементов. Рассчитать стоимость можно в калькуляторе за 1 минуту.' },
+    { q: 'Входит ли доставка и монтаж в стоимость?', a: 'Да, доставка по Красноярску, монтаж и демонтаж включены в цену. При доставке в пригород (Солнечный, Подгорный, Емельяново) действует надбавка 1 500 ₽.' },
+    { q: 'Как быстро перезванивает менеджер?', a: 'В среднем 7 минут, максимум — 15 минут в рабочее время (9:00–21:00). Заявки, оставленные ночью, обрабатываем утром первыми.' },
+    { q: 'Можно ли брендировать фотозону логотипом?', a: 'Да, для корпоративов мы печатаем ваш логотип на пресс-волле. Это указывается в заявке — менеджер согласует макет.' },
+    { q: 'Что если фотозона занята на мою дату?', a: 'Менеджер предложит аналогичные свободные варианты под ваш повод и бюджет. Подбираем по категории и цене ±20%.' },
+  ];
+
+  // Извлечь hero-заголовок и подзаголовок из блоков (если есть)
+  const heroHeading = heroBlocks?.find((b) => b.type === 'heading') as { type: 'heading'; text: string } | undefined;
+  const heroParagraph = heroBlocks?.find((b) => b.type === 'paragraph') as { type: 'paragraph'; text: string } | undefined;
+
+  // Извлечь шаги из howBlocks (список)
+  const howHeading = howBlocks?.find((b) => b.type === 'heading') as { type: 'heading'; text: string } | undefined;
+  const howSubtitle = howBlocks?.find((b) => b.type === 'paragraph') as { type: 'paragraph'; text: string } | undefined;
+  const howList = howBlocks?.find((b) => b.type === 'list') as { type: 'list'; items: string[] } | undefined;
+  const howSteps = howList?.items || steps.map((s) => s.text);
+
+  // CTA-текст
+  const ctaHeading = ctaBlocks?.find((b) => b.type === 'heading') as { type: 'heading'; text: string } | undefined;
+  const ctaParagraph = ctaBlocks?.find((b) => b.type === 'paragraph') as { type: 'paragraph'; text: string } | undefined;
 
   return (
     <>
@@ -69,11 +98,10 @@ export default async function HomePage() {
               <Sparkles className="w-3.5 h-3.5 mr-1" /> 100+ мероприятий в месяц в Красноярске
             </Badge>
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[1.05] mb-5">
-              Аренда фотозон <span className="text-gradient-gold">в Красноярске</span> под любое событие
+              {heroHeading ? heroHeading.text : <>Аренда фотозон <span className="text-gradient-gold">в Красноярске</span> под любое событие</>}
             </h1>
             <p className="text-lg text-muted-foreground mb-7 max-w-xl">
-              Свадьбы, дни рождения, корпоративы и сезонные праздники. Доставка, монтаж и демонтаж включены.
-              Оставьте заявку — перезвоним за 15 минут и подтвердим дату.
+              {heroParagraph ? heroParagraph.text : 'Свадьбы, дни рождения, корпоративы и сезонные праздники. Доставка, монтаж и демонтаж включены. Оставьте заявку — перезвоним за 15 минут и подтвердим дату.'}
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <OrderButton prefill={{ source: 'hero', sourcePage: '/' }}
@@ -153,14 +181,18 @@ export default async function HomePage() {
       {/* ===== HOW WE WORK ===== */}
       <section className="bg-card/30 border-y border-border/60 py-16 mt-12">
         <div className="container mx-auto max-w-7xl px-4">
-          <SectionHeading eyebrow="Как мы работаем" title="Заявка → перезвон → монтаж за 1 час" subtitle="Весь процесс занимает от заявки до готовой фотозоны — несколько часов" />
+          <SectionHeading
+            eyebrow="Как мы работаем"
+            title={howHeading?.text || 'Заявка → перезвон → монтаж за 1 час'}
+            subtitle={howSubtitle?.text || 'Весь процесс занимает от заявки до готовой фотозоны — несколько часов'}
+          />
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {steps.map((s, i) => (
               <div key={s.title} className="relative rounded-2xl border border-border bg-background p-6">
                 <div className="absolute -top-3 -left-3 w-9 h-9 rounded-full bg-gold text-primary-foreground flex items-center justify-center font-bold text-sm">{i + 1}</div>
                 <s.icon className="w-7 h-7 text-gold mb-3 mt-2" />
                 <h3 className="font-display text-lg mb-1">{s.title}</h3>
-                <p className="text-sm text-muted-foreground">{s.text}</p>
+                <p className="text-sm text-muted-foreground">{howSteps[i] || s.text}</p>
               </div>
             ))}
           </div>
@@ -209,8 +241,8 @@ export default async function HomePage() {
       {/* ===== CTA ===== */}
       <section className="container mx-auto max-w-7xl px-4 pb-16">
         <CtaBand
-          title="Готовы сделать событие незабываемым?"
-          subtitle="Оставьте заявку — перезвоним за 15 минут, подтвердим дату или подберём аналог. Без обязательств."
+          title={ctaHeading?.text || 'Готовы сделать событие незабываемым?'}
+          subtitle={ctaParagraph?.text || 'Оставьте заявку — перезвоним за 15 минут, подтвердим дату или подберём аналог. Без обязательств.'}
           prefill={{ source: 'home-cta', sourcePage: '/' }}
         />
       </section>
