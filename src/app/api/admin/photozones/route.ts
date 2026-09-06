@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
   const body = await req.json().catch(() => ({}));
-  const { title, slug, description, category, occasions, basePrice, sizeW, sizeH, images, includes, badge, hit, sortOrder, isActive } = body;
+  const { title, slug, description, category, occasions, basePrice, sizeW, sizeH, images, videos, includes, badge, hit, sortOrder, isActive } = body;
   if (!title || !slug || !category || basePrice == null) return NextResponse.json({ error: 'Заполните обязательные поля' }, { status: 422 });
   const existing = await db.photoZone.findUnique({ where: { slug } });
   if (existing) return NextResponse.json({ error: 'Slug занят' }, { status: 409 });
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       title, slug, description: description || '', category,
       occasions: occasions || [], basePrice: Number(basePrice),
       sizeW: sizeW ? Number(sizeW) : null, sizeH: sizeH ? Number(sizeH) : null,
-      images: images || [], includes: includes || [],
+      images: images || [], videos: videos || [], includes: includes || [],
       badge: badge || null, hit: !!hit, sortOrder: Number(sortOrder ?? 100), isActive: isActive !== false,
     },
   });

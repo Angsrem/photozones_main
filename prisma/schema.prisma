@@ -39,6 +39,7 @@ model PhotoZone {
   sizeW       Float?   // ширина, м
   sizeH       Float?   // высота, м
   images      Json     // string[] (URL)
+  videos      Json?    // string[] (URL видео для автоплея в каталоге/карточке)
   includes    Json     // string[] — что входит (доставка/монтаж/демонтаж/срок)
   badge       String?  // HIT | NEW | null
   hit         Boolean  @default(false)
@@ -60,18 +61,24 @@ model PhotoZone {
   @@index([isActive])
 }
 
-// ===== Отдельно сдаваемые элементы (буквы, шары, подсветка, реквизит) =====
+// ===== Дополнительные опции (буквы, шары, подсветка, реквизит, освещение) =====
+// Может быть привязан к конкретной фотозоне (photozoneId) или быть глобальным (null)
+// category группирует опции в карточке: letter | decor | prop | lighting | service
 model Element {
   id          String   @id @default(cuid())
   name        String
+  description String?
   price       Int
-  photozoneId String?
+  image       String?  // превью опции (для освещения — фото светильника)
+  category    String   @default("decor") // letter | decor | prop | lighting | service
+  photozoneId String?  // null = глобальная опция (доступна всем фотозонам)
   photozone   PhotoZone? @relation(fields: [photozoneId], references: [id], onDelete: Cascade)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([photozoneId])
+  @@index([category])
 }
 
 // ===== Заявки =====

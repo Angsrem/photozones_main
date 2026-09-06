@@ -375,6 +375,9 @@ function PhotozoneEditor({
   const [imagesText, setImagesText] = React.useState<string>(
     Array.isArray(photozone?.images) ? (photozone!.images as string[]).join('\n') : ''
   );
+  const [videosText, setVideosText] = React.useState<string>(
+    Array.isArray(photozone?.videos) ? (photozone!.videos as string[]).join('\n') : ''
+  );
   const [includesText, setIncludesText] = React.useState<string>(
     Array.isArray(photozone?.includes) ? (photozone!.includes as string[]).join('\n') : ''
   );
@@ -391,6 +394,9 @@ function PhotozoneEditor({
   );
   const [newElName, setNewElName] = React.useState('');
   const [newElPrice, setNewElPrice] = React.useState('');
+  const [newElCategory, setNewElCategory] = React.useState('decor');
+  const [newElImage, setNewElImage] = React.useState('');
+  const [newElDesc, setNewElDesc] = React.useState('');
   const [saving, setSaving] = React.useState(false);
 
   // автоген slug
@@ -410,10 +416,19 @@ function PhotozoneEditor({
     if (!newElName.trim()) return;
     setElements((prev) => [
       ...prev,
-      { name: newElName.trim(), price: Number(newElPrice) || 0 },
+      {
+        name: newElName.trim(),
+        price: Number(newElPrice) || 0,
+        category: newElCategory,
+        image: newElImage.trim() || null,
+        description: newElDesc.trim() || null,
+      } as any,
     ]);
     setNewElName('');
     setNewElPrice('');
+    setNewElCategory('decor');
+    setNewElImage('');
+    setNewElDesc('');
   };
 
   const removeElement = (idx: number) => {
@@ -438,6 +453,10 @@ function PhotozoneEditor({
         .split('\n')
         .map((s) => s.trim())
         .filter(Boolean),
+      videos: videosText
+        .split('\n')
+        .map((s) => s.trim())
+        .filter(Boolean),
       includes: includesText
         .split('\n')
         .map((s) => s.trim())
@@ -451,6 +470,9 @@ function PhotozoneEditor({
         name: e.name,
         price: Number(e.price) || 0,
         isActive: (e as any).isActive !== false,
+        category: (e as any).category || 'decor',
+        image: (e as any).image || null,
+        description: (e as any).description || null,
       })),
     };
     setSaving(true);
@@ -635,6 +657,21 @@ function PhotozoneEditor({
             </div>
           </div>
 
+          {/* Видео */}
+          <div className="space-y-1.5">
+            <Label>Видео (URL, по одному в строке) — необязательно</Label>
+            <Textarea
+              rows={2}
+              value={videosText}
+              onChange={(e) => setVideosText(e.target.value)}
+              placeholder="/videos/love.mp4"
+              className="font-mono text-xs"
+            />
+            <div className="text-xs text-muted-foreground">
+              Видео автоплеем без звука при наведении в каталоге и карточке. Несколько видео — ротация каждые 4 сек.
+            </div>
+          </div>
+
           {/* Что входит */}
           <div className="space-y-1.5">
             <Label>Что входит (по строке)</Label>
@@ -646,17 +683,20 @@ function PhotozoneEditor({
             />
           </div>
 
-          {/* Элементы */}
+          {/* Элементы / опции */}
           <div className="space-y-2">
-            <Label>Элементы (доп. услуги)</Label>
+            <Label>Дополнительные опции (буквы, декор, освещение, реквизит)</Label>
+            <p className="text-xs text-muted-foreground">Опции с категорией «Освещение» можно сделать глобальными (доступны всем фотозонам) — оставьте category=lighting. Опции группируются в карточке фотозоны по category.</p>
             <div className="rounded-md border divide-y">
               {elements.length === 0 && (
-                <div className="p-3 text-xs text-muted-foreground">Пока нет элементов</div>
+                <div className="p-3 text-xs text-muted-foreground">Пока нет опций</div>
               )}
               {elements.map((el, idx) => (
                 <div key={idx} className="flex items-center gap-2 p-2 text-sm">
                   <GripVertical className="size-4 text-muted-foreground" />
+                  {el.image && <img src={el.image} alt="" className="size-8 rounded object-cover" />}
                   <span className="flex-1">{el.name}</span>
+                  {el.category && <Badge variant="outline" className="text-[10px]">{el.category}</Badge>}
                   <span className="text-muted-foreground">{formatPrice(el.price)}</span>
                   <Button
                     size="icon"
@@ -669,24 +709,45 @@ function PhotozoneEditor({
                 </div>
               ))}
             </div>
-            <div className="flex gap-2">
+            {/* Форма добавления новой опции */}
+            <div className="grid grid-cols-2 gap-2">
               <Input
-                placeholder="Название элемента"
+                placeholder="Название опции *"
                 value={newElName}
                 onChange={(e) => setNewElName(e.target.value)}
-                className="flex-1"
               />
               <Input
                 type="number"
-                placeholder="Цена, ₽"
+                placeholder="Цена, ₽ *"
                 value={newElPrice}
                 onChange={(e) => setNewElPrice(e.target.value)}
-                className="w-32"
               />
-              <Button variant="outline" onClick={addElement} className="gap-1">
-                <Plus className="size-4" /> Добавить
-              </Button>
+              <Select value={newElCategory} onValueChange={setNewElCategory}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Категория" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="letter">Буквы и цифры</SelectItem>
+                  <SelectItem value="decor">Декор</SelectItem>
+                  <SelectItem value="prop">Реквизит</SelectItem>
+                  <SelectItem value="lighting">Освещение</SelectItem>
+                  <SelectItem value="service">Доп. услуга</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="URL изображения (необязательно)"
+                value={newElImage}
+                onChange={(e) => setNewElImage(e.target.value)}
+                className="font-mono text-xs"
+              />
+              <Input
+                placeholder="Описание (необязательно)"
+                value={newElDesc}
+                onChange={(e) => setNewElDesc(e.target.value)}
+                className="col-span-2"
+              />
             </div>
+            <Button variant="outline" onClick={addElement} className="gap-1 w-full">
+              <Plus className="size-4" /> Добавить опцию
+            </Button>
             {!isEdit && (
               <div className="text-xs text-muted-foreground">
                 Примечание: элементы сохранятся после создания фотозоны (нужен её id).

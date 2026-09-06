@@ -38,8 +38,19 @@ export async function getPhotozones(opts: {
 export async function getPhotozoneBySlug(slug: string) {
   return db.photoZone.findUnique({
     where: { slug },
-    include: { elements: { where: { isActive: true } } },
+    include: { elements: { where: { isActive: true }, orderBy: { category: 'asc' } } },
   });
+}
+
+// Фотозона + её собственные опции + глобальные опции (освещение и др., photozoneId=null)
+export async function getPhotozoneWithOptions(slug: string) {
+  const pz = await db.photoZone.findUnique({ where: { slug } });
+  if (!pz) return null;
+  const [ownElements, globalElements] = await Promise.all([
+    db.element.findMany({ where: { photozoneId: pz.id, isActive: true }, orderBy: { category: 'asc' } }),
+    db.element.findMany({ where: { photozoneId: null, isActive: true }, orderBy: { category: 'asc' } }),
+  ]);
+  return { ...pz, elements: [...ownElements, ...globalElements] };
 }
 
 export async function getReviews(limit = 50) {

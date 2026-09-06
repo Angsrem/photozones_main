@@ -18,8 +18,10 @@ import { OrderButton } from '@/components/site/quick-order-modal';
 import { CtaBand } from '@/components/site/cta-band';
 import { JsonLd } from '@/components/seo/json-ld';
 import { PhotozoneGallery } from './gallery';
+import { OptionsWithStickyBar } from './options-with-sticky';
+import type { Option } from './options-selector';
 import { db } from '@/lib/db';
-import { getPhotozoneBySlug, getPhotozones, asStringArray } from '@/lib/data';
+import { getPhotozoneBySlug, getPhotozoneWithOptions, getPhotozones, asStringArray } from '@/lib/data';
 import { localBusinessLd, productLd, breadcrumbsLd } from '@/lib/seo';
 import { CATEGORIES, OCCASIONS, SITE } from '@/lib/constants';
 import { formatPrice, formatPriceFrom } from '@/lib/format';
@@ -67,16 +69,21 @@ const occLabel = (o: string) => OCCASIONS.find((x) => x.value === o)?.label ?? o
 
 export default async function PhotozonePage({ params }: { params: Params }) {
   const { slug } = await params;
-  const pz = await getPhotozoneBySlug(slug);
+  const pz = await getPhotozoneWithOptions(slug);
 
   if (!pz || !pz.isActive) {
     notFound();
   }
 
   const images = asStringArray(pz.images);
+  const videos = asStringArray(pz.videos);
   const includes = asStringArray(pz.includes);
   const occasions = asStringArray(pz.occasions);
   const elements = pz.elements ?? [];
+  const options: Option[] = elements.map((e) => ({
+    id: e.id, name: e.name, description: e.description, price: e.price,
+    image: e.image, category: e.category || 'decor',
+  }));
   const badge = pz.badge === 'HIT' ? 'Хит' : pz.badge === 'NEW' ? 'Новинка' : null;
 
   // Похожие фотозоны той же категории
@@ -137,7 +144,7 @@ export default async function PhotozonePage({ params }: { params: Params }) {
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 lg:gap-10">
           {/* ГАЛЕРЕЯ */}
           <div>
-            <PhotozoneGallery images={images} title={pz.title} />
+            <PhotozoneGallery images={images} videos={videos} title={pz.title} />
           </div>
 
           {/* ИНФО + ОРДЕР */}
@@ -184,48 +191,13 @@ export default async function PhotozonePage({ params }: { params: Params }) {
               <TransparentPricing includes={includes} basePrice={pz.basePrice} />
             )}
 
-            {/* ЭЛЕМЕНТЫ */}
-            {elements.length > 0 && (
-              <div>
-                <h2 className="font-display text-lg mb-3">Дополнительные элементы</h2>
-                <ul className="divide-y divide-border rounded-xl border border-border overflow-hidden">
-                  {elements.map((el) => (
-                    <li
-                      key={el.id}
-                      className="flex items-center justify-between gap-3 px-4 py-3 bg-card/40"
-                    >
-                      <span className="text-sm">{el.name}</span>
-                      <span className="text-gold font-semibold whitespace-nowrap">
-                        + {formatPrice(el.price)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* CTA-БЛОК (десктоп) */}
-            <div className="hidden lg:block rounded-xl border border-gold/30 bg-gradient-to-br from-card via-card to-gold/10 p-5">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                <Clock className="w-4 h-4 text-gold" /> Перезвон за {SITE.workTimeMin} мин
-                <span className="mx-1">·</span>
-                <ShieldCheck className="w-4 h-4 text-gold" /> Договор и гарантия
-              </div>
-              <OrderButton
-                prefill={orderPrefill}
-                className="w-full h-13 py-3.5 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold text-base"
-              >
-                <Sparkles className="w-5 h-5 mr-2" /> Заказать фотозону
-              </OrderButton>
-              <Button asChild variant="outline" className="w-full h-12 mt-2">
-                <a href={`tel:${SITE.phoneRaw}`}>
-                  <Phone className="w-4 h-4 mr-2" /> {SITE.phone}
-                </a>
-              </Button>
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                Доставка по Красноярску и монтаж включены в стоимость
-              </p>
-            </div>
+            {/* ОПЦИИ + STICKY-БАР */}
+            <OptionsWithStickyBar
+              options={options}
+              basePrice={pz.basePrice}
+              baseTitle={pz.title}
+              orderPrefill={orderPrefill}
+            />
           </div>
         </div>
 
@@ -261,22 +233,6 @@ export default async function PhotozonePage({ params }: { params: Params }) {
             prefill={{ ...orderPrefill, source: 'photozone-cta' }}
           />
         </section>
-      </div>
-
-      {/* STICKY ORDER BAR (mobile) — заменяет глобальный sticky CTA на этой странице */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        <div className="flex items-center gap-3 max-w-7xl mx-auto">
-          <div className="flex-1 min-w-0">
-            <div className="text-xs text-muted-foreground">Аренда фотозоны</div>
-            <div className="font-display text-lg text-gold truncate">{formatPriceFrom(pz.basePrice)}</div>
-          </div>
-          <OrderButton
-            prefill={orderPrefill}
-            className="h-12 px-6 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold shrink-0"
-          >
-            <Sparkles className="w-4 h-4 mr-1.5" /> Заказать
-          </OrderButton>
-        </div>
       </div>
     </>
   );

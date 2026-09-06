@@ -43,7 +43,7 @@ export type PhotoZone = {
   isActive: boolean;
   sortOrder: number;
   _count?: { elements: number };
-  elements?: { id: string; name: string; price: number }[];
+  elements?: { id: string; name: string; price: number; description?: string | null; image?: string | null; category?: string }[];
 };
 
 export type Booking = {

@@ -1,11 +1,12 @@
 'use client';
 
+import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles, Play } from 'lucide-react';
 import { formatPriceFrom } from '@/lib/format';
 import { useQuickOrder } from './quick-order-store';
 import { CATEGORIES } from '@/lib/constants';
@@ -13,11 +14,44 @@ import type { PhotoZone } from '@prisma/client';
 
 const catLabel = (c: string) => CATEGORIES.find((x) => x.value === c)?.label ?? c;
 
+function asStringArray(v: unknown): string[] {
+  return Array.isArray(v) ? (v as string[]) : [];
+}
+
 export function PhotozoneCard({ pz, index = 0 }: { pz: PhotoZone; index?: number }) {
   const openOrder = useQuickOrder((s) => s.openOrder);
-  const images = (pz.images as string[]) ?? [];
+  const images = asStringArray(pz.images);
+  const videos = asStringArray(pz.videos).filter(Boolean);
   const img = images[0] || '/images/photozones/love.jpg';
   const badge = pz.badge === 'HIT' ? 'Хит' : pz.badge === 'NEW' ? 'Новинка' : null;
+
+  // Видео-автоплей при наведении. Если видео несколько — ротация каждые 4 сек.
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+  const [hovered, setHovered] = React.useState(false);
+  const [currentVideo, setCurrentVideo] = React.useState(0);
+
+  // Ротация видео
+  React.useEffect(() => {
+    if (!hovered || videos.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentVideo((i) => (i + 1) % videos.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [hovered, videos.length]);
+
+  // Управление play/pause при наведении
+  React.useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (hovered) {
+      v.currentTime = 0;
+      v.play().catch(() => {});
+    } else {
+      v.pause();
+    }
+  }, [hovered, currentVideo]);
+
+  const hasVideo = videos.length > 0;
 
   return (
     <motion.div
@@ -26,8 +60,11 @@ export function PhotozoneCard({ pz, index = 0 }: { pz: PhotoZone; index?: number
       viewport={{ once: true, margin: '-50px' }}
       transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.3) }}
       className="group card-hover relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <Link href={`/katalog/${pz.slug}`} className="relative block aspect-[4/3] overflow-hidden" aria-label={pz.title}>
+        {/* Картинка (всегда — как poster) */}
         <Image
           src={img}
           alt={pz.title}
@@ -35,7 +72,27 @@ export function PhotozoneCard({ pz, index = 0 }: { pz: PhotoZone; index?: number
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover transition-transform duration-700 group-hover:scale-110"
         />
+        {/* Видео поверх картинки при наведении */}
+        {hasVideo && hovered && (
+          <video
+            ref={videoRef}
+            key={currentVideo}
+            src={videos[currentVideo]}
+            className="absolute inset-0 w-full h-full object-cover"
+            muted
+            loop
+            playsInline
+            autoPlay
+            preload="metadata"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-80" />
+        {/* Индикатор видео */}
+        {hasVideo && (
+          <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/50 backdrop-blur text-[10px] text-white font-medium">
+            <Play className="w-2.5 h-2.5" /> {videos.length} {videos.length === 1 ? 'видео' : 'видео'}
+          </div>
+        )}
         <div className="absolute top-3 left-3 flex gap-2">
           {badge && <Badge className="bg-gold text-primary-foreground border-0">{badge}</Badge>}
           <Badge variant="outline" className="bg-black/40 text-white border-white/20 backdrop-blur">
