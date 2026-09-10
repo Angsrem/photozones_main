@@ -38,7 +38,7 @@ function asString(v: string | string[] | undefined): string | undefined {
 
 const VALID_CATEGORIES = CATEGORIES.map((c) => c.value);
 const VALID_OCCASIONS = OCCASIONS.map((o) => o.value);
-const VALID_SORTS = ['hit', 'new', 'price-asc', 'price-desc'];
+const VALID_SORTS = ['hit', 'new', 'price-asc', 'price-desc', 'rating-desc', 'reviews-desc'];
 
 export default async function CatalogPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
@@ -50,7 +50,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Sear
 
   const safeCategory = category && VALID_CATEGORIES.includes(category) ? category : undefined;
   const safeOccasion = occasion && VALID_OCCASIONS.includes(occasion) ? occasion : undefined;
-  const safeSort = sort && VALID_SORTS.includes(sort) ? (sort as 'hit' | 'new' | 'price-asc' | 'price-desc') : 'hit';
+  const safeSort = sort && VALID_SORTS.includes(sort) ? (sort as 'hit' | 'new' | 'price-asc' | 'price-desc' | 'rating-desc' | 'reviews-desc') : 'hit';
   const safeSearch = search?.trim() || undefined;
 
   const zones = await getPhotozones({

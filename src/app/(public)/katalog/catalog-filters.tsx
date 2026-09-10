@@ -14,13 +14,15 @@ import {
 } from '@/components/ui/select';
 import { CATEGORIES, OCCASIONS } from '@/lib/constants';
 
-type SortValue = 'hit' | 'price-asc' | 'price-desc' | 'new';
+type SortValue = 'hit' | 'price-asc' | 'price-desc' | 'new' | 'rating-desc' | 'reviews-desc';
 
 const SORTS: { value: SortValue; label: string }[] = [
   { value: 'hit', label: 'Сначала хиты' },
-  { value: 'new', label: 'Новинки' },
   { value: 'price-asc', label: 'Цена ↑' },
   { value: 'price-desc', label: 'Цена ↓' },
+  { value: 'rating-desc', label: 'По рейтингу' },
+  { value: 'reviews-desc', label: 'По отзывам' },
+  { value: 'new', label: 'Новинки' },
 ];
 
 export function CatalogFilters({

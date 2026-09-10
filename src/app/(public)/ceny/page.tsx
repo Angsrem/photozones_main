@@ -225,7 +225,7 @@ export default function CenyPage() {
 
         <div className="max-w-3xl">
           <span className="inline-block text-xs font-semibold uppercase tracking-widest text-gold mb-3">
-            Цены · от 8 900 ₽
+            Цены · 8 900 ₽
           </span>
           <h1 className="font-display text-4xl sm:text-5xl leading-tight mb-4">
             Цены на аренду фотозон <span className="text-gradient-gold">в Красноярске</span>

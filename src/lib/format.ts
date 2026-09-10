@@ -6,7 +6,7 @@ export function formatPrice(n: number | null | undefined): string {
 
 export function formatPriceFrom(n: number | null | undefined): string {
   if (n == null) return 'Цена по запросу';
-  return 'от ' + formatPrice(n);
+  return formatPrice(n);
 }
 
 // Маска +7 (XXX) XXX-XX-XX

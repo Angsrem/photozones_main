@@ -5,13 +5,12 @@ export async function getPhotozones(opts: {
   occasion?: string;
   isActive?: boolean;
   search?: string;
-  sort?: 'price-asc' | 'price-desc' | 'new' | 'hit';
+  sort?: 'price-asc' | 'price-desc' | 'new' | 'hit' | 'rating-desc' | 'reviews-desc';
   limit?: number;
 } = {}) {
   const { category, occasion, isActive = true, search, sort = 'hit', limit } = opts;
   const where: any = { isActive };
   if (category) where.category = category;
-  // SQLite не поддерживает string_contains для Json-надёжно → фильтруем occasion в JS
   if (search) where.title = { contains: search };
 
   let orderBy: any = { sortOrder: 'asc' };
@@ -19,6 +18,7 @@ export async function getPhotozones(opts: {
   else if (sort === 'price-desc') orderBy = { basePrice: 'desc' };
   else if (sort === 'new') orderBy = { createdAt: 'desc' };
   else if (sort === 'hit') orderBy = [{ hit: 'desc' }, { sortOrder: 'asc' }];
+  // rating-desc и reviews-desc — сортируем в JS после запроса
 
   let items = await db.photoZone.findMany({
     where,
@@ -29,6 +29,28 @@ export async function getPhotozones(opts: {
   // JS-фильтр по occasion (массив строк в Json)
   if (occasion) {
     items = items.filter((z) => Array.isArray(z.occasions) && (z.occasions as string[]).includes(occasion));
+  }
+
+  // Сортировка по рейтингу и количеству отзывов (JS, т.к. требует агрегации Review)
+  if (sort === 'rating-desc' || sort === 'reviews-desc') {
+    // Получаем агрегацию отзывов для всех фотозон одним запросом
+    const reviewStats = await db.review.groupBy({
+      by: ['photozoneId'],
+      where: { isPublished: true, photozoneId: { in: items.map((z) => z.id) } },
+      _avg: { rating: true },
+      _count: true,
+    });
+    const statsMap = new Map(reviewStats.map((r) => [r.photozoneId, { avg: r._avg.rating || 0, count: r._count }]));
+    items = items.map((z) => ({
+      ...z,
+      _reviewAvg: statsMap.get(z.id)?.avg || 0,
+      _reviewCount: statsMap.get(z.id)?.count || 0,
+    }));
+    if (sort === 'rating-desc') {
+      items.sort((a: any, b: any) => (b._reviewAvg - a._reviewAvg) || (b._reviewCount - a._reviewCount));
+    } else {
+      items.sort((a: any, b: any) => (b._reviewCount - a._reviewCount) || (b._reviewAvg - a._reviewAvg));
+    }
   }
 
   if (limit) items = items.slice(0, limit);
