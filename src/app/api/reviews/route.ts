@@ -60,6 +60,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Если передан photozoneTitle — привязываем отзыв к фотозоне
+    const photozoneTitle = String(formData.get('photozoneTitle') || '').trim();
+    if (photozoneTitle) {
+      const pz = await db.photoZone.findFirst({ where: { title: photozoneTitle }, select: { id: true } });
+      if (pz) {
+        await db.review.update({ where: { id: review.id }, data: { photozoneId: pz.id } });
+      }
+    }
+
     return NextResponse.json({ ok: true, id: review.id }, { status: 201 });
   } catch (e: any) {
     console.error('[POST /api/reviews]', e);

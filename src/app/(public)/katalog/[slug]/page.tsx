@@ -20,7 +20,7 @@ import { JsonLd } from '@/components/seo/json-ld';
 import { PhotozoneGallery } from './gallery';
 import { OptionsWithStickyBar } from './options-with-sticky';
 import type { Option } from './options-selector';
-import { PhotozoneReviews } from '@/components/site/photozone-reviews';
+import { PhotozoneReviewsCarousel } from '@/components/site/photozone-reviews-carousel';
 import { db } from '@/lib/db';
 import { getPhotozoneBySlug, getPhotozoneWithOptions, getPhotozones, getReviewsByPhotozone, asStringArray } from '@/lib/data';
 import { localBusinessLd, productLd, breadcrumbsLd } from '@/lib/seo';
@@ -146,9 +146,10 @@ export default async function PhotozonePage({ params }: { params: Params }) {
         </Breadcrumb>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 lg:gap-10">
-          {/* ГАЛЕРЕЯ */}
+          {/* ГАЛЕРЕЯ + КНОПКА ОТЗЫВОВ */}
           <div>
             <PhotozoneGallery images={images} videos={videos} title={pz.title} />
+            <PhotozoneReviewsCarousel reviews={reviews.map((r) => ({ ...r, publishedAt: r.publishedAt.toISOString() }))} photozoneTitle={pz.title} />
           </div>
 
           {/* ИНФО + ОРДЕР */}
@@ -228,9 +229,6 @@ export default async function PhotozonePage({ params }: { params: Params }) {
             </div>
           </section>
         )}
-
-        {/* ОТЗЫВЫ */}
-        <PhotozoneReviews reviews={reviews.map((r) => ({ ...r, publishedAt: new Date(r.publishedAt) }))} photozoneTitle={pz.title} />
 
         {/* CTA */}
         <section className="mt-14">
