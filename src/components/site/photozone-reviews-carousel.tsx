@@ -64,70 +64,22 @@ export function PhotozoneReviewsCarousel({ reviews, photozoneTitle }: { reviews:
 
   const scroll = (dir: -1 | 1) => {
     if (!scrollRef) return;
-    scrollRef.scrollBy({ left: dir * 340, behavior: 'smooth' });
-  };
-
-  const scrollToReviews = () => {
-    reviewsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    scrollRef.scrollBy({ left: dir * 290, behavior: 'smooth' });
   };
 
   return (
     <div ref={reviewsRef} className="mt-4">
-      {/* Кнопка "Отзывы клиентов" с миниатюрами — прямо под галереей */}
-      <button
-        onClick={scrollToReviews}
-        className="w-full flex items-center gap-3 p-3 rounded-xl border border-border bg-card/50 hover:border-gold/40 hover:bg-card transition-colors group"
-      >
-        {/* Миниатюры фото из отзывов */}
-        <div className="flex -space-x-2">
-          {allMedia.slice(0, 4).map((m, i) => (
-            <div key={i} className="relative w-10 h-10 rounded-lg overflow-hidden border-2 border-background shrink-0">
-              {m.type === 'image' ? (
-                <Image src={m.src} alt="" fill sizes="40px" className="object-cover" />
-              ) : (
-                <>
-                  <video src={m.src} className="w-full h-full object-cover" preload="metadata" muted />
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                    <Play className="w-3 h-3 text-white" />
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-          {allMedia.length === 0 && (
-            <div className="w-10 h-10 rounded-lg border-2 border-background bg-muted flex items-center justify-center shrink-0">
-              <Camera className="w-4 h-4 text-muted-foreground" />
-            </div>
-          )}
-        </div>
-
-        {/* Текст */}
-        <div className="flex-1 text-left min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">Отзывы клиентов</span>
-            <div className="flex gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className={cn('w-3 h-3', i < Math.round(Number(avg)) ? 'fill-gold text-gold' : 'text-muted-foreground/30')} />
-              ))}
-            </div>
-          </div>
-          <div className="text-xs text-muted-foreground">{avg} · {reviews.length} {pluralReviews(reviews.length)}{allMedia.length > 0 && ` · ${allMedia.length} фото/видео`}</div>
-        </div>
-
-        <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-gold transition-colors shrink-0" />
-      </button>
-
       {/* Заголовок секции отзывов */}
-      <div className="flex items-center justify-between mb-4 mt-8">
-        <h2 className="font-display text-xl sm:text-2xl">Отзывы</h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-display text-lg sm:text-xl">Отзывы</h2>
         <div className="flex items-center gap-1.5">
-          <span className="font-display text-lg text-gold">{avg}</span>
+          <span className="font-display text-base text-gold">{avg}</span>
           <div className="flex gap-0.5">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className={cn('w-3.5 h-3.5', i < Math.round(Number(avg)) ? 'fill-gold text-gold' : 'text-muted-foreground/30')} />
+              <Star key={i} className={cn('w-3 h-3', i < Math.round(Number(avg)) ? 'fill-gold text-gold' : 'text-muted-foreground/30')} />
             ))}
           </div>
-          <span className="text-sm text-muted-foreground">· {reviews.length} {pluralReviews(reviews.length)}</span>
+          <span className="text-xs text-muted-foreground">· {reviews.length} {pluralReviews(reviews.length)}</span>
         </div>
       </div>
 
@@ -153,55 +105,43 @@ export function PhotozoneReviewsCarousel({ reviews, photozoneTitle }: { reviews:
               ...videos.map((src) => ({ src, type: 'video' as const })),
             ];
             return (
-              <article key={r.id} className="shrink-0 w-[300px] sm:w-[340px] snap-start rounded-xl border border-border bg-card/50 p-4 flex flex-col">
+              <article key={r.id} className="shrink-0 w-[260px] sm:w-[280px] snap-start rounded-xl border border-border bg-card/50 p-3 flex flex-col">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex gap-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={cn('w-3.5 h-3.5', i < r.rating ? 'fill-gold text-gold' : 'text-muted-foreground/30')} />
+                      <Star key={i} className={cn('w-3 h-3', i < r.rating ? 'fill-gold text-gold' : 'text-muted-foreground/30')} />
                     ))}
                   </div>
-                  {r.event && <Badge variant="outline" className="text-xs">{r.event}</Badge>}
+                  {r.event && <Badge variant="outline" className="text-[10px]">{r.event}</Badge>}
                 </div>
-                <p className="text-sm text-muted-foreground flex-1 leading-relaxed line-clamp-4 mb-3">«{r.text}»</p>
+                <p className="text-xs text-muted-foreground flex-1 leading-relaxed line-clamp-4 mb-2">«{r.text}»</p>
 
-                {/* Медиа в отзыве — увеличенные миниатюры с hover-эффектом */}
+                {/* Медиа — только миниатюры, клик → lightbox */}
                 {reviewMedia.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-3">
+                  <div className="flex flex-wrap gap-1.5 mb-2">
                     {reviewMedia.slice(0, 4).map((m, i) => {
                       const globalIndex = allMedia.findIndex((am) => am.src === m.src && am.reviewId === r.id);
                       return (
                         <motion.button
                           key={i}
                           onClick={() => setLightbox(globalIndex >= 0 ? globalIndex : 0)}
-                          whileHover={{ y: -4, scale: 1.08 }}
+                          whileHover={{ y: -3, scale: 1.1 }}
                           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                          className="relative w-16 h-16 rounded-lg overflow-hidden border border-border shadow-sm cursor-pointer"
+                          className="relative w-14 h-14 rounded-lg overflow-hidden border border-border shadow-sm cursor-pointer"
                         >
                           {m.type === 'image' ? (
-                            <Image src={m.src} alt={`Фото из отзыва ${r.author}`} fill sizes="64px" className="object-cover" />
+                            <Image src={m.src} alt={`Фото из отзыва ${r.author}`} fill sizes="56px" className="object-cover" />
                           ) : (
                             <>
                               <video src={m.src} className="w-full h-full object-cover" preload="metadata" muted />
                               <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                                <Play className="w-4 h-4 text-white" />
+                                <Play className="w-3.5 h-3.5 text-white" />
                               </div>
                             </>
                           )}
                         </motion.button>
                       );
                     })}
-                  </div>
-                )}
-
-                {/* Видео в карточке — пропорциональный размер */}
-                {videos.length > 0 && (
-                  <div className="mb-3">
-                    <video
-                      src={videos[0]}
-                      controls
-                      className="w-full aspect-video rounded-lg border border-border object-cover"
-                      preload="metadata"
-                    />
                   </div>
                 )}
 
