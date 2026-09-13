@@ -1,12 +1,12 @@
 // Prisma schema — аренда фотозон в Красноярске
-// SQLite-провайдер (песочница). Массивы и JSON хранятся как Json (TEXT).
+// PostgreSQL. Json → JSONB (с индексами), даты → нативный DATE.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -35,7 +35,7 @@ model PhotoZone {
   description String
   category    String   // FRAME | PRESSWALL | TEXTILE | THEME
   occasions   Json     // string[]: WEDDING, BIRTHDAY, GRADUATION, CORPORATE, NEW_YEAR, MARCH_8, FEB_23
-  basePrice   Int      // рублей, "от"
+  basePrice   Int      // рублей
   sizeW       Float?   // ширина, м
   sizeH       Float?   // высота, м
   images      Json     // string[] (URL)
@@ -89,7 +89,7 @@ model Lead {
 
   name        String
   phone       String
-  eventDate   String   // желаемая дата (ISO yyyy-mm-dd) — строка для SQLite-совместимости
+  eventDate   DateTime @db.Date  // желаемая дата (Postgres нативный DATE)
   occasion    String?  // повод
   comment     String?
 
@@ -134,7 +134,7 @@ model Booking {
   photozone   PhotoZone? @relation(fields: [photozoneId], references: [id], onDelete: Cascade)
   elementIds  Json?    // string[] — id элементов (читаем вручную, relation на Json не поддерживается)
 
-  date        String   // ISO yyyy-mm-dd
+  date        DateTime @db.Date  // Postgres нативный DATE
   status      String   @default("RESERVED") // RESERVED | DONE | CANCELED
   note        String?
 
@@ -147,7 +147,7 @@ model Booking {
 model DateBlock {
   id          String   @id @default(cuid())
   createdAt   DateTime @default(now())
-  date        String   // ISO yyyy-mm-dd
+  date        DateTime @db.Date  // Postgres нативный DATE
   photozoneId String?
   photozone   PhotoZone? @relation(fields: [photozoneId], references: [id], onDelete: Cascade)
   managerId   String?
@@ -254,7 +254,7 @@ model Article {
 
 // ===== Редактируемые страницы (контентные блоки) =====
 // slug = ключ страницы (например "home", "ceny", "svadby-hero")
-// blocks = JSON-массив блоков: [{type:'heading', text, level}, {type:'paragraph', text}, {type:'list', items}, {type:'image', src, alt}, {type:'cta', text, href}, {type:'quote', text, author}, {type:'faq', items:[{q,a}]}]
+// blocks = JSON-массив блоков: [{type:'heading', text, level}, {type:'paragraph', text}, ...]
 model Page {
   id          String   @id @default(cuid())
   slug        String   @unique
@@ -278,4 +278,3 @@ model QuizPartial {
   converted   Boolean  @default(false) // дошёл ли до результата
   sessionId   String?  // если дошёл — id QuizSession
 }
-
