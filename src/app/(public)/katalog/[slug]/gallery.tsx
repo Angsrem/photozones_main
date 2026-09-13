@@ -57,9 +57,9 @@ export function PhotozoneGallery({
   }, [lightbox, media.length]);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 w-full min-w-0">
       {/* Основное медиа */}
-      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border bg-card group">
+      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border bg-card group w-full max-w-full">
         <AnimatePresence mode="wait">
           {current.type === 'image' ? (
             <motion.div

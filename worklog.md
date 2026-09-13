@@ -992,3 +992,25 @@ Stage Summary:
 - Карточки отзывов компактные (280px десктоп, 260px мобайл)
 - Карусель с горизонтальным скроллом — на мобильном свайп, на десктопе стрелки
 - Видео только миниатюрами (56px), клик → lightbox
+
+---
+Task ID: ORCHESTRATOR-23 (адаптивная вёрстка, фикс overflow)
+Agent: main (Z.ai Code)
+
+Work Log:
+- Проблема: на 1024px галерея занимала 1156px → overflow 480px. Карточка фотозоны вылезала за экран.
+- Корень: grid lg:grid-cols-[1.2fr_1fr] активировался на 1024px, но контент не помещался. Нет overflow-x-hidden. Нет min-w-0 на grid-children.
+
+ФИКСЫ:
+1. Public layout: + overflow-x-hidden на корневом div
+2. Карточка фотозоны: + overflow-x-hidden на контейнере
+3. Grid children: + min-w-0 (галерея и сайдбар) — предотвращает расширение grid-children
+4. Галерея: + w-full max-w-full min-w-0 на контейнерах
+
+Self-verify (agent-browser):
+- 1024px: scrollWidth=1024 (было 1504!), overflow=false ✓
+- 375px: scrollWidth=375, overflow=false ✓
+- Галерея на 375px: 343px (помещается) ✓
+- Карточки отзывов: 260px, fits=true ✓
+- Все ключевые страницы на 375px: OK (/ /katalog /katalog/love /svadby /ceny /otzyvy /kviz) ✓
+- lint: 0 ошибок

@@ -5,7 +5,7 @@ import { StickyCta } from '@/components/site/sticky-cta';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col bg-grain">
+    <div className="min-h-screen flex flex-col bg-grain overflow-x-hidden">
       <SiteHeader />
       <main className="flex-1 pb-20 sm:pb-0">{children}</main>
       <SiteFooter />

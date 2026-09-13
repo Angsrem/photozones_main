@@ -123,7 +123,7 @@ export default async function PhotozonePage({ params }: { params: Params }) {
         ]}
       />
 
-      <div className="container mx-auto max-w-7xl px-4 pt-6 pb-10">
+      <div className="container mx-auto max-w-7xl px-4 pt-6 pb-10 overflow-x-hidden">
         {/* ХЛЕБНЫЕ КРОШКИ */}
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
@@ -146,14 +146,14 @@ export default async function PhotozonePage({ params }: { params: Params }) {
         </Breadcrumb>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 lg:gap-10">
-          {/* ГАЛЕРЕЯ + КНОПКА ОТЗЫВОВ */}
-          <div>
+          {/* ГАЛЕРЕЯ + ОТЗЫВЫ */}
+          <div className="min-w-0">
             <PhotozoneGallery images={images} videos={videos} title={pz.title} />
             <PhotozoneReviewsCarousel reviews={reviews.map((r) => ({ ...r, publishedAt: r.publishedAt.toISOString() }))} photozoneTitle={pz.title} />
           </div>
 
           {/* ИНФО + ОРДЕР */}
-          <div className="lg:sticky lg:top-6 lg:self-start space-y-5">
+          <div className="lg:sticky lg:top-6 lg:self-start space-y-5 min-w-0">
             <div>
               <div className="flex flex-wrap gap-2 mb-3">
                 {badge && (
