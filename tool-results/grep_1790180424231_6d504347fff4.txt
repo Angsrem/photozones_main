@@ -1,0 +1,252 @@
+/home/z/my-project/src/hooks/use-mobile.ts:9:    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+/home/z/my-project/src/lib/seo.ts:10:    '@id': `${SITE.url}/#business`,
+/home/z/my-project/src/lib/seo.ts:14:    image: `${SITE.url}/images/hero.jpg`,
+/home/z/my-project/src/lib/seo.ts:15:    logo: `${SITE.url}/favicon.svg`,
+/home/z/my-project/src/lib/seo.ts:36:      ...SITE.districts.map((d) => ({ '@type': 'AdministrativeArea', name: `${d} район Красноярска` })),
+/home/z/my-project/src/lib/seo.ts:40:      `https://wa.me/${SITE.whatsapp}`,
+/home/z/my-project/src/lib/seo.ts:41:      `https://t.me/${SITE.telegram}`,
+/home/z/my-project/src/lib/seo.ts:56:    image: (p.images ?? []).map((i) => (i.startsWith('http') ? i : `${SITE.url}${i}`)),
+/home/z/my-project/src/lib/seo.ts:63:      url: `${SITE.url}/katalog/${p.slug}`,
+/home/z/my-project/src/lib/seo.ts:89:      item: `${SITE.url}${it.url}`,
+/home/z/my-project/src/lib/seo.ts:139:    image: a.cover ? (a.cover.startsWith('http') ? a.cover : `${SITE.url}${a.cover}`) : `${SITE.url}/images/hero.jpg`,
+/home/z/my-project/src/lib/seo.ts:146:      logo: { '@type': 'ImageObject', url: `${SITE.url}/favicon.svg` },
+/home/z/my-project/src/lib/seo.ts:148:    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE.url}/blog/${a.slug}` },
+/home/z/my-project/src/lib/seo.ts:167:      ...SITE.districts.map((d) => ({ '@type': 'AdministrativeArea', name: `${d} район` })),
+/home/z/my-project/src/lib/seo.ts:170:    url: `${SITE.url}/${opts.slug}`,
+/home/z/my-project/src/lib/seo.ts:182:    url: `${SITE.url}${opts.url}`,
+/home/z/my-project/src/lib/seo.ts:194:    url: `${SITE.url}${opts.url}`,
+/home/z/my-project/src/lib/metadata.ts:20:      url: `${SITE.url}${opts.path}`,
+/home/z/my-project/src/lib/metadata.ts:38:    title: `${opts.title} — аренда в Красноярске`,
+/home/z/my-project/src/lib/metadata.ts:41:      `${opts.title} Красноярск`,
+/home/z/my-project/src/lib/metadata.ts:42:      `аренда ${opts.title.toLowerCase()}`,
+/home/z/my-project/src/lib/metadata.ts:43:      `фотозона ${opts.title.toLowerCase()}`,
+/home/z/my-project/src/lib/metadata.ts:46:    alternates: { canonical: `/katalog/${opts.slug}` },
+/home/z/my-project/src/lib/metadata.ts:48:      title: `${opts.title} — аренда от ${opts.price.toLocaleString('ru-RU')} ₽ | ФотоЗона24`,
+/home/z/my-project/src/lib/metadata.ts:50:      url: `${SITE.url}/katalog/${opts.slug}`,
+/home/z/my-project/src/lib/notify.ts:30:    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+/home/z/my-project/src/lib/notify.ts:49:  const from = process.env.RESEND_FROM || `ФотоЗона24 <noreply@${SITE.url.replace('https://', '')}>`;
+/home/z/my-project/src/lib/notify.ts:58:        Authorization: `Bearer ${apiKey}`,
+/home/z/my-project/src/lib/notify.ts:102:  const adminUrl = `${SITE.url}/admin/leads`;
+/home/z/my-project/src/lib/notify.ts:107:    `👤 Имя: <b>${escapeHtml(data.name)}</b>`,
+/home/z/my-project/src/lib/notify.ts:108:    `📞 Телефон: <code>${escapeHtml(data.phone)}</code>`,
+/home/z/my-project/src/lib/notify.ts:109:    `📅 Желаемая дата: <b>${escapeHtml(data.eventDate)}</b>`,
+/home/z/my-project/src/lib/notify.ts:111:  if (occasionLabel) lines.push(`🎉 Повод: ${escapeHtml(occasionLabel)}`);
+/home/z/my-project/src/lib/notify.ts:112:  if (data.photozoneTitle) lines.push(`🖼 Фотозона: ${escapeHtml(data.photozoneTitle)}`);
+/home/z/my-project/src/lib/notify.ts:113:  if (data.priceEstimate) lines.push(`💰 Ориентировочно: <b>${data.priceEstimate.toLocaleString('ru-RU')} ₽</b>`);
+/home/z/my-project/src/lib/notify.ts:114:  if (data.comment) lines.push(`💬 Комментарий: <i>${escapeHtml(data.comment)}</i>`);
+/home/z/my-project/src/lib/notify.ts:115:  if (data.source) lines.push(`📍 Источник: <code>${escapeHtml(data.source)}</code>`);
+/home/z/my-project/src/lib/notify.ts:116:  lines.push('', `⚡ Перезвонить за <b>${SITE.workTimeMin} минут</b>!`);
+/home/z/my-project/src/lib/notify.ts:122:        { text: '📞 Позвонить', url: `tel:+${digits}` },
+/home/z/my-project/src/lib/notify.ts:123:        { text: '💬 WhatsApp', url: `https://wa.me/${digits}` },
+/home/z/my-project/src/lib/notify.ts:136:    `🔔 Новая заявка: ${data.name} — ${data.eventDate}`,
+/home/z/my-project/src/lib/notify.ts:137:    `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;background:#faf7f2;padding:24px;border-radius:12px">
+/home/z/my-project/src/lib/notify.ts:143:          <tr><td style="color:#888;padding:4px 0;width:120px">Имя:</td><td style="font-weight:600">${escapeHtml(data.name)}</td></tr>
+/home/z/my-project/src/lib/notify.ts:144:          <tr><td style="color:#888;padding:4px 0">Телефон:</td><td><a href="tel:+${digits}" style="color:#b8860b;font-weight:600">${escapeHtml(data.phone)}</a></td></tr>
+/home/z/my-project/src/lib/notify.ts:145:          <tr><td style="color:#888;padding:4px 0">Дата:</td><td><b>${escapeHtml(data.eventDate)}</b></td></tr>
+/home/z/my-project/src/lib/notify.ts:146:          ${occasionLabel ? `<tr><td style="color:#888;padding:4px 0">Повод:</td><td>${escapeHtml(occasionLabel)}</td></tr>` : ''}
+/home/z/my-project/src/lib/notify.ts:147:          ${data.photozoneTitle ? `<tr><td style="color:#888;padding:4px 0">Фотозона:</td><td>${escapeHtml(data.photozoneTitle)}</td></tr>` : ''}
+/home/z/my-project/src/lib/notify.ts:148:          ${data.priceEstimate ? `<tr><td style="color:#888;padding:4px 0">Ориентировочно:</td><td><b>${data.priceEstimate.toLocaleString('ru-RU')} ₽</b></td></tr>` : ''}
+/home/z/my-project/src/lib/notify.ts:149:          ${data.comment ? `<tr><td style="color:#888;padding:4px 0;vertical-align:top">Комментарий:</td><td>${escapeHtml(data.comment)}</td></tr>` : ''}
+/home/z/my-project/src/lib/notify.ts:150:          <tr><td style="color:#888;padding:4px 0">Источник:</td><td><code>${escapeHtml(data.source || '—')}</code></td></tr>
+/home/z/my-project/src/lib/notify.ts:153:          ⚡ Перезвонить за ${SITE.workTimeMin} минут
+/home/z/my-project/src/lib/notify.ts:156:          <a href="tel:+${digits}" style="display:inline-block;padding:10px 20px;background:#b8860b;color:#fff;text-decoration:none;border-radius:6px;margin:0 4px">📞 Позвонить</a>
+/home/z/my-project/src/lib/notify.ts:157:          <a href="https://wa.me/${digits}" style="display:inline-block;padding:10px 20px;background:#25d366;color:#fff;text-decoration:none;border-radius:6px;margin:0 4px">💬 WhatsApp</a>
+/home/z/my-project/src/lib/notify.ts:158:          <a href="${adminUrl}" style="display:inline-block;padding:10px 20px;background:#1a1428;color:#fff;text-decoration:none;border-radius:6px;margin:0 4px">📋 В админку</a>
+/home/z/my-project/src/lib/notify.ts:161:    </div>`
+/home/z/my-project/src/lib/notify.ts:172:      chatId: process.env.TELEGRAM_MANAGER_CHAT_ID ? `…${process.env.TELEGRAM_MANAGER_CHAT_ID.slice(-4)}` : null,
+/home/z/my-project/src/lib/auth.ts:12:  return `scrypt$${salt}$${hash}`;
+/home/z/my-project/src/lib/auth.ts:40:  return `${body}.${sig}`;
+/home/z/my-project/src/lib/promo-codes.ts:11:  return `FOTO-${code}`;
+/home/z/my-project/src/lib/promo-codes.ts:22:  return `FOTO-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
+/home/z/my-project/src/lib/promo-codes.ts:70:      return `Привет, ${data.name}! Как всё прошло? 🎉\n\nКак фотозона${data.photozoneTitle ? ` «${data.photozoneTitle}»` : ''}, гости оценили?\n\nС маленьким бонусом: оставите отзыв на Яндекс Картах и скинете пару живых фото с праздника — подарим промокод на 5% для следующего заказа. Можно оставить себе или передать другу, действует год.\n\nСсылка на отзыв: ${data.reviewLink || 'https://yandex.ru/maps/org/fotozona24'}\n\nЕсли что-то не понравилось — напишите прямо сюда, разберёмся без отзыва.`;
+/home/z/my-project/src/lib/promo-codes.ts:73:      return `${data.name}, добрый день! Не хочу доставать, просто напомню про бонус за отзыв — промокод 5% уже ждёт 😊 Одна минута: ${data.reviewLink || 'https://yandex.ru/maps/org/fotozona24'}\n\nИ фото с праздника, если есть — с удовольствием добавим в портфолио (можно без лиц).`;
+/home/z/my-project/src/lib/promo-codes.ts:76:      return `${data.name}, спасибо за отзыв — очень приятно! 🙏\n\nВаш промокод: ${data.code}\nСкидка 5% на любой следующий заказ до ${data.expiresAt}.\nЗаказать можно у нас на сайте или просто написав мне сюда — код я приму сам.\n\nP.S. Если друзьям понравилась фотозона — можете подарить им этот код. Скажут спасибо 😊`;
+/home/z/my-project/src/lib/promo-codes.ts:79:      return `${data.name}, фото супер, спасибо! Уже смотрю, как попасть в портфолио 📸\n\nДля промокода остался отзыв: ${data.reviewLink || 'https://yandex.ru/maps/org/fotozona24'} — минута, и код ваш.`;
+/home/z/my-project/src/lib/promo-codes.ts:82:      return `${data.name}, спасибо, что написали честно — это важно.\n\nРасскажите, что именно не так? Мы вернём деньги за фотозону или переделаем концепцию к вашей следующей съёмке — как вам удобнее.`;
+/home/z/my-project/src/lib/promo-codes.ts:85:      return `Привет, ${data.name}! ${data.childName || 'Вашему ребёнку'} скоро ${data.childAge || 'день рождения'}, да? 🎂 Время летит.\n\nУ вас ещё действует промокод ${data.code} на 5% — если планируете фотозону на день рождения, лучше забронировать заранее: перед летом близнецы-юбилеи разбирают популярные темы.\n\nВот здесь можно посмотреть, что есть: ${data.catalogLink || 'https://fotozona24.ru/katalog'}`;
+/home/z/my-project/src/components/site/cta-band.tsx:39:            <a href={`tel:${SITE.phoneRaw}`}>
+/home/z/my-project/src/components/site/site-footer.tsx:23:              <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noopener noreferrer"
+/home/z/my-project/src/components/site/site-footer.tsx:27:              <a href={`https://t.me/${SITE.telegram}`} target="_blank" rel="noopener noreferrer"
+/home/z/my-project/src/components/site/site-footer.tsx:31:              <a href={`tel:${SITE.phoneRaw}`} aria-label="Позвонить"
+/home/z/my-project/src/components/site/site-footer.tsx:72:                <a href={`tel:${SITE.phoneRaw}`} className="hover:text-gold transition-colors">{SITE.phone}</a>
+/home/z/my-project/src/components/site/site-footer.tsx:76:                <a href={`mailto:${SITE.email}`} className="hover:text-gold transition-colors">{SITE.email}</a>
+/home/z/my-project/src/components/site/photozone-card.tsx:66:      <Link href={`/katalog/${pz.slug}`} className="relative block aspect-[4/3] overflow-hidden" aria-label={pz.title}>
+/home/z/my-project/src/components/site/photozone-card.tsx:73:          className={`object-cover transition-transform duration-700 ${hasVideo ? '' : 'group-hover:scale-110'}`}
+/home/z/my-project/src/components/site/photozone-card.tsx:122:              sourcePage: `/katalog/${pz.slug}`,
+/home/z/my-project/src/components/site/photozone-card.tsx:129:            <Link href={`/katalog/${pz.slug}`} aria-label={`Подробнее: ${pz.title}`}>
+/home/z/my-project/src/components/site/photozone-card.tsx:147:    <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 ${className}`}>
+/home/z/my-project/src/components/site/photozone-card.tsx:162:    <div className={`mb-8 ${center ? 'text-center mx-auto max-w-2xl' : ''}`}>
+/home/z/my-project/src/components/site/sticky-cta.tsx:30:      <div className={`fixed right-4 z-30 flex flex-col gap-2 ${isPhotozoneCard ? 'bottom-[88px] sm:bottom-6' : 'bottom-[88px] sm:bottom-6'}`}>
+/home/z/my-project/src/components/site/sticky-cta.tsx:31:        <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noopener noreferrer"
+/home/z/my-project/src/components/site/sticky-cta.tsx:36:        <a href={`tel:${SITE.phoneRaw}`} aria-label="Позвонить"
+/home/z/my-project/src/components/site/sticky-cta.tsx:46:          <a href={`tel:${SITE.phoneRaw}`} aria-label="Позвонить"
+/home/z/my-project/src/components/site/review-form.tsx:133:              aria-label={`${n} звёзд`}
+/home/z/my-project/src/components/site/review-form.tsx:136:              <Star className={`w-7 h-7 transition-colors ${n <= rating ? 'fill-gold text-gold' : 'text-muted-foreground/40 hover:text-gold/50'}`} />
+/home/z/my-project/src/components/site/quiz-button.tsx:34:  const href = occ ? `/kviz?occasion=${occ}&source=${pathname || '/'}` : '/kviz';
+/home/z/my-project/src/components/site/quiz-button.tsx:48:  const href = occ ? `/kviz?occasion=${occ}&source=${pathname || '/'}` : '/kviz';
+/home/z/my-project/src/components/site/transparent-pricing.tsx:22:    <div className={`space-y-4 ${className}`}>
+/home/z/my-project/src/components/site/transparent-pricing.tsx:146:    <div className={`rounded-2xl border border-border overflow-hidden ${className}`}>
+/home/z/my-project/src/components/site/transparent-pricing.tsx:155:        <div key={i} className={`grid grid-cols-3 border-b border-border/50 ${i % 2 ? 'bg-card/20' : ''}`}>
+/home/z/my-project/src/components/site/faq-accordion.tsx:7:        <AccordionItem key={i} value={`item-${i}`}>
+/home/z/my-project/src/components/site/page-blocks.tsx:12:      const Tag = (`h${block.level || 2}`) as any;
+/home/z/my-project/src/components/site/site-header.tsx:50:              href={`tel:${SITE.phoneRaw}`}
+/home/z/my-project/src/components/site/site-header.tsx:90:                  <a href={`tel:${SITE.phoneRaw}`} className="flex items-center gap-2 px-3 py-2 text-base">
+/home/z/my-project/src/components/site/site-header.tsx:95:                      <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noopener noreferrer">
+/home/z/my-project/src/components/site/site-header.tsx:100:                      <a href={`https://t.me/${SITE.telegram}`} target="_blank" rel="noopener noreferrer">
+/home/z/my-project/src/components/site/photozone-reviews.tsx:57:                    <img src={src} alt={`Фото от ${r.author}`} className="w-full h-full object-cover" loading="lazy" />
+/home/z/my-project/src/components/site/quick-order-modal.tsx:201:                      <p className={`text-xs ${promoStatus.valid ? 'text-emerald-400' : 'text-coral'}`}>
+/home/z/my-project/src/components/site/quick-order-modal.tsx:203:                          ? `✓ Промокод принят: скидка ${promoStatus.discountPct}%`
+/home/z/my-project/src/components/site/quick-order-modal.tsx:204:                          : `✗ ${promoStatus.reason}`}
+/home/z/my-project/src/components/site/photozone-reviews-carousel.tsx:133:                            <Image src={m.src} alt={`Фото из отзыва ${r.author}`} fill sizes="56px" className="object-cover" />
+/home/z/my-project/src/components/ui/chart.tsx:50:  const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
+/home/z/my-project/src/components/ui/chart.tsx:86:            ([theme, prefix]) => `
+/home/z/my-project/src/components/ui/chart.tsx:87:${prefix} [data-chart=${id}] {
+/home/z/my-project/src/components/ui/chart.tsx:88:${colorConfig
+/home/z/my-project/src/components/ui/chart.tsx:93:    return color ? `  --color-${key}: ${color};` : null
+/home/z/my-project/src/components/ui/chart.tsx:97:`
+/home/z/my-project/src/components/ui/chart.tsx:137:    const key = `${labelKey || item?.dataKey || item?.name || "value"}`
+/home/z/my-project/src/components/ui/chart.tsx:183:          const key = `${nameKey || item.name || item.dataKey || "value"}`
+/home/z/my-project/src/components/ui/chart.tsx:279:        const key = `${nameKey || item.dataKey || "value"}`
+/home/z/my-project/src/components/ui/form.tsx:61:    formItemId: `${id}-form-item`,
+/home/z/my-project/src/components/ui/form.tsx:62:    formDescriptionId: `${id}-form-item-description`,
+/home/z/my-project/src/components/ui/form.tsx:63:    formMessageId: `${id}-form-item-message`,
+/home/z/my-project/src/components/ui/form.tsx:116:          ? `${formDescriptionId}`
+/home/z/my-project/src/components/ui/form.tsx:117:          : `${formDescriptionId} ${formMessageId}`
+/home/z/my-project/src/components/ui/sidebar.tsx:86:      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+/home/z/my-project/src/components/ui/sidebar.tsx:611:    return `${Math.floor(Math.random() * 40) + 50}%`
+/home/z/my-project/src/components/ui/calendar.tsx:33:        String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
+/home/z/my-project/src/components/ui/calendar.tsx:34:        String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
+/home/z/my-project/src/components/ui/progress.tsx:25:        style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+/home/z/my-project/src/app/robots.ts:23:    sitemap: `${SITE.url}/sitemap.xml`,
+/home/z/my-project/src/app/api/reviews/route.ts:18:  if (!allowed.includes(file.type)) throw new Error(`Недопустимый формат ${type}: ${file.type}`);
+/home/z/my-project/src/app/api/reviews/route.ts:19:  if (file.size > maxSize) throw new Error(`Файл слишком большой (макс ${maxSize / 1024 / 1024}МБ)`);
+/home/z/my-project/src/app/api/reviews/route.ts:23:  const name = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
+/home/z/my-project/src/app/api/reviews/route.ts:26:  return `/uploads/reviews/${name}`;
+/home/z/my-project/src/app/api/photozones/route.ts:7:  const { searchParams } = new URL(req.url);
+/home/z/my-project/src/app/api/quiz/[id]/route.ts:70:        comment: `Квиз. Канал: ${channel || '—'}. Рекомендации: ${ids.join(', ')}`,
+/home/z/my-project/src/app/api/quiz/[id]/route.ts:72:        sourcePage: `/podborka/${id}`,
+/home/z/my-project/src/app/api/admin/bookings/route.ts:44:  const { searchParams } = new URL(req.url);
+/home/z/my-project/src/app/api/admin/calendar/route.ts:13:  const { searchParams } = new URL(req.url);
+/home/z/my-project/src/app/api/admin/leads/route.ts:18:  const { searchParams } = new URL(req.url);
+/home/z/my-project/src/app/api/admin/leads/[id]/promo-codes/route.ts:22:  const waBase = `https://wa.me/${(lead.phone || '').replace(/\D/g, '').replace(/^8/, '7').replace(/^/, '7').slice(0, 11)}`;
+/home/z/my-project/src/app/api/admin/leads/[id]/promo-codes/route.ts:39:    waLink: `${waBase}?text=${encodeURIComponent(waTemplate('code_issued', {
+/home/z/my-project/src/app/api/admin/leads/[id]/promo-codes/route.ts:43:    }))}`,
+/home/z/my-project/src/app/api/quiz-partial/route.ts:35:  const { searchParams } = new URL(req.url);
+/home/z/my-project/src/app/admin/pages/page.tsx:97:      await api(`/api/admin/pages/${deleteId}`, { method: 'DELETE' });
+/home/z/my-project/src/app/admin/pages/page.tsx:266:    toast.success(`Добавлен блок: ${BLOCK_TYPES.find((x) => x.type === type)?.label}`);
+/home/z/my-project/src/app/admin/pages/page.tsx:287:      await api(`/api/admin/pages/${page.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+/home/z/my-project/src/app/admin/pages/page.tsx:522:    const Tag = (`h${block.level || 2}`) as any;
+/home/z/my-project/src/app/admin/reviews/page.tsx:50:      await api(`/api/admin/reviews/${id}`, { method: 'PATCH', body: JSON.stringify({ isPublished: publish }) });
+/home/z/my-project/src/app/admin/reviews/page.tsx:61:      await api(`/api/admin/reviews/${deleteId}`, { method: 'DELETE' });
+/home/z/my-project/src/app/admin/reviews/page.tsx:123:                              <Star key={i} className={`w-3.5 h-3.5 ${i < r.rating ? 'fill-gold text-gold' : 'text-muted-foreground/30'}`} />
+/home/z/my-project/src/app/admin/photozones/page.tsx:130:            <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} /> Обновить
+/home/z/my-project/src/app/admin/photozones/page.tsx:324:                  await api(`/api/admin/photozones/${deleteTarget.id}`, { method: 'DELETE' });
+/home/z/my-project/src/app/admin/photozones/page.tsx:481:        await api(`/api/admin/photozones/${photozone.id}`, {
+/home/z/my-project/src/app/admin/photozones/page.tsx:629:                  className={`flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer text-sm transition-colors ${
+/home/z/my-project/src/app/admin/photozones/page.tsx:633:                  }`}
+/home/z/my-project/src/app/admin/layout.tsx:118:            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+/home/z/my-project/src/app/admin/layout.tsx:122:            }`}
+/home/z/my-project/src/app/admin/page.tsx:147:        <KpiCard title="Подтверждены" value={confirmedCount} icon={<CheckCircle2 className="size-5" />} tint="bg-emerald-100 text-emerald-700" hint={`Выполнено: ${doneCount}`} />
+/home/z/my-project/src/app/admin/page.tsx:148:        <KpiCard title="Конверсия" value={`${stats.conversion}%`} icon={<Percent className="size-5" />} tint="bg-violet-100 text-violet-700" hint="подтв. + выполнено / всего" />
+/home/z/my-project/src/app/admin/page.tsx:171:            <div className={`rounded-lg border p-3 ${notifyStatus?.telegram.configured ? 'border-emerald-300 bg-emerald-50' : 'border-amber-300 bg-amber-50'}`}>
+/home/z/my-project/src/app/admin/page.tsx:181:                  ? `Уведомления идут в чат …${notifyStatus?.telegram.chatId}`
+/home/z/my-project/src/app/admin/page.tsx:186:            <div className={`rounded-lg border p-3 ${notifyStatus?.email.configured ? 'border-emerald-300 bg-emerald-50' : 'border-amber-300 bg-amber-50'}`}>
+/home/z/my-project/src/app/admin/page.tsx:195:                {notifyStatus?.email.configured ? `Дублирование на ${notifyStatus?.email.to}` : 'Добавьте RESEND_API_KEY в .env'}
+/home/z/my-project/src/app/admin/page.tsx:271:                      className={`h-full ${STATUS_BAR_COLORS[b.status]} transition-all`}
+/home/z/my-project/src/app/admin/page.tsx:272:                      style={{ width: `${(b.value / maxBar) * 100}%` }}
+/home/z/my-project/src/app/admin/page.tsx:297:                  <div className="h-full bg-primary" style={{ width: `${(s.count / maxSource) * 100}%` }} />
+/home/z/my-project/src/app/admin/page.tsx:323:                  <div className="h-full bg-primary" style={{ width: `${(p.count / maxPhotozone) * 100}%` }} />
+/home/z/my-project/src/app/admin/page.tsx:352:                  <Badge variant="outline" className={`shrink-0 ${LEAD_STATUS_STYLES[r.status as LeadStatus] || ''}`}>
+/home/z/my-project/src/app/admin/page.tsx:383:          <div className={`flex size-10 items-center justify-center rounded-lg ${tint}`}>{icon}</div>
+/home/z/my-project/src/app/layout.tsx:66:    <html lang="ru" suppressHydrationWarning className={`${inter.variable} ${unbounded.variable}`}>
+/home/z/my-project/src/app/sitemap.ts:30:    url: `${base}${r.path}`,
+/home/z/my-project/src/app/sitemap.ts:43:      url: `${base}/katalog/${z.slug}`,
+/home/z/my-project/src/app/sitemap.ts:57:      url: `${base}/blog/${a.slug}`,
+/home/z/my-project/src/app/admin/calendar/page.tsx:69:  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+/home/z/my-project/src/app/admin/calendar/page.tsx:134:      const ym = `${year}-${pad(month + 1)}`;
+/home/z/my-project/src/app/admin/calendar/page.tsx:135:      const data = await api<MonthData>(`/api/admin/calendar?month=${ym}`);
+/home/z/my-project/src/app/admin/calendar/page.tsx:286:                    key={`${c.date}-${idx}`}
+/home/z/my-project/src/app/admin/calendar/page.tsx:288:                    className={`calendar-cell relative text-left rounded-md border p-1.5 sm:p-2 transition-colors ${
+/home/z/my-project/src/app/admin/calendar/page.tsx:290:                    } ${
+/home/z/my-project/src/app/admin/calendar/page.tsx:292:                    } hover:border-primary/60 hover:bg-accent/30`}
+/home/z/my-project/src/app/admin/calendar/page.tsx:296:                        className={`text-sm font-medium ${
+/home/z/my-project/src/app/admin/calendar/page.tsx:298:                        } ${isWeekend && c.inMonth ? 'text-rose-600' : ''}`}
+/home/z/my-project/src/app/admin/calendar/page.tsx:324:                            className={`size-1.5 rounded-full shrink-0 ${pzColor(
+/home/z/my-project/src/app/admin/calendar/page.tsx:326:                            )}`}
+/home/z/my-project/src/app/admin/calendar/page.tsx:411:        `/api/admin/calendar?date=${date}`
+/home/z/my-project/src/app/admin/calendar/page.tsx:444:          `/api/admin/calendar?date=${date}&alternativesFor=${alternativesFor}`
+/home/z/my-project/src/app/admin/calendar/page.tsx:461:      await api(`/api/admin/bookings?id=${id}&type=block`, { method: 'DELETE' });
+/home/z/my-project/src/app/admin/calendar/page.tsx:473:      await api(`/api/admin/bookings?id=${id}&type=booking`, { method: 'DELETE' });
+/home/z/my-project/src/app/admin/calendar/page.tsx:551:                          className={`size-2.5 rounded-full shrink-0 ${pzColor(
+/home/z/my-project/src/app/admin/calendar/page.tsx:553:                          )}`}
+/home/z/my-project/src/app/admin/calendar/page.tsx:560:                            {b.lead ? `Клиент: ${b.lead.name} · ${b.lead.phone}` : b.note || 'без лида'}
+/home/z/my-project/src/app/admin/calendar/page.tsx:671:                          className={`text-xs ${LEAD_STATUS_STYLES[l.status as LeadStatus]}`}
+/home/z/my-project/src/app/admin/calendar/page.tsx:682:                            href={waLink(l.phone, `Здравствуйте, ${l.name}!`)}
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:162:              sourcePage: sessionId ? `/podborka/${sessionId}` : '/kviz',
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:295:    const url = `${window.location.origin}/podborka/${result.sessionId}`;
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:311:      await fetch(`/api/quiz/${result.sessionId}`, {
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:327:    ? `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(`Здравствуйте! Хочу фотозону «${result.recommended[0].title}» (подборка с сайта ФотоЗона24)`)}` : `https://wa.me/${SITE.whatsapp}`;
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:340:                <motion.div className="h-full bg-gold" animate={{ width: `${progressPct}%` }} transition={{ duration: 0.3 }} />
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:414:              <QuestionHeader eyebrow={`Шаг ${answers.occasion === 'BIRTHDAY' ? 3 : 2} из ${totalSteps}`} title="Какая атмосфера ближе?" icon={Sparkles} />
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:430:              <QuestionHeader eyebrow={`Шаг ${answers.occasion === 'BIRTHDAY' ? 4 : 3} из ${totalSteps}`} title="Сколько примерно гостей?" icon={Users} />
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:448:              <QuestionHeader eyebrow={`Шаг ${answers.occasion === 'BIRTHDAY' ? 5 : 4} из ${totalSteps}`} title="Какой бюджет на фотозону?" icon={Wallet} />
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:463:              <QuestionHeader eyebrow={`Шаг ${totalSteps} из ${totalSteps}`} title="На какую дату планируете?" icon={Calendar} />
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:487:                  {answers.guests && ` · ${GUESTS.find((g) => g.value === answers.guests)?.label}`}
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:488:                  {answers.style && ` · ${styles.find((s) => s.value === answers.style)?.label}`}
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:489:                  {answers.budget && answers.budget !== 'unknown' && ` · ${BUDGETS.find((b) => b.value === answers.budget)?.label}`}
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:537:                    <a href={`https://t.me/${SITE.telegram}`} target="_blank" rel="noopener noreferrer">
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:584:      className={`flex items-center gap-3 p-4 rounded-xl border-2 text-left transition-all min-h-[64px] ${
+/home/z/my-project/src/app/(public)/kviz/quiz-wizard.tsx:586:      }`}
+/home/z/my-project/src/app/admin/promo/page.tsx:65:      await api(`/api/admin/promos/${deleteId}`, { method: 'DELETE' });
+/home/z/my-project/src/app/admin/promo/page.tsx:209:        await api(`/api/admin/promos/${promo.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+/home/z/my-project/src/app/(public)/kalkulyator/calculator-wizard.tsx:441:              htmlFor={`addon-${a.value}`}
+/home/z/my-project/src/app/(public)/kalkulyator/calculator-wizard.tsx:447:              <Checkbox id={`addon-${a.value}`} checked={checked} onCheckedChange={() => onToggleAddon(a.value)} />
+/home/z/my-project/src/app/(public)/kalkulyator/calculator-wizard.tsx:577:          <BreakdownRow label={`Повод: ${occasionLabel}`} />
+/home/z/my-project/src/app/(public)/kalkulyator/calculator-wizard.tsx:578:          <BreakdownRow label={`Стиль: ${styleLabel}`} value={breakdown.styleModifier} />
+/home/z/my-project/src/app/(public)/kalkulyator/calculator-wizard.tsx:580:            <BreakdownRow label={`Основа: ${baseOpt.label} (${baseOpt.desc})`} value={breakdown.basePrice} />
+/home/z/my-project/src/app/(public)/kalkulyator/calculator-wizard.tsx:583:            <BreakdownRow key={a.value} label={`Доп.: ${a.label}`} value={a.price} />
+/home/z/my-project/src/app/(public)/kalkulyator/calculator-wizard.tsx:588:          {date && <BreakdownRow label={`Дата: ${date}`} />}
+/home/z/my-project/src/app/(public)/kalkulyator/calculator-wizard.tsx:589:          {address && <BreakdownRow label={`Адрес: ${address}`} />}
+/home/z/my-project/src/app/(public)/kalkulyator/calculator-wizard.tsx:622:          {value === 0 ? 'включено' : `+${formatPrice(value)}`}
+/home/z/my-project/src/app/(public)/kalkulyator/page.tsx:77:          <a href={`tel:${SITE.phoneRaw}`}><Phone className="w-4 h-4 mr-2" /> {SITE.phone}</a>
+/home/z/my-project/src/app/(public)/blog/[slug]/page.tsx:42:    alternates: { canonical: `/blog/${article.slug}` },
+/home/z/my-project/src/app/(public)/blog/[slug]/page.tsx:64:  const coverUrlAbsolute = coverUrl.startsWith('http') ? coverUrl : `${SITE.url}${coverUrl}`;
+/home/z/my-project/src/app/(public)/blog/[slug]/page.tsx:83:              logo: { '@type': 'ImageObject', url: `${SITE.url}/images/hero.jpg` },
+/home/z/my-project/src/app/(public)/blog/[slug]/page.tsx:85:            mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE.url}/blog/${article.slug}` },
+/home/z/my-project/src/app/(public)/blog/[slug]/page.tsx:90:            { name: article.title, url: `/blog/${article.slug}` },
+/home/z/my-project/src/app/(public)/blog/[slug]/page.tsx:159:          prefill={{ source: 'blog-article-cta', sourcePage: `/blog/${article.slug}` }}
+/home/z/my-project/src/app/(public)/blog/page.tsx:67:                  <Link href={`/blog/${a.slug}`} className="relative block aspect-[16/10] overflow-hidden" aria-label={a.title}>
+/home/z/my-project/src/app/(public)/blog/page.tsx:90:                      <Link href={`/blog/${a.slug}`} className="hover:text-gold transition-colors">
+/home/z/my-project/src/app/(public)/blog/page.tsx:106:                        <Link href={`/blog/${a.slug}`}>
+/home/z/my-project/src/app/admin/leads/lead-promo-codes.tsx:44:      const data = await api<{ promoCodes: PromoCode[]; templates: Templates; waBase: string }>(`/api/admin/leads/${leadId}/promo-codes`);
+/home/z/my-project/src/app/admin/leads/lead-promo-codes.tsx:65:      toast.success(`Промокод выдан: ${res.code}`);
+/home/z/my-project/src/app/admin/leads/lead-promo-codes.tsx:82:    return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+/home/z/my-project/src/app/admin/leads/lead-promo-codes.tsx:110:                {pc.usedAt && ` · использован ${new Date(pc.usedAt).toLocaleDateString('ru-RU')}`}
+/home/z/my-project/src/app/admin/leads/lead-promo-codes.tsx:152:                  className={`px-2 py-1 rounded text-xs ${activeTemplate === key ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+/home/z/my-project/src/app/admin/leads/page.tsx:103:      const data = await api<{ items: Lead[] }>(`/api/admin/leads?${params.toString()}`);
+/home/z/my-project/src/app/admin/leads/page.tsx:131:          <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} /> Обновить
+/home/z/my-project/src/app/admin/leads/page.tsx:293:          api<Lead>(`/api/admin/leads/${leadId}`),
+/home/z/my-project/src/app/admin/leads/page.tsx:353:            {lead ? `ID: ${lead.id}` : 'Загрузка…'}
+/home/z/my-project/src/app/admin/leads/page.tsx:399:                          `Здравствуйте, ${leadName}! Пишу по поводу аренды фотозоны на ${formatDateRu(
+/home/z/my-project/src/app/admin/leads/page.tsx:401:                          )}.`
+/home/z/my-project/src/app/(public)/qr/qr-landing.tsx:92:              <a href={`https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(`Здравствуйте! Отсканировал QR-код, хочу фотозону со скидкой по промокоду ${PROMO_CODE}`)}`} target="_blank" rel="noopener noreferrer">
+/home/z/my-project/src/app/(public)/qr/qr-landing.tsx:97:              <a href={`tel:${SITE.phoneRaw}`}><Phone className="w-4 h-4 mr-2" /> Позвонить</a>
+/home/z/my-project/src/app/admin/_lib.ts:82:    const err = new Error((data && (data.error || data.message)) || `HTTP ${res.status}`) as any;
+/home/z/my-project/src/app/admin/_lib.ts:100:  const t = text ? `?text=${encodeURIComponent(text)}` : '';
+/home/z/my-project/src/app/admin/_lib.ts:101:  return `https://wa.me/${d}${t}`;
+/home/z/my-project/src/app/admin/_lib.ts:105:  return `tel:+${phoneDigits(phone)}`;
+/home/z/my-project/src/app/(public)/podborka/[id]/podborka-client.tsx:41:      await navigator.clipboard.writeText(`${window.location.origin}/podborka/${session.id}`);
+/home/z/my-project/src/app/(public)/podborka/[id]/podborka-client.tsx:54:      await fetch(`/api/quiz/${session.id}`, {
+/home/z/my-project/src/app/(public)/podborka/[id]/podborka-client.tsx:69:    ? `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(`Здравствуйте! Хочу фотозону «${zones[0].title}» (подборка с сайта ФотоЗона24)`)}` : `https://wa.me/${SITE.whatsapp}`;
+/home/z/my-project/src/app/(public)/podborka/[id]/podborka-client.tsx:123:                    sourcePage: `/podborka/${session.id}`,
+/home/z/my-project/src/app/(public)/podborka/[id]/podborka-client.tsx:154:            <a href={`https://t.me/${SITE.telegram}`} target="_blank" rel="noopener noreferrer"><Send className="w-4 h-4 mr-1.5" /> Telegram</a>
+/home/z/my-project/src/app/(public)/podborka/[id]/page.tsx:37:      <JsonLd data={[localBusinessLd(), breadcrumbsLd([{ name: 'Главная', url: '/' }, { name: 'Подборка', url: `/podborka/${id}` }])]} />
+/home/z/my-project/src/app/(public)/otzyvy/page.tsx:74:                  className={`w-5 h-5 ${i < Math.round(avg) ? 'fill-gold text-gold' : 'text-muted-foreground/40'}`}
+/home/z/my-project/src/app/(public)/otzyvy/page.tsx:93:                      <div className="h-full bg-gold" style={{ width: `${pct}%` }} />
+/home/z/my-project/src/app/(public)/otzyvy/page.tsx:127:                      className={`w-4 h-4 ${i < r.rating ? 'fill-gold text-gold' : 'text-muted-foreground/40'}`}
+/home/z/my-project/src/app/(public)/otzyvy/page.tsx:139:                        <img src={src} alt={`Фото от ${r.author}`} className="w-full h-full object-cover" loading="lazy" />
+/home/z/my-project/src/app/(public)/konstruktor/page.tsx:143:              <a href={`tel:${SITE.phoneRaw}`}><Phone className="w-4 h-4 mr-2" /> {SITE.phone}</a>
+/home/z/my-project/src/app/(public)/spasibo/page.tsx:59:            <a href={`tel:${SITE.phoneRaw}`}>
+/home/z/my-project/src/app/(public)/spasibo/page.tsx:64:            <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noopener noreferrer">
+
+[Showing results with pagination = limit: 250]

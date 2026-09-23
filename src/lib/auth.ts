@@ -1,9 +1,23 @@
 import { scryptSync, randomBytes, timingSafeEqual, createHmac } from 'crypto';
 import { cookies } from 'next/headers';
 
-const SECRET = process.env.ADMIN_JWT_SECRET || 'dev-secret-change-me-fotozona24-krsk';
+// В production секрет обязательно задаётся через env и должен быть >= 32 символов.
+// В dev/sandbox допускается fallback, чтобы локальная разработка не падала.
+function resolveSecret(): string {
+  const raw =
+    process.env.ADMIN_JWT_SECRET ||
+    (process.env.NODE_ENV === 'production'
+      ? null
+      : 'dev-secret-fotozona24-krsk-sandbox-fallback-32-chars-min');
+  if (!raw || raw.length < 32) {
+    throw new Error('ADMIN_JWT_SECRET must be set and be at least 32 chars long');
+  }
+  return raw;
+}
+const SECRET: string = resolveSecret();
+
 const COOKIE_NAME = 'fz_admin_token';
-const TOKEN_TTL = 60 * 60 * 24 * 7; // 7 дней
+const TOKEN_TTL = 60 * 60 * 24; // 1 день
 
 // ===== Хэширование паролей (scrypt) =====
 export function hashPassword(plain: string): string {
@@ -67,7 +81,7 @@ export async function setSessionCookie(payload: Omit<TokenPayload, 'exp'>) {
   const store = await cookies();
   store.set(COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: 'strict',
     secure: process.env.NODE_ENV === 'production',
     path: '/',
     maxAge: TOKEN_TTL,

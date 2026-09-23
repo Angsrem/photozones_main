@@ -1,0 +1,795 @@
+     1→'use client';
+     2→
+     3→import * as React from 'react';
+     4→import { toast } from 'sonner';
+     5→import {
+     6→  Plus,
+     7→  Loader2,
+     8→  RefreshCw,
+     9→  Trash2,
+    10→  Pencil,
+    11→  Star,
+    12→  Search,
+    13→  ImageOff,
+    14→  Save,
+    15→  X,
+    16→  GripVertical,
+    17→} from 'lucide-react';
+    18→import { Card, CardContent } from '@/components/ui/card';
+    19→import { Button } from '@/components/ui/button';
+    20→import { Input } from '@/components/ui/input';
+    21→import { Label } from '@/components/ui/label';
+    22→import { Textarea } from '@/components/ui/textarea';
+    23→import { Badge } from '@/components/ui/badge';
+    24→import { Switch } from '@/components/ui/switch';
+    25→import { Checkbox } from '@/components/ui/checkbox';
+    26→import {
+    27→  Table,
+    28→  TableBody,
+    29→  TableCell,
+    30→  TableHead,
+    31→  TableHeader,
+    32→  TableRow,
+    33→} from '@/components/ui/table';
+    34→import {
+    35→  Dialog,
+    36→  DialogContent,
+    37→  DialogDescription,
+    38→  DialogFooter,
+    39→  DialogHeader,
+    40→  DialogTitle,
+    41→} from '@/components/ui/dialog';
+    42→import {
+    43→  AlertDialog,
+    44→  AlertDialogAction,
+    45→  AlertDialogCancel,
+    46→  AlertDialogContent,
+    47→  AlertDialogDescription,
+    48→  AlertDialogFooter,
+    49→  AlertDialogHeader,
+    50→  AlertDialogTitle,
+    51→} from '@/components/ui/alert-dialog';
+    52→import {
+    53→  Select,
+    54→  SelectContent,
+    55→  SelectItem,
+    56→  SelectTrigger,
+    57→  SelectValue,
+    58→} from '@/components/ui/select';
+    59→import {
+    60→  api,
+    61→  type PhotoZone,
+    62→  type Category,
+    63→  CATEGORY_LABEL,
+    64→} from '../_lib';
+    65→import { OCCASIONS, CATEGORIES } from '@/lib/constants';
+    66→import { formatPrice } from '@/lib/format';
+    67→
+    68→const BADGES = [
+    69→  { value: '', label: 'Нет' },
+    70→  { value: 'HIT', label: 'HIT — хит' },
+    71→  { value: 'NEW', label: 'NEW — новинка' },
+    72→];
+    73→
+    74→function slugify(s: string) {
+    75→  return (s || '')
+    76→    .toLowerCase()
+    77→    .replace(/[^a-z0-9а-я]+/gi, '-')
+    78→    .replace(/^-+|-+$/g, '')
+    79→    .slice(0, 80);
+    80→}
+    81→
+    82→export default function AdminPhotozonesPage() {
+    83→  const [items, setItems] = React.useState<PhotoZone[]>([]);
+    84→  const [loading, setLoading] = React.useState(false);
+    85→  const [err, setErr] = React.useState<string | null>(null);
+    86→  const [q, setQ] = React.useState('');
+    87→  const [editing, setEditing] = React.useState<PhotoZone | null>(null);
+    88→  const [creating, setCreating] = React.useState(false);
+    89→  const [deleteTarget, setDeleteTarget] = React.useState<PhotoZone | null>(null);
+    90→
+    91→  const load = React.useCallback(async () => {
+    92→    setLoading(true);
+    93→    setErr(null);
+    94→    try {
+    95→      const data = await api<{ items: PhotoZone[] }>('/api/admin/photozones');
+    96→      setItems(data.items || []);
+    97→    } catch (e: any) {
+    98→      setErr(e?.message || 'Не удалось загрузить фотозоны');
+    99→    } finally {
+   100→      setLoading(false);
+   101→    }
+   102→  }, []);
+   103→
+   104→  React.useEffect(() => {
+   105→    load();
+   106→  }, [load]);
+   107→
+   108→  const filtered = React.useMemo(() => {
+   109→    if (!q) return items;
+   110→    const ql = q.toLowerCase();
+   111→    return items.filter(
+   112→      (i) =>
+   113→        i.title.toLowerCase().includes(ql) ||
+   114→        i.slug.toLowerCase().includes(ql) ||
+   115→        i.category.toLowerCase().includes(ql)
+   116→    );
+   117→  }, [items, q]);
+   118→
+   119→  return (
+   120→    <div className="space-y-5">
+   121→      <div className="flex items-end justify-between gap-3 flex-wrap">
+   122→        <div>
+   123→          <h1 className="font-display text-2xl font-semibold">Фотозоны</h1>
+   124→          <p className="text-sm text-muted-foreground">
+   125→            Управление каталогом · всего {items.length}
+   126→          </p>
+   127→        </div>
+   128→        <div className="flex items-center gap-2">
+   129→          <Button variant="outline" size="sm" onClick={load} disabled={loading} className="gap-2">
+   130→            <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} /> Обновить
+   131→          </Button>
+   132→          <Button size="sm" onClick={() => setCreating(true)} className="gap-1.5">
+   133→            <Plus className="size-4" /> Добавить
+   134→          </Button>
+   135→        </div>
+   136→      </div>
+   137→
+   138→      <Card>
+   139→        <CardContent className="p-3">
+   140→          <div className="relative max-w-md">
+   141→            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+   142→            <Input
+   143→              placeholder="Поиск по названию, slug, категории…"
+   144→              className="pl-8"
+   145→              value={q}
+   146→              onChange={(e) => setQ(e.target.value)}
+   147→            />
+   148→          </div>
+   149→        </CardContent>
+   150→      </Card>
+   151→
+   152→      <Card>
+   153→        <CardContent className="p-0">
+   154→          {err && (
+   155→            <div className="p-6 text-sm text-destructive text-center">
+   156→              {err}
+   157→              <div className="mt-2">
+   158→                <Button variant="outline" size="sm" onClick={load}>Повторить</Button>
+   159→              </div>
+   160→            </div>
+   161→          )}
+   162→          {!err && loading && (
+   163→            <div className="p-12 flex items-center justify-center text-muted-foreground">
+   164→              <Loader2 className="size-5 mr-2 animate-spin text-primary" /> Загрузка…
+   165→            </div>
+   166→          )}
+   167→          {!err && !loading && (
+   168→            <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
+   169→              <Table>
+   170→                <TableHeader className="sticky top-0 bg-card z-10">
+   171→                  <TableRow>
+   172→                    <TableHead className="w-16">Превью</TableHead>
+   173→                    <TableHead>Название</TableHead>
+   174→                    <TableHead className="w-32">Категория</TableHead>
+   175→                    <TableHead className="w-28">Цена</TableHead>
+   176→                    <TableHead className="w-24">Бейдж</TableHead>
+   177→                    <TableHead className="w-20">Хит</TableHead>
+   178→                    <TableHead className="w-20">Статус</TableHead>
+   179→                    <TableHead className="w-20">Элементов</TableHead>
+   180→                    <TableHead className="w-24 text-right">Действия</TableHead>
+   181→                  </TableRow>
+   182→                </TableHeader>
+   183→                <TableBody>
+   184→                  {filtered.length === 0 && (
+   185→                    <TableRow>
+   186→                      <TableCell colSpan={9} className="text-center text-sm text-muted-foreground py-10">
+   187→                        Ничего не найдено
+   188→                      </TableCell>
+   189→                    </TableRow>
+   190→                  )}
+   191→                  {filtered.map((p) => (
+   192→                    <TableRow key={p.id} className="hover:bg-accent/50">
+   193→                      <TableCell>
+   194→                        {p.images?.[0] ? (
+   195→                          <img
+   196→                            src={p.images[0]}
+   197→                            alt={p.title}
+   198→                            className="size-10 rounded-md object-cover border"
+   199→                          />
+   200→                        ) : (
+   201→                          <div className="size-10 rounded-md bg-muted flex items-center justify-center text-muted-foreground">
+   202→                            <ImageOff className="size-4" />
+   203→                          </div>
+   204→                        )}
+   205→                      </TableCell>
+   206→                      <TableCell>
+   207→                        <button
+   208→                          onClick={() => setEditing(p)}
+   209→                          className="text-left font-medium hover:text-primary"
+   210→                        >
+   211→                          {p.title}
+   212→                        </button>
+   213→                        <div className="text-xs text-muted-foreground font-mono">{p.slug}</div>
+   214→                      </TableCell>
+   215→                      <TableCell>
+   216→                        <Badge variant="outline" className="text-xs">
+   217→                          {CATEGORY_LABEL[p.category as Category] || p.category}
+   218→                        </Badge>
+   219→                      </TableCell>
+   220→                      <TableCell className="text-sm">{formatPrice(p.basePrice)}</TableCell>
+   221→                      <TableCell>
+   222→                        {p.badge ? (
+   223→                          <Badge
+   224→                            variant="secondary"
+   225→                            className={
+   226→                              p.badge === 'HIT'
+   227→                                ? 'bg-amber-100 text-amber-800'
+   228→                                : 'bg-emerald-100 text-emerald-800'
+   229→                            }
+   230→                          >
+   231→                            {p.badge}
+   232→                          </Badge>
+   233→                        ) : (
+   234→                          <span className="text-xs text-muted-foreground">—</span>
+   235→                        )}
+   236→                      </TableCell>
+   237→                      <TableCell>
+   238→                        {p.hit ? (
+   239→                          <Star className="size-4 fill-amber-400 text-amber-500" />
+   240→                        ) : (
+   241→                          <span className="text-xs text-muted-foreground">—</span>
+   242→                        )}
+   243→                      </TableCell>
+   244→                      <TableCell>
+   245→                        <Badge
+   246→                          variant="outline"
+   247→                          className={
+   248→                            p.isActive
+   249→                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+   250→                              : 'bg-muted text-muted-foreground'
+   251→                          }
+   252→                        >
+   253→                          {p.isActive ? 'активна' : 'скрыта'}
+   254→                        </Badge>
+   255→                      </TableCell>
+   256→                      <TableCell className="text-sm text-muted-foreground">
+   257→                        {p._count?.elements ?? '—'}
+   258→                      </TableCell>
+   259→                      <TableCell className="text-right">
+   260→                        <div className="flex justify-end gap-1">
+   261→                          <Button
+   262→                            size="icon"
+   263→                            variant="ghost"
+   264→                            className="size-8"
+   265→                            onClick={() => setEditing(p)}
+   266→                            title="Редактировать"
+   267→                          >
+   268→                            <Pencil className="size-3.5" />
+   269→                          </Button>
+   270→                          <Button
+   271→                            size="icon"
+   272→                            variant="ghost"
+   273→                            className="size-8 text-muted-foreground hover:text-destructive"
+   274→                            onClick={() => setDeleteTarget(p)}
+   275→                            title="Удалить"
+   276→                          >
+   277→                            <Trash2 className="size-3.5" />
+   278→                          </Button>
+   279→                        </div>
+   280→                      </TableCell>
+   281→                    </TableRow>
+   282→                  ))}
+   283→                </TableBody>
+   284→              </Table>
+   285→            </div>
+   286→          )}
+   287→        </CardContent>
+   288→      </Card>
+   289→
+   290→      {(editing || creating) && (
+   291→        <PhotozoneEditor
+   292→          photozone={editing}
+   293→          onClose={() => {
+   294→            setEditing(null);
+   295→            setCreating(false);
+   296→          }}
+   297→          onSaved={() => {
+   298→            setEditing(null);
+   299→            setCreating(false);
+   300→            load();
+   301→          }}
+   302→        />
+   303→      )}
+   304→
+   305→      <AlertDialog
+   306→        open={!!deleteTarget}
+   307→        onOpenChange={(o) => !o && setDeleteTarget(null)}
+   308→      >
+   309→        <AlertDialogContent>
+   310→          <AlertDialogHeader>
+   311→            <AlertDialogTitle>Удалить фотозону?</AlertDialogTitle>
+   312→            <AlertDialogDescription>
+   313→              Фотозона «{deleteTarget?.title}» будет удалена без возможности восстановления.
+   314→              Связанные заявки сохранятся, но потеряют ссылку на фотозону.
+   315→            </AlertDialogDescription>
+   316→          </AlertDialogHeader>
+   317→          <AlertDialogFooter>
+   318→            <AlertDialogCancel>Отмена</AlertDialogCancel>
+   319→            <AlertDialogAction
+   320→              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+   321→              onClick={async () => {
+   322→                if (!deleteTarget) return;
+   323→                try {
+   324→                  await api(`/api/admin/photozones/${deleteTarget.id}`, { method: 'DELETE' });
+   325→                  toast.success('Фотозона удалена');
+   326→                  load();
+   327→                } catch (e: any) {
+   328→                  toast.error(e?.message || 'Ошибка удаления');
+   329→                } finally {
+   330→                  setDeleteTarget(null);
+   331→                }
+   332→              }}
+   333→            >
+   334→              Удалить
+   335→            </AlertDialogAction>
+   336→          </AlertDialogFooter>
+   337→        </AlertDialogContent>
+   338→      </AlertDialog>
+   339→    </div>
+   340→  );
+   341→}
+   342→
+   343→// ============ Редактор фотозоны ============
+   344→type Element = { id?: string; name: string; price: number };
+   345→
+   346→function PhotozoneEditor({
+   347→  photozone,
+   348→  onClose,
+   349→  onSaved,
+   350→}: {
+   351→  photozone: PhotoZone | null;
+   352→  onClose: () => void;
+   353→  onSaved: () => void;
+   354→}) {
+   355→  const isEdit = !!photozone;
+   356→  const [title, setTitle] = React.useState(photozone?.title || '');
+   357→  const [slug, setSlug] = React.useState(photozone?.slug || '');
+   358→  const [slugTouched, setSlugTouched] = React.useState(!!photozone?.slug);
+   359→  const [description, setDescription] = React.useState(photozone?.description || '');
+   360→  const [category, setCategory] = React.useState<Category>(
+   361→    (photozone?.category as Category) || 'FRAME'
+   362→  );
+   363→  const [occasions, setOccasions] = React.useState<string[]>(
+   364→    (photozone?.occasions as string[]) || []
+   365→  );
+   366→  const [basePrice, setBasePrice] = React.useState<string>(
+   367→    photozone?.basePrice != null ? String(photozone.basePrice) : ''
+   368→  );
+   369→  const [sizeW, setSizeW] = React.useState<string>(
+   370→    photozone?.sizeW != null ? String(photozone.sizeW) : ''
+   371→  );
+   372→  const [sizeH, setSizeH] = React.useState<string>(
+   373→    photozone?.sizeH != null ? String(photozone.sizeH) : ''
+   374→  );
+   375→  const [imagesText, setImagesText] = React.useState<string>(
+   376→    Array.isArray(photozone?.images) ? (photozone!.images as string[]).join('\n') : ''
+   377→  );
+   378→  const [videosText, setVideosText] = React.useState<string>(
+   379→    Array.isArray(photozone?.videos) ? (photozone!.videos as string[]).join('\n') : ''
+   380→  );
+   381→  const [includesText, setIncludesText] = React.useState<string>(
+   382→    Array.isArray(photozone?.includes) ? (photozone!.includes as string[]).join('\n') : ''
+   383→  );
+   384→  const [badge, setBadge] = React.useState<string>(photozone?.badge || '');
+   385→  const [hit, setHit] = React.useState<boolean>(!!photozone?.hit);
+   386→  const [sortOrder, setSortOrder] = React.useState<string>(
+   387→    String(photozone?.sortOrder ?? 100)
+   388→  );
+   389→  const [isActive, setIsActive] = React.useState<boolean>(
+   390→    photozone?.isActive !== false
+   391→  );
+   392→  const [elements, setElements] = React.useState<Element[]>(
+   393→    (photozone?.elements as any) || []
+   394→  );
+   395→  const [newElName, setNewElName] = React.useState('');
+   396→  const [newElPrice, setNewElPrice] = React.useState('');
+   397→  const [newElCategory, setNewElCategory] = React.useState('decor');
+   398→  const [newElImage, setNewElImage] = React.useState('');
+   399→  const [newElDesc, setNewElDesc] = React.useState('');
+   400→  const [saving, setSaving] = React.useState(false);
+   401→
+   402→  // автоген slug
+   403→  React.useEffect(() => {
+   404→    if (!slugTouched) {
+   405→      setSlug(slugify(title));
+   406→    }
+   407→  }, [title, slugTouched]);
+   408→
+   409→  const toggleOccasion = (val: string) => {
+   410→    setOccasions((prev) =>
+   411→      prev.includes(val) ? prev.filter((o) => o !== val) : [...prev, val]
+   412→    );
+   413→  };
+   414→
+   415→  const addElement = () => {
+   416→    if (!newElName.trim()) return;
+   417→    setElements((prev) => [
+   418→      ...prev,
+   419→      {
+   420→        name: newElName.trim(),
+   421→        price: Number(newElPrice) || 0,
+   422→        category: newElCategory,
+   423→        image: newElImage.trim() || null,
+   424→        description: newElDesc.trim() || null,
+   425→      } as any,
+   426→    ]);
+   427→    setNewElName('');
+   428→    setNewElPrice('');
+   429→    setNewElCategory('decor');
+   430→    setNewElImage('');
+   431→    setNewElDesc('');
+   432→  };
+   433→
+   434→  const removeElement = (idx: number) => {
+   435→    setElements((prev) => prev.filter((_, i) => i !== idx));
+   436→  };
+   437→
+   438→  const save = async () => {
+   439→    if (!title || !slug || !category || basePrice === '') {
+   440→      toast.error('Заполните название, slug, категорию и цену');
+   441→      return;
+   442→    }
+   443→    const payload: any = {
+   444→      title: title.trim(),
+   445→      slug: slug.trim(),
+   446→      description: description.trim(),
+   447→      category,
+   448→      occasions,
+   449→      basePrice: Number(basePrice),
+   450→      sizeW: sizeW ? Number(sizeW) : null,
+   451→      sizeH: sizeH ? Number(sizeH) : null,
+   452→      images: imagesText
+   453→        .split('\n')
+   454→        .map((s) => s.trim())
+   455→        .filter(Boolean),
+   456→      videos: videosText
+   457→        .split('\n')
+   458→        .map((s) => s.trim())
+   459→        .filter(Boolean),
+   460→      includes: includesText
+   461→        .split('\n')
+   462→        .map((s) => s.trim())
+   463→        .filter(Boolean),
+   464→      badge: badge || null,
+   465→      hit,
+   466→      sortOrder: Number(sortOrder) || 100,
+   467→      isActive,
+   468→      elements: elements.map((e) => ({
+   469→        id: (e as any).id,
+   470→        name: e.name,
+   471→        price: Number(e.price) || 0,
+   472→        isActive: (e as any).isActive !== false,
+   473→        category: (e as any).category || 'decor',
+   474→        image: (e as any).image || null,
+   475→        description: (e as any).description || null,
+   476→      })),
+   477→    };
+   478→    setSaving(true);
+   479→    try {
+   480→      if (isEdit && photozone) {
+   481→        await api(`/api/admin/photozones/${photozone.id}`, {
+   482→          method: 'PATCH',
+   483→          body: JSON.stringify(payload),
+   484→        });
+   485→        toast.success('Фотозона обновлена');
+   486→      } else {
+   487→        await api('/api/admin/photozones', {
+   488→          method: 'POST',
+   489→          body: JSON.stringify(payload),
+   490→        });
+   491→        toast.success('Фотозона создана');
+   492→      }
+   493→      onSaved();
+   494→    } catch (e: any) {
+   495→      if (e?.status === 409) toast.error('Slug уже занят');
+   496→      else toast.error(e?.message || 'Не удалось сохранить');
+   497→    } finally {
+   498→      setSaving(false);
+   499→    }
+   500→  };
+   501→
+   502→  return (
+   503→    <Dialog open onOpenChange={(o) => !o && onClose()}>
+   504→      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
+   505→        <DialogHeader>
+   506→          <DialogTitle>
+   507→            {isEdit ? 'Редактирование фотозоны' : 'Новая фотозона'}
+   508→          </DialogTitle>
+   509→          <DialogDescription>
+   510→            Поля со звёздочкой — обязательные. Slug генерируется автоматически из названия.
+   511→          </DialogDescription>
+   512→        </DialogHeader>
+   513→
+   514→        <div className="space-y-4">
+   515→          {/* Основное */}
+   516→          <div className="grid sm:grid-cols-2 gap-3">
+   517→            <div className="space-y-1.5">
+   518→              <Label>Название *</Label>
+   519→              <Input
+   520→                value={title}
+   521→                onChange={(e) => setTitle(e.target.value)}
+   522→                placeholder="Например, Love-инсталляция"
+   523→              />
+   524→            </div>
+   525→            <div className="space-y-1.5">
+   526→              <Label>Slug *</Label>
+   527→              <Input
+   528→                value={slug}
+   529→                onChange={(e) => {
+   530→                  setSlug(e.target.value);
+   531→                  setSlugTouched(true);
+   532→                }}
+   533→                placeholder="love-installyaciya"
+   534→                className="font-mono text-sm"
+   535→              />
+   536→            </div>
+   537→          </div>
+   538→
+   539→          <div className="space-y-1.5">
+   540→            <Label>Описание</Label>
+   541→            <Textarea
+   542→              rows={3}
+   543→              value={description}
+   544→              onChange={(e) => setDescription(e.target.value)}
+   545→              placeholder="Короткое описание для карточки и страницы фотозоны"
+   546→            />
+   547→          </div>
+   548→
+   549→          <div className="grid sm:grid-cols-3 gap-3">
+   550→            <div className="space-y-1.5">
+   551→              <Label>Категория *</Label>
+   552→              <Select value={category} onValueChange={(v) => setCategory(v as Category)}>
+   553→                <SelectTrigger className="w-full">
+   554→                  <SelectValue />
+   555→                </SelectTrigger>
+   556→                <SelectContent>
+   557→                  {CATEGORIES.map((c) => (
+   558→                    <SelectItem key={c.value} value={c.value}>
+   559→                      {c.label}
+   560→                    </SelectItem>
+   561→                  ))}
+   562→                </SelectContent>
+   563→              </Select>
+   564→            </div>
+   565→            <div className="space-y-1.5">
+   566→              <Label>Цена (от), ₽ *</Label>
+   567→              <Input
+   568→                type="number"
+   569→                value={basePrice}
+   570→                onChange={(e) => setBasePrice(e.target.value)}
+   571→                placeholder="12000"
+   572→              />
+   573→            </div>
+   574→            <div className="space-y-1.5">
+   575→              <Label>Бейдж</Label>
+   576→              <Select value={badge} onValueChange={setBadge}>
+   577→                <SelectTrigger className="w-full">
+   578→                  <SelectValue />
+   579→                </SelectTrigger>
+   580→                <SelectContent>
+   581→                  {BADGES.map((b) => (
+   582→                    <SelectItem key={b.value || 'none'} value={b.value || 'none'}>
+   583→                      {b.label}
+   584→                    </SelectItem>
+   585→                  ))}
+   586→                </SelectContent>
+   587→              </Select>
+   588→            </div>
+   589→          </div>
+   590→
+   591→          <div className="grid sm:grid-cols-3 gap-3">
+   592→            <div className="space-y-1.5">
+   593→              <Label>Ширина, м</Label>
+   594→              <Input
+   595→                type="number"
+   596→                step="0.1"
+   597→                value={sizeW}
+   598→                onChange={(e) => setSizeW(e.target.value)}
+   599→                placeholder="3"
+   600→              />
+   601→            </div>
+   602→            <div className="space-y-1.5">
+   603→              <Label>Высота, м</Label>
+   604→              <Input
+   605→                type="number"
+   606→                step="0.1"
+   607→                value={sizeH}
+   608→                onChange={(e) => setSizeH(e.target.value)}
+   609→                placeholder="2.2"
+   610→              />
+   611→            </div>
+   612→            <div className="space-y-1.5">
+   613→              <Label>Порядок сортировки</Label>
+   614→              <Input
+   615→                type="number"
+   616→                value={sortOrder}
+   617→                onChange={(e) => setSortOrder(e.target.value)}
+   618→              />
+   619→            </div>
+   620→          </div>
+   621→
+   622→          {/* Поводы */}
+   623→          <div className="space-y-1.5">
+   624→            <Label>Поводы</Label>
+   625→            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+   626→              {OCCASIONS.map((o) => (
+   627→                <label
+   628→                  key={o.value}
+   629→                  className={`flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer text-sm transition-colors ${
+   630→                    occasions.includes(o.value)
+   631→                      ? 'bg-primary/10 border-primary/40'
+   632→                      : 'hover:bg-accent'
+   633→                  }`}
+   634→                >
+   635→                  <Checkbox
+   636→                    checked={occasions.includes(o.value)}
+   637→                    onCheckedChange={() => toggleOccasion(o.value)}
+   638→                  />
+   639→                  <span>{o.label}</span>
+   640→                </label>
+   641→              ))}
+   642→            </div>
+   643→          </div>
+   644→
+   645→          {/* Изображения */}
+   646→          <div className="space-y-1.5">
+   647→            <Label>Изображения (URL, по одному в строке)</Label>
+   648→            <Textarea
+   649→              rows={3}
+   650→              value={imagesText}
+   651→              onChange={(e) => setImagesText(e.target.value)}
+   652→              placeholder="/images/photozones/love.jpg"
+   653→              className="font-mono text-xs"
+   654→            />
+   655→            <div className="text-xs text-muted-foreground">
+   656→              Первое изображение — основное (превью в каталоге)
+   657→            </div>
+   658→          </div>
+   659→
+   660→          {/* Видео */}
+   661→          <div className="space-y-1.5">
+   662→            <Label>Видео (URL, по одному в строке) — необязательно</Label>
+   663→            <Textarea
+   664→              rows={2}
+   665→              value={videosText}
+   666→              onChange={(e) => setVideosText(e.target.value)}
+   667→              placeholder="/videos/love.mp4"
+   668→              className="font-mono text-xs"
+   669→            />
+   670→            <div className="text-xs text-muted-foreground">
+   671→              Видео автоплеем без звука при наведении в каталоге и карточке. Несколько видео — ротация каждые 4 сек.
+   672→            </div>
+   673→          </div>
+   674→
+   675→          {/* Что входит */}
+   676→          <div className="space-y-1.5">
+   677→            <Label>Что входит (по строке)</Label>
+   678→            <Textarea
+   679→              rows={3}
+   680→              value={includesText}
+   681→              onChange={(e) => setIncludesText(e.target.value)}
+   682→              placeholder={"Доставка по городу\nМонтаж и демонтаж\nАренда 24 часа"}
+   683→            />
+   684→          </div>
+   685→
+   686→          {/* Элементы / опции */}
+   687→          <div className="space-y-2">
+   688→            <Label>Дополнительные опции (буквы, декор, освещение, реквизит)</Label>
+   689→            <p className="text-xs text-muted-foreground">Опции с категорией «Освещение» можно сделать глобальными (доступны всем фотозонам) — оставьте category=lighting. Опции группируются в карточке фотозоны по category.</p>
+   690→            <div className="rounded-md border divide-y">
+   691→              {elements.length === 0 && (
+   692→                <div className="p-3 text-xs text-muted-foreground">Пока нет опций</div>
+   693→              )}
+   694→              {elements.map((el, idx) => (
+   695→                <div key={idx} className="flex items-center gap-2 p-2 text-sm">
+   696→                  <GripVertical className="size-4 text-muted-foreground" />
+   697→                  {el.image && <img src={el.image} alt="" className="size-8 rounded object-cover" />}
+   698→                  <span className="flex-1">{el.name}</span>
+   699→                  {el.category && <Badge variant="outline" className="text-[10px]">{el.category}</Badge>}
+   700→                  <span className="text-muted-foreground">{formatPrice(el.price)}</span>
+   701→                  <Button
+   702→                    size="icon"
+   703→                    variant="ghost"
+   704→                    className="size-7 text-muted-foreground hover:text-destructive"
+   705→                    onClick={() => removeElement(idx)}
+   706→                  >
+   707→                    <X className="size-3.5" />
+   708→                  </Button>
+   709→                </div>
+   710→              ))}
+   711→            </div>
+   712→            {/* Форма добавления новой опции */}
+   713→            <div className="grid grid-cols-2 gap-2">
+   714→              <Input
+   715→                placeholder="Название опции *"
+   716→                value={newElName}
+   717→                onChange={(e) => setNewElName(e.target.value)}
+   718→              />
+   719→              <Input
+   720→                type="number"
+   721→                placeholder="Цена, ₽ *"
+   722→                value={newElPrice}
+   723→                onChange={(e) => setNewElPrice(e.target.value)}
+   724→              />
+   725→              <Select value={newElCategory} onValueChange={setNewElCategory}>
+   726→                <SelectTrigger className="w-full"><SelectValue placeholder="Категория" /></SelectTrigger>
+   727→                <SelectContent>
+   728→                  <SelectItem value="letter">Буквы и цифры</SelectItem>
+   729→                  <SelectItem value="decor">Декор</SelectItem>
+   730→                  <SelectItem value="prop">Реквизит</SelectItem>
+   731→                  <SelectItem value="lighting">Освещение</SelectItem>
+   732→                  <SelectItem value="service">Доп. услуга</SelectItem>
+   733→                </SelectContent>
+   734→              </Select>
+   735→              <Input
+   736→                placeholder="URL изображения (необязательно)"
+   737→                value={newElImage}
+   738→                onChange={(e) => setNewElImage(e.target.value)}
+   739→                className="font-mono text-xs"
+   740→              />
+   741→              <Input
+   742→                placeholder="Описание (необязательно)"
+   743→                value={newElDesc}
+   744→                onChange={(e) => setNewElDesc(e.target.value)}
+   745→                className="col-span-2"
+   746→              />
+   747→            </div>
+   748→            <Button variant="outline" onClick={addElement} className="gap-1 w-full">
+   749→              <Plus className="size-4" /> Добавить опцию
+   750→            </Button>
+   751→            {!isEdit && (
+   752→              <div className="text-xs text-muted-foreground">
+   753→                Примечание: элементы сохранятся после создания фотозоны (нужен её id).
+   754→                Сначала сохраните фотозону, затем добавьте элементы в повторном редактировании.
+   755→              </div>
+   756→            )}
+   757→          </div>
+   758→
+   759→          {/* Переключатели */}
+   760→          <div className="grid sm:grid-cols-2 gap-3 border-t pt-4">
+   761→            <div className="flex items-center justify-between rounded-md border p-3">
+   762→              <div>
+   763→                <div className="text-sm font-medium">Хит продаж</div>
+   764→                <div className="text-xs text-muted-foreground">
+   765→                  Показывать звезду и поднимать в выдаче
+   766→                </div>
+   767→              </div>
+   768→              <Switch checked={hit} onCheckedChange={setHit} />
+   769→            </div>
+   770→            <div className="flex items-center justify-between rounded-md border p-3">
+   771→              <div>
+   772→                <div className="text-sm font-medium">Активна</div>
+   773→                <div className="text-xs text-muted-foreground">
+   774→                  Показывать в публичном каталоге
+   775→                </div>
+   776→              </div>
+   777→              <Switch checked={isActive} onCheckedChange={setIsActive} />
+   778→            </div>
+   779→          </div>
+   780→        </div>
+   781→
+   782→        <DialogFooter>
+   783→          <Button variant="outline" onClick={onClose} disabled={saving}>
+   784→            Отмена
+   785→          </Button>
+   786→          <Button onClick={save} disabled={saving} className="gap-1.5">
+   787→            {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+   788→            {isEdit ? 'Сохранить' : 'Создать'}
+   789→          </Button>
+   790→        </DialogFooter>
+   791→      </DialogContent>
+   792→    </Dialog>
+   793→  );
+   794→}
+   795→

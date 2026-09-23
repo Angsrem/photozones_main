@@ -11,8 +11,8 @@ import { api } from '../_lib';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = React.useState('admin@fotozona24.ru');
-  const [password, setPassword] = React.useState('admin123');
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -91,11 +91,6 @@ export default function AdminLoginPage() {
               'Войти'
             )}
           </Button>
-
-          <div className="text-xs text-muted-foreground text-center pt-2 border-t">
-            Демо-доступ: <code className="font-mono">admin@fotozona24.ru</code> /{' '}
-            <code className="font-mono">admin123</code>
-          </div>
         </form>
 
         <div className="mt-4 text-center">

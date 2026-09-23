@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { runQuiz, QUIZ_PROMO_CODE, type QuizAnswers } from '@/lib/quiz';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
 // POST — создать сессию квиза с ответами, вернуть recommended + sessionId
 export async function POST(req: NextRequest) {
   try {
+    // Rate-limit: 20 запросов в минуту на IP.
+    const ip = getClientIp(req);
+    if (!rateLimit(`quiz:${ip}`, 20, 60_000)) {
+      return NextResponse.json(
+        { error: 'Слишком много запросов. Попробуйте позже.' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const answers = body.answers as QuizAnswers;
     if (!answers || !answers.occasion) {

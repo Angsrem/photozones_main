@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createLead } from '@/lib/leads';
 import { isPhoneValid } from '@/lib/format';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate-limit: 10 заявок в минуту на IP — защита от спама лидами.
+    const ip = getClientIp(req);
+    if (!rateLimit(`leads:${ip}`, 10, 60_000)) {
+      return NextResponse.json(
+        { error: 'Слишком много заявок. Попробуйте позже.' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
+    }
+
     const body = await req.json().catch(() => null);
     if (!body) return NextResponse.json({ error: 'Некорректный запрос' }, { status: 400 });
 

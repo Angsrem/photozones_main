@@ -16,7 +16,12 @@ async function sendTelegram(text: string, replyMarkup?: object) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_MANAGER_CHAT_ID;
   if (!token || !chatId) {
-    console.log('[notify:telegram] (нет TELEGRAM_BOT_TOKEN/CHAT_ID — fallback в лог) ->\n', text);
+    // Полный текст уведомления печатаем только в dev — в prod это утечка PII.
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[notify:telegram] (нет TELEGRAM_BOT_TOKEN/CHAT_ID — fallback в лог) ->\n', text);
+    } else {
+      console.warn('[notify:telegram] нет TELEGRAM_BOT_TOKEN/CHAT_ID — уведомление не отправлено');
+    }
     return { ok: false, reason: 'no-credentials' };
   }
   try {
@@ -34,6 +39,7 @@ async function sendTelegram(text: string, replyMarkup?: object) {
     });
     const data = await res.json();
     if (!res.ok || !data.ok) {
+      // В prod не логируем body ответа целиком — там может быть содержимое сообщения.
       console.error('[notify:telegram] API error:', JSON.stringify(data).slice(0, 200));
       return { ok: false, reason: 'api-error', data };
     }
@@ -48,7 +54,12 @@ async function sendEmail(to: string, subject: string, html: string) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM || `ФотоЗона24 <noreply@${SITE.url.replace('https://', '')}>`;
   if (!apiKey) {
-    console.log('[notify:email] (нет RESEND_API_KEY — fallback в лог) ->', to, subject);
+    // В prod не печатаем тему/получателя — это PII.
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[notify:email] (нет RESEND_API_KEY — fallback в лог) ->', to, subject);
+    } else {
+      console.warn('[notify:email] нет RESEND_API_KEY — письмо не отправлено');
+    }
     return;
   }
   try {
@@ -60,9 +71,9 @@ async function sendEmail(to: string, subject: string, html: string) {
       },
       body: JSON.stringify({ from, to: [to], subject, html }),
     });
-    if (!res.ok) console.error('[notify:email] resend error', await res.text());
-  } catch (e) {
-    console.error('[notify:email] error', e);
+    if (!res.ok) console.error('[notify:email] resend error', (await res.text()).slice(0, 200));
+  } catch (e: any) {
+    console.error('[notify:email] error', e?.message);
   }
 }
 

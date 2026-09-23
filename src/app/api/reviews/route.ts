@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -9,25 +10,83 @@ export const runtime = 'nodejs';
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'reviews');
 const MAX_PHOTO_SIZE = 8 * 1024 * 1024; // 8MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
-const ALLOWED_PHOTO = ['image/jpeg', 'image/png', 'image/webp'];
-const ALLOWED_VIDEO = ['video/mp4', 'video/webm'];
+
+// Разрешённые типы по Content-Type и соответствующие magic-bytes.
+// Расширение всегда выбираем по Content-Type, а НЕ из file.name —
+// иначе атакующий может загрузить .svg/.html под видом .jpg.
+const PHOTO_FORMATS: Record<string, { ext: string; magic: number[][] }> = {
+  'image/jpeg': { ext: 'jpg', magic: [[0xff, 0xd8, 0xff]] },
+  'image/png': { ext: 'png', magic: [[0x89, 0x50, 0x4e, 0x47]] },
+  'image/webp': { ext: 'webp', magic: [[0x52, 0x49, 0x46, 0x46]] }, // RIFF....WEBP
+};
+const VIDEO_FORMATS: Record<string, { ext: string; magic: number[][] }> = {
+  'video/mp4': { ext: 'mp4', magic: [[0x00, 0x00, 0x00]] }, // ....ftyp
+  'video/webm': { ext: 'webm', magic: [[0x1a, 0x45, 0xdf, 0xa3]] },
+};
+
+// Запретные расширения — даже если Content-Type валиден, не пропускаем.
+const FORBIDDEN_EXT = ['svg', 'svgz', 'html', 'htm', 'xhtml', 'js', 'xml'];
+
+function matchesMagic(buf: Buffer, candidates: number[][]): boolean {
+  return candidates.some((sig) => {
+    // Для сигнатур, у которых позиция может быть смещена (RIFF....WEBP, ....ftyp),
+    // ищем префикс в первых 16 байтах.
+    if (sig.length === 4 && (sig[0] === 0x52 || sig[0] === 0x00)) {
+      const head = buf.subarray(0, Math.min(buf.length, 32));
+      // точное совпадение в начале
+      if (head.subarray(0, sig.length).equals(Buffer.from(sig))) return true;
+      // для WEBP: RIFF????WEBP
+      if (sig[0] === 0x52 && buf.length >= 12 && buf.subarray(0, 4).equals(Buffer.from([0x52, 0x49, 0x46, 0x46])) && buf.subarray(8, 12).equals(Buffer.from([0x57, 0x45, 0x42, 0x50]))) return true;
+      // для MP4: ....ftyp
+      if (sig[0] === 0x00 && buf.length >= 12 && buf.subarray(4, 8).equals(Buffer.from([0x66, 0x74, 0x79, 0x70]))) return true;
+      return false;
+    }
+    if (buf.length < sig.length) return false;
+    return buf.subarray(0, sig.length).equals(Buffer.from(sig));
+  });
+}
 
 async function saveFile(file: File, type: 'photo' | 'video'): Promise<string> {
   const maxSize = type === 'photo' ? MAX_PHOTO_SIZE : MAX_VIDEO_SIZE;
-  const allowed = type === 'photo' ? ALLOWED_PHOTO : ALLOWED_VIDEO;
-  if (!allowed.includes(file.type)) throw new Error(`Недопустимый формат ${type}: ${file.type}`);
+  const formats = type === 'photo' ? PHOTO_FORMATS : VIDEO_FORMATS;
+
+  const contentType = (file.type || '').toLowerCase();
+  const fmt = formats[contentType];
+  if (!fmt) throw new Error(`Недопустимый формат ${type}: ${contentType || 'не указан'}`);
   if (file.size > maxSize) throw new Error(`Файл слишком большой (макс ${maxSize / 1024 / 1024}МБ)`);
 
-  if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-  const ext = file.name.split('.').pop() || (type === 'photo' ? 'jpg' : 'mp4');
-  const name = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
+  if (buffer.length < 12) throw new Error('Файл повреждён или слишком маленький');
+
+  // Проверка magic-bytes: Content-Type может врать, имя файла — тем более.
+  if (!matchesMagic(buffer, fmt.magic)) {
+    throw new Error(`Содержимое файла не соответствует типу ${contentType}`);
+  }
+
+  // Запрет опасных расширений (на случай, если кто-то передаст file.name с .svg).
+  const lowerName = (file.name || '').toLowerCase();
+  if (FORBIDDEN_EXT.some((e) => lowerName.endsWith('.' + e))) {
+    throw new Error('Этот тип файлов запрещён');
+  }
+
+  if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  // Расширение всегда из Content-Type — не из имени файла.
+  const name = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${fmt.ext}`;
   fs.writeFileSync(path.join(UPLOAD_DIR, name), buffer);
   return `/uploads/reviews/${name}`;
 }
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate-limit: 5 отзывов в минуту на IP.
+    const ip = getClientIp(req);
+    if (!rateLimit(`reviews:${ip}`, 5, 60_000)) {
+      return NextResponse.json(
+        { error: 'Слишком много отзывов. Попробуйте позже.' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
+    }
+
     const formData = await req.formData();
     const author = String(formData.get('author') || '').trim();
     const text = String(formData.get('text') || '').trim();

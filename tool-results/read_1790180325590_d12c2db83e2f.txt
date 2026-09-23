@@ -1,0 +1,961 @@
+     1→'use client';
+     2→
+     3→import * as React from 'react';
+     4→import { toast } from 'sonner';
+     5→import {
+     6→  ChevronLeft,
+     7→  ChevronRight,
+     8→  Loader2,
+     9→  CalendarDays,
+    10→  Ban,
+    11→  Trash2,
+    12→  Plus,
+    13→  Phone,
+    14→  MessageCircle,
+    15→  Sparkles,
+    16→  X,
+    17→  AlertTriangle,
+    18→} from 'lucide-react';
+    19→import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+    20→import { Button } from '@/components/ui/button';
+    21→import { Input } from '@/components/ui/input';
+    22→import { Label } from '@/components/ui/label';
+    23→import { Textarea } from '@/components/ui/textarea';
+    24→import { Badge } from '@/components/ui/badge';
+    25→import { Separator } from '@/components/ui/separator';
+    26→import {
+    27→  Dialog,
+    28→  DialogContent,
+    29→  DialogDescription,
+    30→  DialogFooter,
+    31→  DialogHeader,
+    32→  DialogTitle,
+    33→} from '@/components/ui/dialog';
+    34→import {
+    35→  Select,
+    36→  SelectContent,
+    37→  SelectItem,
+    38→  SelectTrigger,
+    39→  SelectValue,
+    40→} from '@/components/ui/select';
+    41→import {
+    42→  api,
+    43→  type Lead,
+    44→  type Booking,
+    45→  type DateBlock,
+    46→  type PhotoZone,
+    47→  type LeadStatus,
+    48→  LEAD_STATUS_LABEL,
+    49→  LEAD_STATUS_STYLES,
+    50→  waLink,
+    51→  telLink,
+    52→} from '../_lib';
+    53→import { formatDateRu, formatDateShort, formatPrice } from '@/lib/format';
+    54→
+    55→type DayData = { bookings: Booking[]; blocks: DateBlock[]; leads: Lead[] };
+    56→type MonthData = { month: string; byDay: Record<string, DayData> };
+    57→
+    58→const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    59→const MONTHS_RU = [
+    60→  'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+    61→  'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
+    62→];
+    63→
+    64→function pad(n: number) {
+    65→  return String(n).padStart(2, '0');
+    66→}
+    67→
+    68→function ymOf(d: Date) {
+    69→  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+    70→}
+    71→
+    72→// строит сетку месяца (с доп. ячейками из соседних месяцев чтобы заполнить 6 строк × 7 столбцов)
+    73→function buildMonthGrid(year: number, month: number) {
+    74→  // month: 0-based
+    75→  const first = new Date(year, month, 1);
+    76→  const firstDayJs = new Date(year, month, 1);
+    77→  // делаем понедельник первым днём недели
+    78→  const firstWeekday = (firstDayJs.getDay() + 6) % 7; // 0=Пн
+    79→  const daysInMonth = new Date(year, month + 1, 0).getDate();
+    80→  const cells: { date: string; day: number; inMonth: boolean; isToday: boolean }[] = [];
+    81→  const todayStr = new Date().toISOString().slice(0, 10);
+    82→
+    83→  // префикс из прошлого месяца
+    84→  for (let i = firstWeekday - 1; i >= 0; i--) {
+    85→    const d = new Date(year, month, -i);
+    86→    cells.push({
+    87→      date: d.toISOString().slice(0, 10),
+    88→      day: d.getDate(),
+    89→      inMonth: false,
+    90→      isToday: d.toISOString().slice(0, 10) === todayStr,
+    91→    });
+    92→  }
+    93→  for (let i = 1; i <= daysInMonth; i++) {
+    94→    const d = new Date(year, month, i);
+    95→    const ds = d.toISOString().slice(0, 10);
+    96→    cells.push({ date: ds, day: i, inMonth: true, isToday: ds === todayStr });
+    97→  }
+    98→  // суффикс до 42 ячеек (6 строк)
+    99→  let i = 1;
+   100→  while (cells.length < 42) {
+   101→    const d = new Date(year, month + 1, i++);
+   102→    cells.push({
+   103→      date: d.toISOString().slice(0, 10),
+   104→      day: d.getDate(),
+   105→      inMonth: false,
+   106→      isToday: d.toISOString().slice(0, 10) === todayStr,
+   107→    });
+   108→  }
+   109→  return cells;
+   110→}
+   111→
+   112→export default function AdminCalendarPage() {
+   113→  const today = new Date();
+   114→  const [year, setYear] = React.useState(today.getFullYear());
+   115→  const [month, setMonth] = React.useState(today.getMonth()); // 0-based
+   116→  const [pzFilter, setPzFilter] = React.useState<string>('ALL');
+   117→  const [photozones, setPhotozones] = React.useState<PhotoZone[]>([]);
+   118→  const [data, setData] = React.useState<MonthData | null>(null);
+   119→  const [loading, setLoading] = React.useState(false);
+   120→  const [err, setErr] = React.useState<string | null>(null);
+   121→  const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
+   122→
+   123→  // загрузка фотозон для фильтра
+   124→  React.useEffect(() => {
+   125→    api<{ items: PhotoZone[] }>('/api/admin/photozones')
+   126→      .then((r) => setPhotozones(r.items || []))
+   127→      .catch(() => setPhotozones([]));
+   128→  }, []);
+   129→
+   130→  const load = React.useCallback(async () => {
+   131→    setLoading(true);
+   132→    setErr(null);
+   133→    try {
+   134→      const ym = `${year}-${pad(month + 1)}`;
+   135→      const data = await api<MonthData>(`/api/admin/calendar?month=${ym}`);
+   136→      setData(data);
+   137→    } catch (e: any) {
+   138→      setErr(e?.message || 'Не удалось загрузить календарь');
+   139→    } finally {
+   140→      setLoading(false);
+   141→    }
+   142→  }, [year, month]);
+   143→
+   144→  React.useEffect(() => {
+   145→    load();
+   146→  }, [load]);
+   147→
+   148→  const goPrev = () => {
+   149→    if (month === 0) {
+   150→      setMonth(11);
+   151→      setYear((y) => y - 1);
+   152→    } else {
+   153→      setMonth((m) => m - 1);
+   154→    }
+   155→  };
+   156→  const goNext = () => {
+   157→    if (month === 11) {
+   158→      setMonth(0);
+   159→      setYear((y) => y + 1);
+   160→    } else {
+   161→      setMonth((m) => m + 1);
+   162→    }
+   163→  };
+   164→  const goToday = () => {
+   165→    const t = new Date();
+   166→    setYear(t.getFullYear());
+   167→    setMonth(t.getMonth());
+   168→  };
+   169→
+   170→  const cells = React.useMemo(() => buildMonthGrid(year, month), [year, month]);
+   171→
+   172→  // цвет точки фотозоны — стабильный на основе id
+   173→  const pzColor = (id: string) => {
+   174→    const palette = [
+   175→      'bg-emerald-500',
+   176→      'bg-rose-500',
+   177→      'bg-sky-500',
+   178→      'bg-violet-500',
+   179→      'bg-amber-500',
+   180→      'bg-pink-500',
+   181→      'bg-teal-500',
+   182→      'bg-indigo-500',
+   183→      'bg-orange-500',
+   184→      'bg-cyan-500',
+   185→      'bg-fuchsia-500',
+   186→      'bg-lime-600',
+   187→    ];
+   188→    let h = 0;
+   189→    for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+   190→    return palette[h % palette.length];
+   191→  };
+   192→
+   193→  const pzTitle = (id: string | null | undefined) =>
+   194→    photozones.find((p) => p.id === id)?.title || '—';
+   195→
+   196→  return (
+   197→    <div className="space-y-5">
+   198→      <div className="flex items-end justify-between gap-3 flex-wrap">
+   199→        <div>
+   200→          <h1 className="font-display text-2xl font-semibold">Календарь занятости</h1>
+   201→          <p className="text-sm text-muted-foreground">
+   202→            Бронирования, блокировки и заявки по дням
+   203→          </p>
+   204→        </div>
+   205→        <div className="flex items-center gap-2">
+   206→          <Button variant="outline" size="sm" onClick={goToday}>Сегодня</Button>
+   207→          <Button variant="outline" size="icon" onClick={goPrev} aria-label="Предыдущий месяц">
+   208→            <ChevronLeft className="size-4" />
+   209→          </Button>
+   210→          <div className="min-w-[170px] text-center font-medium">
+   211→            {MONTHS_RU[month]} {year}
+   212→          </div>
+   213→          <Button variant="outline" size="icon" onClick={goNext} aria-label="Следующий месяц">
+   214→            <ChevronRight className="size-4" />
+   215→          </Button>
+   216→        </div>
+   217→      </div>
+   218→
+   219→      {/* фильтр по фотозоне */}
+   220→      <Card>
+   221→        <CardContent className="p-3 flex flex-wrap items-center gap-3">
+   222→          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+   223→            <CalendarDays className="size-4" /> Фотозона:
+   224→          </div>
+   225→          <Select value={pzFilter} onValueChange={setPzFilter}>
+   226→            <SelectTrigger className="w-[260px]">
+   227→              <SelectValue />
+   228→            </SelectTrigger>
+   229→            <SelectContent>
+   230→              <SelectItem value="ALL">Все фотозоны</SelectItem>
+   231→              {photozones.map((p) => (
+   232→                <SelectItem key={p.id} value={p.id}>
+   233→                  {p.title}
+   234→                </SelectItem>
+   235→              ))}
+   236→            </SelectContent>
+   237→          </Select>
+   238→          {loading && (
+   239→            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+   240→          )}
+   241→        </CardContent>
+   242→      </Card>
+   243→
+   244→      {err && (
+   245→        <Card>
+   246→          <CardContent className="py-8 text-center text-sm text-destructive">
+   247→            {err}
+   248→            <div className="mt-2">
+   249→              <Button variant="outline" size="sm" onClick={load}>Повторить</Button>
+   250→            </div>
+   251→          </CardContent>
+   252→        </Card>
+   253→      )}
+   254→
+   255→      {/* Сетка */}
+   256→      {!err && (
+   257→        <Card>
+   258→          <CardContent className="p-3 sm:p-4">
+   259→            <div className="grid grid-cols-7 gap-1 sm:gap-2">
+   260→              {WEEKDAYS.map((w) => (
+   261→                <div
+   262→                  key={w}
+   263→                  className="text-center text-xs font-medium text-muted-foreground py-2"
+   264→                >
+   265→                  {w}
+   266→                </div>
+   267→              ))}
+   268→              {cells.map((c, idx) => {
+   269→                const dayData = data?.byDay[c.date];
+   270→                // если фильтр по фотозоне — отфильтруем брони/блоки/лиды по ней
+   271→                let bookings = dayData?.bookings || [];
+   272→                let blocks = dayData?.blocks || [];
+   273→                let leads = dayData?.leads || [];
+   274→                if (pzFilter !== 'ALL') {
+   275→                  bookings = bookings.filter(
+   276→                    (b) => b.photozoneId === pzFilter
+   277→                  );
+   278→                  blocks = blocks.filter((b) => b.photozoneId === pzFilter);
+   279→                  leads = leads.filter((l) => l.photozoneId === pzFilter);
+   280→                }
+   281→                const hasEvents = bookings.length + blocks.length + leads.length > 0;
+   282→                const isWeekend = idx % 7 >= 5;
+   283→
+   284→                return (
+   285→                  <button
+   286→                    key={`${c.date}-${idx}`}
+   287→                    onClick={() => setSelectedDate(c.date)}
+   288→                    className={`calendar-cell relative text-left rounded-md border p-1.5 sm:p-2 transition-colors ${
+   289→                      c.inMonth ? 'bg-card' : 'bg-muted/30'
+   290→                    } ${
+   291→                      c.isToday ? 'border-primary ring-1 ring-primary/30' : 'border-border'
+   292→                    } hover:border-primary/60 hover:bg-accent/30`}
+   293→                  >
+   294→                    <div className="flex items-center justify-between">
+   295→                      <span
+   296→                        className={`text-sm font-medium ${
+   297→                          c.inMonth ? '' : 'text-muted-foreground/60'
+   298→                        } ${isWeekend && c.inMonth ? 'text-rose-600' : ''}`}
+   299→                      >
+   300→                        {c.day}
+   301→                      </span>
+   302→                      {hasEvents && (
+   303→                        <span className="text-[10px] text-muted-foreground">
+   304→                          {bookings.length + blocks.length > 0 && (
+   305→                            <span className="mr-1 text-emerald-600">
+   306→                              ●{bookings.length + blocks.length}
+   307→                            </span>
+   308→                          )}
+   309→                          {leads.length > 0 && (
+   310→                            <span className="text-amber-600">∞{leads.length}</span>
+   311→                          )}
+   312→                        </span>
+   313→                      )}
+   314→                    </div>
+   315→
+   316→                    {/* Чипы бронирований */}
+   317→                    <div className="mt-1 space-y-0.5">
+   318→                      {bookings.slice(0, 2).map((b) => (
+   319→                        <div
+   320→                          key={b.id}
+   321→                          className="flex items-center gap-1 text-[10px] sm:text-[11px] leading-tight truncate"
+   322→                        >
+   323→                          <span
+   324→                            className={`size-1.5 rounded-full shrink-0 ${pzColor(
+   325→                              b.photozoneId || ''
+   326→                            )}`}
+   327→                          />
+   328→                          <span className="truncate">
+   329→                            {b.photozone?.title || 'Бронь'}
+   330→                          </span>
+   331→                        </div>
+   332→                      ))}
+   333→                      {blocks.slice(0, 1).map((b) => (
+   334→                        <div
+   335→                          key={b.id}
+   336→                          className="flex items-center gap-1 text-[10px] sm:text-[11px] text-rose-700 leading-tight truncate"
+   337→                        >
+   338→                          <Ban className="size-2.5 shrink-0" />
+   339→                          <span className="truncate">
+   340→                            {b.photozone?.title || 'Заблокировано'}
+   341→                          </span>
+   342→                        </div>
+   343→                      ))}
+   344→                      {bookings.length + blocks.length > 3 && (
+   345→                        <div className="text-[10px] text-muted-foreground">
+   346→                          +{bookings.length + blocks.length - 3} ещё
+   347→                        </div>
+   348→                      )}
+   349→                    </div>
+   350→                  </button>
+   351→                );
+   352→              })}
+   353→            </div>
+   354→
+   355→            <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
+   356→              <div className="flex items-center gap-1.5">
+   357→                <span className="size-2 rounded-full bg-emerald-500" /> Бронь
+   358→              </div>
+   359→              <div className="flex items-center gap-1.5">
+   360→                <Ban className="size-3 text-rose-600" /> Блокировка
+   361→              </div>
+   362→              <div className="flex items-center gap-1.5">
+   363→                <span className="text-amber-600">∞</span> Заявка
+   364→              </div>
+   365→            </div>
+   366→          </CardContent>
+   367→        </Card>
+   368→      )}
+   369→
+   370→      <DayDetailDialog
+   371→        date={selectedDate}
+   372→        photozones={photozones}
+   373→        onClose={() => setSelectedDate(null)}
+   374→        onChanged={load}
+   375→        pzColor={pzColor}
+   376→      />
+   377→    </div>
+   378→  );
+   379→}
+   380→
+   381→// ============ Диалог деталей дня ============
+   382→
+   383→function DayDetailDialog({
+   384→  date,
+   385→  photozones,
+   386→  onClose,
+   387→  onChanged,
+   388→  pzColor,
+   389→}: {
+   390→  date: string | null;
+   391→  photozones: PhotoZone[];
+   392→  onClose: () => void;
+   393→  onChanged: () => void;
+   394→  pzColor: (id: string) => string;
+   395→}) {
+   396→  const [leads, setLeads] = React.useState<Lead[]>([]);
+   397→  const [bookings, setBookings] = React.useState<Booking[]>([]);
+   398→  const [blocks, setBlocks] = React.useState<DateBlock[]>([]);
+   399→  const [loading, setLoading] = React.useState(false);
+   400→  const [alternativesFor, setAlternativesFor] = React.useState<string | null>(null);
+   401→  const [alts, setAlts] = React.useState<PhotoZone[]>([]);
+   402→  const [loadingAlts, setLoadingAlts] = React.useState(false);
+   403→  const [showBlockForm, setShowBlockForm] = React.useState(false);
+   404→  const [showBookingForm, setShowBookingForm] = React.useState(false);
+   405→
+   406→  const loadDay = React.useCallback(async () => {
+   407→    if (!date) return;
+   408→    setLoading(true);
+   409→    try {
+   410→      const data = await api<{ leads: Lead[]; bookings: Booking[]; blocks: DateBlock[] }>(
+   411→        `/api/admin/calendar?date=${date}`
+   412→      );
+   413→      setLeads(data.leads || []);
+   414→      setBookings(data.bookings || []);
+   415→      setBlocks(data.blocks || []);
+   416→    } catch (e: any) {
+   417→      toast.error(e?.message || 'Не удалось загрузить день');
+   418→    } finally {
+   419→      setLoading(false);
+   420→    }
+   421→  }, [date]);
+   422→
+   423→  React.useEffect(() => {
+   424→    if (date) {
+   425→      loadDay();
+   426→      setAlternativesFor(null);
+   427→      setAlts([]);
+   428→      setShowBlockForm(false);
+   429→      setShowBookingForm(false);
+   430→    }
+   431→  }, [date, loadDay]);
+   432→
+   433→  // подбор аналогов
+   434→  React.useEffect(() => {
+   435→    if (!date || !alternativesFor) {
+   436→      setAlts([]);
+   437→      return;
+   438→    }
+   439→    let cancelled = false;
+   440→    setLoadingAlts(true);
+   441→    (async () => {
+   442→      try {
+   443→        const r = await api<{ items: PhotoZone[] }>(
+   444→          `/api/admin/calendar?date=${date}&alternativesFor=${alternativesFor}`
+   445→        );
+   446→        if (!cancelled) setAlts(r.items || []);
+   447→      } catch {
+   448→        if (!cancelled) setAlts([]);
+   449→      } finally {
+   450→        if (!cancelled) setLoadingAlts(false);
+   451→      }
+   452→    })();
+   453→    return () => {
+   454→      cancelled = true;
+   455→    };
+   456→  }, [date, alternativesFor]);
+   457→
+   458→  const removeBlock = async (id: string) => {
+   459→    if (!confirm('Разблокировать дату?')) return;
+   460→    try {
+   461→      await api(`/api/admin/bookings?id=${id}&type=block`, { method: 'DELETE' });
+   462→      toast.success('Блокировка снята');
+   463→      loadDay();
+   464→      onChanged();
+   465→    } catch (e: any) {
+   466→      toast.error(e?.message || 'Ошибка');
+   467→    }
+   468→  };
+   469→
+   470→  const removeBooking = async (id: string) => {
+   471→    if (!confirm('Удалить бронирование?')) return;
+   472→    try {
+   473→      await api(`/api/admin/bookings?id=${id}&type=booking`, { method: 'DELETE' });
+   474→      toast.success('Бронирование удалено');
+   475→      loadDay();
+   476→      onChanged();
+   477→    } catch (e: any) {
+   478→      toast.error(e?.message || 'Ошибка');
+   479→    }
+   480→  };
+   481→
+   482→  const occupiedPzIds = React.useMemo(() => {
+   483→    const set = new Set<string>();
+   484→    for (const b of bookings) if (b.photozoneId) set.add(b.photozoneId);
+   485→    for (const b of blocks) if (b.photozoneId) set.add(b.photozoneId);
+   486→    return set;
+   487→  }, [bookings, blocks]);
+   488→
+   489→  return (
+   490→    <Dialog open={!!date} onOpenChange={(o) => !o && onClose()}>
+   491→      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
+   492→        <DialogHeader>
+   493→          <DialogTitle className="flex items-center gap-2">
+   494→            <CalendarDays className="size-5 text-primary" />
+   495→            {date ? formatDateRu(date) : ''}
+   496→          </DialogTitle>
+   497→          <DialogDescription>
+   498→            Бронирования, блокировки и заявки на выбранный день
+   499→          </DialogDescription>
+   500→        </DialogHeader>
+   501→
+   502→        {loading && (
+   503→          <div className="py-8 flex items-center justify-center text-muted-foreground">
+   504→            <Loader2 className="size-5 mr-2 animate-spin text-primary" /> Загрузка…
+   505→          </div>
+   506→        )}
+   507→
+   508→        {!loading && date && (
+   509→          <div className="space-y-4">
+   510→            {/* Бронирования */}
+   511→            <section>
+   512→              <div className="flex items-center justify-between mb-2">
+   513→                <h3 className="text-sm font-semibold">
+   514→                  Бронирования ({bookings.length})
+   515→                </h3>
+   516→                <Button
+   517→                  size="sm"
+   518→                  variant="outline"
+   519→                  className="gap-1"
+   520→                  onClick={() => setShowBookingForm((v) => !v)}
+   521→                >
+   522→                  <Plus className="size-3.5" /> Добавить бронь
+   523→                </Button>
+   524→              </div>
+   525→
+   526→              {showBookingForm && (
+   527→                <AddBookingForm
+   528→                  date={date}
+   529→                  photozones={photozones}
+   530→                  occupiedPzIds={occupiedPzIds}
+   531→                  leads={leads}
+   532→                  onDone={() => {
+   533→                    setShowBookingForm(false);
+   534→                    loadDay();
+   535→                    onChanged();
+   536→                  }}
+   537→                />
+   538→              )}
+   539→
+   540→              {bookings.length === 0 ? (
+   541→                <div className="text-xs text-muted-foreground py-2">Нет бронирований</div>
+   542→              ) : (
+   543→                <div className="space-y-1.5">
+   544→                  {bookings.map((b) => (
+   545→                    <div
+   546→                      key={b.id}
+   547→                      className="flex items-center justify-between gap-3 rounded-md border p-2.5 text-sm"
+   548→                    >
+   549→                      <div className="flex items-center gap-2 min-w-0">
+   550→                        <span
+   551→                          className={`size-2.5 rounded-full shrink-0 ${pzColor(
+   552→                            b.photozoneId || ''
+   553→                          )}`}
+   554→                        />
+   555→                        <div className="min-w-0">
+   556→                          <div className="font-medium truncate">
+   557→                            {b.photozone?.title || '—'}
+   558→                          </div>
+   559→                          <div className="text-xs text-muted-foreground">
+   560→                            {b.lead ? `Клиент: ${b.lead.name} · ${b.lead.phone}` : b.note || 'без лида'}
+   561→                          </div>
+   562→                        </div>
+   563→                      </div>
+   564→                      <div className="flex items-center gap-2 shrink-0">
+   565→                        <Badge variant="outline" className="text-xs">
+   566→                          {b.status}
+   567→                        </Badge>
+   568→                        <Button
+   569→                          size="icon"
+   570→                          variant="ghost"
+   571→                          className="size-7 text-muted-foreground hover:text-destructive"
+   572→                          onClick={() => removeBooking(b.id)}
+   573→                          title="Удалить"
+   574→                        >
+   575→                          <Trash2 className="size-3.5" />
+   576→                        </Button>
+   577→                      </div>
+   578→                    </div>
+   579→                  ))}
+   580→                </div>
+   581→              )}
+   582→            </section>
+   583→
+   584→            <Separator />
+   585→
+   586→            {/* Блокировки */}
+   587→            <section>
+   588→              <div className="flex items-center justify-between mb-2">
+   589→                <h3 className="text-sm font-semibold flex items-center gap-1.5">
+   590→                  <Ban className="size-4 text-rose-600" /> Блокировки ({blocks.length})
+   591→                </h3>
+   592→                <Button
+   593→                  size="sm"
+   594→                  variant="outline"
+   595→                  className="gap-1"
+   596→                  onClick={() => setShowBlockForm((v) => !v)}
+   597→                >
+   598→                  <Plus className="size-3.5" /> Заблокировать
+   599→                </Button>
+   600→              </div>
+   601→
+   602→              {showBlockForm && (
+   603→                <BlockForm
+   604→                  date={date}
+   605→                  photozones={photozones}
+   606→                  onDone={() => {
+   607→                    setShowBlockForm(false);
+   608→                    loadDay();
+   609→                    onChanged();
+   610→                  }}
+   611→                />
+   612→              )}
+   613→
+   614→              {blocks.length === 0 ? (
+   615→                <div className="text-xs text-muted-foreground py-2">Нет блокировок</div>
+   616→              ) : (
+   617→                <div className="space-y-1.5">
+   618→                  {blocks.map((b) => (
+   619→                    <div
+   620→                      key={b.id}
+   621→                      className="flex items-center justify-between gap-3 rounded-md border border-rose-200 bg-rose-50 p-2.5 text-sm"
+   622→                    >
+   623→                      <div className="min-w-0">
+   624→                        <div className="font-medium truncate">
+   625→                          {b.photozone?.title || 'Все фотозоны'}
+   626→                        </div>
+   627→                        <div className="text-xs text-rose-700">
+   628→                          Причина: {b.reason || 'service'}
+   629→                        </div>
+   630→                      </div>
+   631→                      <Button
+   632→                        size="icon"
+   633→                        variant="ghost"
+   634→                        className="size-7 text-rose-700 hover:text-rose-900"
+   635→                        onClick={() => removeBlock(b.id)}
+   636→                        title="Снять блокировку"
+   637→                      >
+   638→                        <Trash2 className="size-3.5" />
+   639→                      </Button>
+   640→                    </div>
+   641→                  ))}
+   642→                </div>
+   643→              )}
+   644→            </section>
+   645→
+   646→            <Separator />
+   647→
+   648→            {/* Заявки */}
+   649→            <section>
+   650→              <h3 className="text-sm font-semibold mb-2">
+   651→                Заявки на день ({leads.length})
+   652→              </h3>
+   653→              {leads.length === 0 ? (
+   654→                <div className="text-xs text-muted-foreground py-2">Нет заявок</div>
+   655→              ) : (
+   656→                <div className="space-y-1.5">
+   657→                  {leads.map((l) => (
+   658→                    <div
+   659→                      key={l.id}
+   660→                      className="flex items-center justify-between gap-3 rounded-md border p-2.5 text-sm"
+   661→                    >
+   662→                      <div className="min-w-0">
+   663→                        <div className="font-medium truncate">{l.name}</div>
+   664→                        <div className="text-xs text-muted-foreground">
+   665→                          {l.phone} · {l.photozone?.title || '—'}
+   666→                        </div>
+   667→                      </div>
+   668→                      <div className="flex items-center gap-2 shrink-0">
+   669→                        <Badge
+   670→                          variant="outline"
+   671→                          className={`text-xs ${LEAD_STATUS_STYLES[l.status as LeadStatus]}`}
+   672→                        >
+   673→                          {LEAD_STATUS_LABEL[l.status as LeadStatus]}
+   674→                        </Badge>
+   675→                        <Button asChild size="icon" variant="ghost" className="size-7">
+   676→                          <a href={telLink(l.phone)} target="_blank" rel="noreferrer" title="Позвонить">
+   677→                            <Phone className="size-3.5" />
+   678→                          </a>
+   679→                        </Button>
+   680→                        <Button asChild size="icon" variant="ghost" className="size-7">
+   681→                          <a
+   682→                            href={waLink(l.phone, `Здравствуйте, ${l.name}!`)}
+   683→                            target="_blank"
+   684→                            rel="noreferrer"
+   685→                            title="WhatsApp"
+   686→                          >
+   687→                            <MessageCircle className="size-3.5" />
+   688→                          </a>
+   689→                        </Button>
+   690→                      </div>
+   691→                    </div>
+   692→                  ))}
+   693→                </div>
+   694→              )}
+   695→            </section>
+   696→
+   697→            {/* Свободные аналоги */}
+   698→            <Separator />
+   699→            <section>
+   700→              <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+   701→                <h3 className="text-sm font-semibold flex items-center gap-1.5">
+   702→                  <Sparkles className="size-4 text-primary" /> Свободные аналоги на {formatDateShort(date)}
+   703→                </h3>
+   704→                <Select
+   705→                  value={alternativesFor || '__none__'}
+   706→                  onValueChange={(v) => setAlternativesFor(v === '__none__' ? null : v)}
+   707→                >
+   708→                  <SelectTrigger className="w-[240px] h-8 text-xs">
+   709→                    <SelectValue placeholder="Выбрать занятую фотозону" />
+   710→                  </SelectTrigger>
+   711→                  <SelectContent>
+   712→                    <SelectItem value="__none__">— Сбросить —</SelectItem>
+   713→                    {[...occupiedPzIds].map((id) => {
+   714→                      const pz = photozones.find((p) => p.id === id);
+   715→                      return (
+   716→                        <SelectItem key={id} value={id}>
+   717→                          {pz?.title || id}
+   718→                        </SelectItem>
+   719→                      );
+   720→                    })}
+   721→                  </SelectContent>
+   722→                </Select>
+   723→              </div>
+   724→
+   725→              {alternativesFor && (
+   726→                <>
+   727→                  {loadingAlts ? (
+   728→                    <div className="py-4 flex items-center justify-center text-muted-foreground text-sm">
+   729→                      <Loader2 className="size-4 mr-2 animate-spin text-primary" /> Подбираем…
+   730→                    </div>
+   731→                  ) : alts.length === 0 ? (
+   732→                    <div className="text-xs text-muted-foreground py-3">
+   733→                      Свободных аналогов не найдено. Попробуйте изменить дату или фотозону.
+   734→                    </div>
+   735→                  ) : (
+   736→                    <div className="grid sm:grid-cols-2 gap-2">
+   737→                      {alts.slice(0, 5).map((a) => (
+   738→                        <Card key={a.id} className="p-3">
+   739→                          <div className="flex items-start justify-between gap-2">
+   740→                            <div className="min-w-0">
+   741→                              <div className="text-sm font-medium truncate">{a.title}</div>
+   742→                              <div className="text-xs text-muted-foreground">
+   743→                                {a.category} · {formatPrice(a.basePrice)}
+   744→                              </div>
+   745→                            </div>
+   746→                            <Badge variant="secondary" className="shrink-0 text-xs">
+   747→                              свободна
+   748→                            </Badge>
+   749→                          </div>
+   750→                          {a.images?.[0] && (
+   751→                            <img
+   752→                              src={a.images[0]}
+   753→                              alt={a.title}
+   754→                              className="mt-2 h-20 w-full rounded-md object-cover"
+   755→                            />
+   756→                          )}
+   757→                        </Card>
+   758→                      ))}
+   759→                    </div>
+   760→                  )}
+   761→                </>
+   762→              )}
+   763→              {!alternativesFor && (
+   764→                <div className="text-xs text-muted-foreground py-2">
+   765→                  Выберите занятую фотозону выше — покажем 3–5 свободных альтернатив.
+   766→                </div>
+   767→              )}
+   768→            </section>
+   769→          </div>
+   770→        )}
+   771→
+   772→        <DialogFooter>
+   773→          <Button variant="outline" onClick={onClose}>
+   774→            <X className="size-4 mr-1.5" /> Закрыть
+   775→          </Button>
+   776→        </DialogFooter>
+   777→      </DialogContent>
+   778→    </Dialog>
+   779→  );
+   780→}
+   781→
+   782→// ============ Форма блокировки ============
+   783→function BlockForm({
+   784→  date,
+   785→  photozones,
+   786→  onDone,
+   787→}: {
+   788→  date: string;
+   789→  photozones: PhotoZone[];
+   790→  onDone: () => void;
+   791→}) {
+   792→  const [photozoneId, setPhotozoneId] = React.useState<string>('');
+   793→  const [reason, setReason] = React.useState('service');
+   794→  const [saving, setSaving] = React.useState(false);
+   795→
+   796→  const submit = async () => {
+   797→    setSaving(true);
+   798→    try {
+   799→      await api('/api/admin/bookings', {
+   800→        method: 'POST',
+   801→        body: JSON.stringify({
+   802→          type: 'block',
+   803→          date,
+   804→          photozoneId: photozoneId || null,
+   805→          reason,
+   806→        }),
+   807→      });
+   808→      toast.success('Дата заблокирована');
+   809→      onDone();
+   810→    } catch (e: any) {
+   811→      if (e?.status === 409) toast.error('Уже заблокировано');
+   812→      else toast.error(e?.message || 'Ошибка');
+   813→    } finally {
+   814→      setSaving(false);
+   815→    }
+   816→  };
+   817→
+   818→  return (
+   819→    <div className="rounded-md border border-rose-200 bg-rose-50/50 p-3 space-y-2 mb-3">
+   820→      <div className="grid sm:grid-cols-2 gap-2">
+   821→        <div className="space-y-1">
+   822→          <Label className="text-xs">Фотозона</Label>
+   823→          <Select value={photozoneId || '__all__'} onValueChange={(v) => setPhotozoneId(v === '__all__' ? '' : v)}>
+   824→            <SelectTrigger className="h-8 text-xs">
+   825→              <SelectValue placeholder="Все фотозоны" />
+   826→            </SelectTrigger>
+   827→            <SelectContent>
+   828→              <SelectItem value="__all__">— Все фотозоны —</SelectItem>
+   829→              {photozones.map((p) => (
+   830→                <SelectItem key={p.id} value={p.id}>
+   831→                  {p.title}
+   832→                </SelectItem>
+   833→              ))}
+   834→            </SelectContent>
+   835→          </Select>
+   836→        </div>
+   837→        <div className="space-y-1">
+   838→          <Label className="text-xs">Причина</Label>
+   839→          <Select value={reason} onValueChange={setReason}>
+   840→            <SelectTrigger className="h-8 text-xs">
+   841→              <SelectValue />
+   842→            </SelectTrigger>
+   843→            <SelectContent>
+   844→              <SelectItem value="service">Техобслуживание</SelectItem>
+   845→              <SelectItem value="reserved">Выкуп</SelectItem>
+   846→              <SelectItem value="other">Другое</SelectItem>
+   847→            </SelectContent>
+   848→          </Select>
+   849→        </div>
+   850→      </div>
+   851→      <div className="flex justify-end gap-2">
+   852→        <Button size="sm" onClick={submit} disabled={saving} className="gap-1">
+   853→          {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Ban className="size-3.5" />}
+   854→          Заблокировать
+   855→        </Button>
+   856→      </div>
+   857→    </div>
+   858→  );
+   859→}
+   860→
+   861→// ============ Форма добавления брони ============
+   862→function AddBookingForm({
+   863→  date,
+   864→  photozones,
+   865→  occupiedPzIds,
+   866→  leads,
+   867→  onDone,
+   868→}: {
+   869→  date: string;
+   870→  photozones: PhotoZone[];
+   871→  occupiedPzIds: Set<string>;
+   872→  leads: Lead[];
+   873→  onDone: () => void;
+   874→}) {
+   875→  const [photozoneId, setPhotozoneId] = React.useState('');
+   876→  const [leadId, setLeadId] = React.useState('');
+   877→  const [note, setNote] = React.useState('');
+   878→  const [saving, setSaving] = React.useState(false);
+   879→
+   880→  const submit = async () => {
+   881→    if (!photozoneId) {
+   882→      toast.error('Выберите фотозону');
+   883→      return;
+   884→    }
+   885→    setSaving(true);
+   886→    try {
+   887→      await api('/api/admin/bookings', {
+   888→        method: 'POST',
+   889→        body: JSON.stringify({
+   890→          type: 'booking',
+   891→          date,
+   892→          photozoneId,
+   893→          leadId: leadId || null,
+   894→          note,
+   895→        }),
+   896→      });
+   897→      toast.success('Бронирование создано');
+   898→      onDone();
+   899→    } catch (e: any) {
+   900→      if (e?.status === 409)
+   901→        toast.error('Конфликт: фотозона занята или заблокирована на эту дату');
+   902→      else toast.error(e?.message || 'Ошибка');
+   903→    } finally {
+   904→      setSaving(false);
+   905→    }
+   906→  };
+   907→
+   908→  return (
+   909→    <div className="rounded-md border p-3 space-y-2 mb-3">
+   910→      <div className="grid sm:grid-cols-2 gap-2">
+   911→        <div className="space-y-1">
+   912→          <Label className="text-xs">Фотозона *</Label>
+   913→          <Select value={photozoneId} onValueChange={setPhotozoneId}>
+   914→            <SelectTrigger className="h-8 text-xs">
+   915→              <SelectValue placeholder="Выбрать" />
+   916→            </SelectTrigger>
+   917→            <SelectContent>
+   918→              {photozones.map((p) => (
+   919→                <SelectItem key={p.id} value={p.id} disabled={occupiedPzIds.has(p.id)}>
+   920→                  {p.title} {occupiedPzIds.has(p.id) ? '(занята)' : ''}
+   921→                </SelectItem>
+   922→              ))}
+   923→            </SelectContent>
+   924→          </Select>
+   925→        </div>
+   926→        <div className="space-y-1">
+   927→          <Label className="text-xs">Заявка (необязательно)</Label>
+   928→          <Select value={leadId || '__none__'} onValueChange={(v) => setLeadId(v === '__none__' ? '' : v)}>
+   929→            <SelectTrigger className="h-8 text-xs">
+   930→              <SelectValue placeholder="Без заявки" />
+   931→            </SelectTrigger>
+   932→            <SelectContent>
+   933→              <SelectItem value="__none__">— Без заявки —</SelectItem>
+   934→              {leads.map((l) => (
+   935→                <SelectItem key={l.id} value={l.id}>
+   936→                  {l.name} · {l.phone}
+   937→                </SelectItem>
+   938→              ))}
+   939→            </SelectContent>
+   940→          </Select>
+   941→        </div>
+   942→      </div>
+   943→      <div className="space-y-1">
+   944→        <Label className="text-xs">Заметка</Label>
+   945→        <Input
+   946→          value={note}
+   947→          onChange={(e) => setNote(e.target.value)}
+   948→          placeholder="Например: договорённость по телефону"
+   949→          className="h-8 text-xs"
+   950→        />
+   951→      </div>
+   952→      <div className="flex justify-end gap-2">
+   953→        <Button size="sm" onClick={submit} disabled={saving} className="gap-1">
+   954→          {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
+   955→          Создать бронь
+   956→        </Button>
+   957→      </div>
+   958→    </div>
+   959→  );
+   960→}
+   961→

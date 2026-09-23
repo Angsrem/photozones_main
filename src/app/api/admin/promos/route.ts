@@ -17,6 +17,9 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const { title, description, discount, activeFrom, activeTo, pages, isActive } = body;
   if (!title) return NextResponse.json({ error: 'Укажите название' }, { status: 422 });
+  if (discount !== null && discount !== undefined && (!Number.isFinite(Number(discount)) || Number(discount) < 0 || Number(discount) > 100)) {
+    return NextResponse.json({ error: 'Скидка 0–100%' }, { status: 422 });
+  }
   const promo = await db.promo.create({
     data: {
       title: String(title),

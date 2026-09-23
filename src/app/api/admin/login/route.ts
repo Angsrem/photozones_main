@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { verifyPassword, setSessionCookie } from '@/lib/auth';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate-limit: 5 попыток в минуту на IP — защита от brute-force пароля.
+    const ip = getClientIp(req);
+    if (!rateLimit(`login:${ip}`, 5, 60_000)) {
+      return NextResponse.json(
+        { error: 'Слишком много попыток входа. Попробуйте позже.' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
+    }
+
     const { email, password } = await req.json().catch(() => ({}));
     if (!email || !password) return NextResponse.json({ error: 'Введите email и пароль' }, { status: 422 });
 

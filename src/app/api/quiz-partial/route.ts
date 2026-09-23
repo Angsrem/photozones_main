@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 
 // POST — сохранить partial-ответы квиза (когда пользователь бросил)
 export async function POST(req: NextRequest) {
   try {
+    // Rate-limit: 20 запросов в минуту на IP.
+    const ip = getClientIp(req);
+    if (!rateLimit(`quiz-partial:${ip}`, 20, 60_000)) {
+      return NextResponse.json(
+        { error: 'Слишком много запросов. Попробуйте позже.' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
     const { answers, step, source, utm } = body;
     if (!answers || !step) return NextResponse.json({ error: 'Нет данных' }, { status: 422 });

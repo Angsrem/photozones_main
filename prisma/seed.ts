@@ -7,14 +7,19 @@ async function main() {
   console.log('Seeding...');
 
   // ===== Менеджер =====
+  // В production пароль обязательно задаётся через ADMIN_PASSWORD.
+  // Для sandbox/dev используем 'admin123' как fallback (явно из env).
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@fotozona24.ru';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+
   await db.manager.upsert({
-    where: { email: 'admin@fotozona24.ru' },
+    where: { email: adminEmail },
     update: {},
     create: {
-      email: 'admin@fotozona24.ru',
+      email: adminEmail,
       name: 'Анна Менеджер',
       phone: '+7 (391) 219-00-24',
-      passwordHash: hashPassword('admin123'),
+      passwordHash: hashPassword(adminPassword),
       role: 'ADMIN',
     },
   });

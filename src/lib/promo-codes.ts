@@ -1,11 +1,12 @@
 import { db } from './db';
 import crypto from 'crypto';
 
-// Генерация кода вида FOTO-XXXX (4 случайных символа A-Z0-9)
+// Генерация кода вида FOTO-XXXXXX (6 случайных символов A-Z0-9)
+// ~1.7 млрд комбинаций (32^6), достаточно против брутфорса промокодов.
 export function generatePromoCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // без I, O, 0, 1 — чтобы не путать
   let code = '';
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 6; i++) {
     code += chars[crypto.randomInt(0, chars.length)];
   }
   return `FOTO-${code}`;
@@ -24,7 +25,10 @@ export async function generateUniquePromoCode(): Promise<string> {
 
 // Выдать промокод лиду (после подтверждения отзыва)
 export async function issuePromoCode(leadId: string, opts?: { discountPct?: number; note?: string }): Promise<{ code: string; expiresAt: Date; discountPct: number }> {
-  const discountPct = opts?.discountPct ?? 5;
+  let discountPct = opts?.discountPct ?? 5;
+  if (!Number.isFinite(discountPct) || discountPct < 1 || discountPct > 50) {
+    throw new Error('discountPct must be between 1 and 50');
+  }
   const code = await generateUniquePromoCode();
   const expiresAt = new Date();
   expiresAt.setFullYear(expiresAt.getFullYear() + 1); // +12 месяцев

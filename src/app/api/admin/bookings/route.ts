@@ -60,6 +60,10 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const { id, status } = body;
   if (!id) return NextResponse.json({ error: 'Нет id' }, { status: 422 });
+  const ALLOWED_BOOKING_STATUSES = ['RESERVED', 'DONE', 'CANCELED'];
+  if ('status' in body && !ALLOWED_BOOKING_STATUSES.includes(body.status)) {
+    return NextResponse.json({ error: 'Недопустимый статус' }, { status: 422 });
+  }
   const updated = await db.booking.update({ where: { id }, data: { status } }).catch(() => null);
   return NextResponse.json({ ok: true, booking: updated });
 }

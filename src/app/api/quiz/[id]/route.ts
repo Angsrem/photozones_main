@@ -47,14 +47,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
   const { contact, channel } = body;
-  if (!contact) return NextResponse.json({ error: 'Укажите контакт' }, { status: 422 });
+  const contactStr = String(contact || '').trim();
+  if (!contactStr || contactStr.length > 100) return NextResponse.json({ error: 'Некорректный контакт' }, { status: 422 });
 
   const session = await db.quizSession.findUnique({ where: { id } });
   if (!session) return NextResponse.json({ error: 'Сессия не найдена' }, { status: 404 });
 
   await db.quizSession.update({
     where: { id },
-    data: { contact: String(contact), channel: channel || null },
+    data: { contact: contactStr, channel: channel || null },
   });
 
   // создадим лид с источником quiz-send
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await db.lead.create({
       data: {
         name: 'Квиз — отправка подборки',
-        phone: String(contact),
+        phone: contactStr,
         eventDate: answers.date || '',
         occasion: answers.occasion || null,
         comment: `Квиз. Канал: ${channel || '—'}. Рекомендации: ${ids.join(', ')}`,

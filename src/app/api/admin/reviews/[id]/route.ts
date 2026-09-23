@@ -27,10 +27,11 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   // удаляем файлы
   const review = await db.review.findUnique({ where: { id } });
   if (review) {
-    const photos = (review.photos as string[]) || [];
-    const videos = (review.videos as string[]) || [];
-    for (const url of [...photos, ...videos]) {
-      const filePath = path.join(process.cwd(), 'public', url);
+    const PUBLIC_ROOT = path.resolve(process.cwd(), 'public');
+    for (const url of [...((review.photos as string[]) || []), ...((review.videos as string[]) || [])]) {
+      if (typeof url !== 'string' || !url.startsWith('/uploads/reviews/')) continue;
+      const filePath = path.resolve(PUBLIC_ROOT, '.' + url);
+      if (!filePath.startsWith(PUBLIC_ROOT + path.sep)) continue;
       try { fs.unlinkSync(filePath); } catch {}
     }
   }
