@@ -7,7 +7,7 @@ import { CtaBand } from '@/components/site/cta-band';
 import { PromoStrip } from '@/components/site/promo-strip';
 import { QuizStrip } from '@/components/site/quiz-button';
 import { JsonLd } from '@/components/seo/json-ld';
-import { localBusinessLd, breadcrumbsLd } from '@/lib/seo';
+import { localBusinessLd, breadcrumbsLd, collectionPageLd } from '@/lib/seo';
 import { getPhotozones } from '@/lib/data';
 import { CATEGORIES, OCCASIONS } from '@/lib/constants';
 import { pluralize } from '@/lib/format';
@@ -70,6 +70,12 @@ export default async function CatalogPage({ searchParams }: { searchParams: Sear
       <JsonLd
         data={[
           localBusinessLd(),
+          collectionPageLd({
+            name: 'Каталог фотозон в Красноярске',
+            description: 'Все фотозоны в аренду: свадебные, детские, корпоративные, новогодние. Доставка, монтаж и демонтаж включены.',
+            url: '/katalog',
+            itemCount: zones.length,
+          }),
           breadcrumbsLd([
             { name: 'Главная', url: '/' },
             { name: 'Каталог фотозон', url: '/katalog' },

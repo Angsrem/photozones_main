@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { getArticleBySlug, getArticles, asStringArray } from '@/lib/data';
 import { CtaBand } from '@/components/site/cta-band';
 import { JsonLd } from '@/components/seo/json-ld';
-import { breadcrumbsLd } from '@/lib/seo';
+import { breadcrumbsLd, localBusinessLd } from '@/lib/seo';
 import { SITE } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -67,6 +67,7 @@ export default async function ArticlePage({
     <>
       <JsonLd
         data={[
+          localBusinessLd(),
           {
             '@context': 'https://schema.org',
             '@type': 'Article',

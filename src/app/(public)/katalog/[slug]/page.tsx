@@ -41,20 +41,32 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { slug } = await params;
   const pz = await getPhotozoneBySlug(slug);
   if (!pz) {
-    return { title: 'Фотозона не найдена' };
+    return { title: 'Фотозона не найдена', robots: { index: false } };
   }
   const description = pz.description.slice(0, 158) + (pz.description.length > 158 ? '…' : '');
+  const title = `${pz.title} — аренда фотозоны в Красноярске`;
   return {
-    title: pz.title,
+    title,
     description,
+    keywords: [
+      `${pz.title} Красноярск`,
+      `аренда ${pz.title.toLowerCase()}`,
+      `фотозона ${pz.title.toLowerCase()} Красноярск`,
+      'аренда фотозоны Красноярск',
+    ],
     alternates: { canonical: `/katalog/${pz.slug}` },
     openGraph: {
-      title: pz.title,
+      title: `${pz.title} — от ${pz.basePrice.toLocaleString('ru-RU')} ₽ | ФотоЗона24`,
       description,
+      url: `${SITE.url}/katalog/${pz.slug}`,
+      siteName: SITE.name,
+      locale: 'ru_RU',
+      type: 'website',
       images: asStringArray(pz.images).slice(0, 1).map((i) => ({
         url: i.startsWith('http') ? i : `${SITE.url}${i}`,
         width: 1200,
         height: 800,
+        alt: `${pz.title} — аренда фотозоны в Красноярске`,
       })),
     },
   };

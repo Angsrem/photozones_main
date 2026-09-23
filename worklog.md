@@ -1014,3 +1014,55 @@ Self-verify (agent-browser):
 - Карточки отзывов: 260px, fits=true ✓
 - Все ключевые страницы на 375px: OK (/ /katalog /katalog/love /svadby /ceny /otzyvy /kviz) ✓
 - lint: 0 ошибок
+
+---
+Task ID: ORCHESTRATOR-24 (SEO/GEO оптимизация)
+Agent: main (Z.ai Code)
+
+Work Log:
+
+1. SEO LIB (src/lib/seo.ts) — расширены микроразметки:
+   - LocalBusiness: + description, logo, postalCode, areaServed (районы + пригороды как schema.org типы), sameAs (WhatsApp/Telegram)
+   - Product: + brand, seller, priceValidUntil, aggregateRating (если есть отзывы)
+   - Article: новая функция articleLd (headline, publisher, mainEntityOfPage)
+   - Service: новая функция serviceLd (для посадочных — name, provider, areaServed, serviceType)
+   - WebPage: новая функция webPageLd
+   - CollectionPage: новая функция collectionPageLd (+ itemCount)
+
+2. METADATA — расширены на ключевых страницах:
+   - Главная: + 12 keywords с GEO (аренда фотозоны Красноярск, фотозона на свадьбу Красноярск, и т.д.), + openGraph с alt
+   - /svadby: + 8 keywords, + openGraph, + serviceLd в JSON-LD
+   - /detskie-prazdniki: + 7 keywords, + openGraph
+   - Карточка фотозоны: generateMetadata с keywords (название + Красноярск), OG с ценой, robots noindex для 404
+
+3. JSON-LD на страницах:
+   - /svadby: + ServiceLd («Аренда свадебных фотозон в Красноярске»)
+   - /katalog: + CollectionPageLd (name, description, itemCount)
+   - /blog/[slug]: + LocalBusinessLd
+
+4. SITEMAP — обновлён:
+   - 15 статических маршрутов с приоритетами (главная 1.0, каталог 0.9, свадьбы 0.9, ...)
+   - Приоритеты по важности: главная > каталог > посадочные > сезонные > блог
+   - changeFrequency: daily для главной/каталога/отзывов, weekly для посадочных, monthly для блога
+
+5. ROBOTS.TXT — обновлён:
+   - Отдельные правила для Yandex и Googlebot
+   - Disallow: /admin, /api, /spasibo, /podborka, /qr
+   - Host: https://fotozona24.ru
+   - Sitemap: https://fotozona24.ru/sitemap.xml
+
+Self-verify:
+- robots.txt: правильные директивы, Host, Sitemap ✓
+- Главная: 12 keywords с GEO (аренда фотозоны Красноярск, фотозона на свадьбу Красноярск, и т.д.) ✓
+- /svadby: keyword «фотозона на свадьбу Красноярск» ✓
+- /katalog: CollectionPageLd с itemCount ✓
+- /blog/[slug]: + LocalBusinessLd ✓
+- lint: 0 ошибок
+
+Stage Summary:
+- 12 GEO-keywords на главной (аренда фотозоны Красноярск, свадьба, детские, новогодняя, выпускной, корпоратив, пресс-волл, LOVE, арка из шаров)
+- 7-8 keywords на каждой посадочной с привязкой «Красноярск»
+- Карточки фотозон: keywords с названием + «Красноярск», OG с ценой
+- JSON-LD: LocalBusiness (расширенный с районами), Service (посадочные), CollectionPage (каталог), Product+AggregateRating (карточки), Article (блог), BreadcrumbList, FAQPage, Review
+- sitemap.xml: 15 статических + 31 фотозона + статьи, с приоритетами
+- robots.txt: Yandex/Googlebot отдельно, Host, Sitemap

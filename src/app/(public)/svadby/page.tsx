@@ -6,7 +6,7 @@ import { CtaBand } from '@/components/site/cta-band';
 import { QuizStrip } from '@/components/site/quiz-button';
 import { FaqAccordion } from '@/components/site/faq-accordion';
 import { JsonLd } from '@/components/seo/json-ld';
-import { localBusinessLd, breadcrumbsLd, faqLd } from '@/lib/seo';
+import { localBusinessLd, breadcrumbsLd, faqLd, serviceLd } from '@/lib/seo';
 import { OrderButton } from '@/components/site/quick-order-modal';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight, Heart } from 'lucide-react';
@@ -15,8 +15,26 @@ import { PageBreadcrumbs, PageHero, WhyUs, EmptyPhotozones } from '../_component
 export const metadata: Metadata = {
   title: 'Фотозоны на свадьбу в Красноярске — аренда свадебных фотозон',
   description:
-    'Аренда фотозон на свадьбу в Красноярске: LOVE-инсталляция, свадебная флора, текстильные и пресс-воллы. Доставка в любой район и ресторан, монтаж за 1 час. От 14 900 ₽. Заявка — перезвоним за 15 минут.',
+    'Аренда фотозон на свадьбу в Красноярске: LOVE-инсталляция, свадебная флора, текстильные и пресс-воллы. Доставка в любой район и ресторан, монтаж за 1 час. Районы: Центральный, Советский, Свердловский, Октябрьский. 14 900 ₽. Перезвоним за 15 минут.',
+  keywords: [
+    'фотозона на свадьбу Красноярск',
+    'свадебная фотозона Красноярск',
+    'аренда фотозоны на свадьбу',
+    'LOVE инсталляция свадьба',
+    'свадебная флора Красноярск',
+    'пресс-волл на свадьбу',
+    'фотозона для свадьбы Красноярск',
+    'арка из роз свадьба',
+  ],
   alternates: { canonical: '/svadby' },
+  openGraph: {
+    title: 'Фотозоны на свадьбу в Красноярске — аренда от 14 900 ₽',
+    description: 'Свадебные фотозоны с доставкой и монтажом по Красноярску. LOVE-инсталляции, флора, текстиль. Районы: Центральный, Советский, Свердловский.',
+    url: 'https://fotozona24.ru/svadby',
+    siteName: 'ФотоЗона24',
+    locale: 'ru_RU',
+    type: 'website',
+  },
 };
 
 const faq = [
@@ -58,6 +76,11 @@ export default async function SvadbyPage() {
       <JsonLd
         data={[
           localBusinessLd(),
+          serviceLd({
+            name: 'Аренда свадебных фотозон в Красноярске',
+            description: 'LOVE-инсталляции, свадебная флора, текстильные фотозоны и пресс-воллы для свадеб в Красноярске. Доставка, монтаж и демонтаж включены.',
+            slug: 'svadby',
+          }),
           breadcrumbsLd([
             { name: 'Главная', url: '/' },
             { name: 'Свадебные фотозоны', url: '/svadby' },
