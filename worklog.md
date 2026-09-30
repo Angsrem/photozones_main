@@ -1066,3 +1066,33 @@ Stage Summary:
 - JSON-LD: LocalBusiness (расширенный с районами), Service (посадочные), CollectionPage (каталог), Product+AggregateRating (карточки), Article (блог), BreadcrumbList, FAQPage, Review
 - sitemap.xml: 15 статических + 31 фотозона + статьи, с приоритетами
 - robots.txt: Yandex/Googlebot отдельно, Host, Sitemap
+
+---
+Task ID: ORCHESTRATOR-25 (сортировка и распределение фотозон)
+Agent: main (Z.ai Code)
+
+Work Log:
+- Пересортировал все 31 фотозону: хиты первыми (8 с HIT badge), потом по цене ↑
+- sortOrder 1-31 назначен по логике: хиты → по цене
+- Добавил сезонные occasions к 13 фотозонам:
+  - NEW_YEAR: +5 фотозон (световой куб, звёзды, шампань, арка из шаров, буквы)
+  - MARCH_8: +4 фотозоны (флора, шампань, арка, рустик)
+  - FEB_23: +4 фотозоны (пресс-волл, бренд, буквы, звёзды)
+- Схема возвращена на SQLite (была переключена на PostgreSQL ранее)
+
+Итог распределения по посадочным:
+| Страница | Было | Стало |
+|----------|------|-------|
+| /svadby | 7 | 17 |
+| /detskie-prazdniki | 8 | 19 |
+| /vypusknie | 3 → 19 | 19 |
+| /korporativy | 11 | 21 |
+| /prazdniki/novyj-god | 1-3 | 8 |
+| /prazdniki/8-marta | 1 | 5 |
+| /prazdniki/23-fevralya | 1 | 5 |
+| /katalog | 15 → 31 | 31 |
+
+Self-verify:
+- Lint: 0 ошибок ✓
+- /svadby: 17 ✓, /detskie: 19 ✓, /vypusknie: 19 ✓, /korporativy: 21 ✓
+- /novyj-god: 8 ✓, /8-marta: 5 ✓, /23-fevralya: 5 ✓, /katalog: 31 ✓

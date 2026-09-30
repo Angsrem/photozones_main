@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -89,7 +89,7 @@ model Lead {
 
   name        String
   phone       String
-  eventDate   DateTime @db.Date  // желаемая дата (Postgres нативный DATE)
+  eventDate   String   // желаемая дата (ISO yyyy-mm-dd)
   occasion    String?  // повод
   comment     String?
 
@@ -134,8 +134,7 @@ model Booking {
   photozone   PhotoZone? @relation(fields: [photozoneId], references: [id], onDelete: Cascade)
   elementIds  Json?    // string[] — id элементов (читаем вручную, relation на Json не поддерживается)
 
-  date        DateTime @db.Date  // Postgres нативный DATE
-  status      String   @default("RESERVED") // RESERVED | DONE | CANCELED
+  date        String   // ISO yyyy-mm-dd
   note        String?
 
   @@index([date])
@@ -147,7 +146,7 @@ model Booking {
 model DateBlock {
   id          String   @id @default(cuid())
   createdAt   DateTime @default(now())
-  date        DateTime @db.Date  // Postgres нативный DATE
+  date        String   // ISO yyyy-mm-dd
   photozoneId String?
   photozone   PhotoZone? @relation(fields: [photozoneId], references: [id], onDelete: Cascade)
   managerId   String?
