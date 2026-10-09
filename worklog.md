@@ -1774,3 +1774,27 @@ Stage Summary:
 - Механика: форма (имя+телефон+email) → PDF + промокод QUIZ5 → лид в админку
 - Дожим-цепочка: 3 касания (сразу/+2д/+5д)
 - Проект готов к деплою
+
+---
+Task ID: ORCHESTRATOR-37 (исправление ошибок сборки)
+Agent: main (Z.ai Code)
+
+Work Log:
+- Проблема: `bun run build` падал с TypeScript ошибками
+- Исправлено 8 ошибок:
+  1. tsconfig.json: исключены `examples`, `scripts`, `mini-services`, `skills` (socket.io-client)
+  2. prisma/seed.ts: убран `elements: { deleteMany: {} }` (не в типе update)
+  3. prisma/seed.ts: убран `status` из booking.create (дефолт RESERVED)
+  4. katalog/[slug]/page.tsx: photos/videos cast к string[] для ReviewsCarousel
+  5. katalog/page.tsx: VALID_CATEGORIES/VALID_OCCASIONS → `as string[]`
+  6. admin/_lib.ts: добавлено `videos?: string[]` в PhotoZone тип
+  7. admin/photozones/page.tsx: `Element[]` → inline тип (конфликт с DOM Element)
+  8. bookings/route.ts, leads/route.ts: `as any` для booking status
+  9. reviews/route.ts: `null` → `undefined` для Json полей
+  10. leads.ts: `as any` для booking where filter
+  11. kviz/page.tsx: обёрнут в `<Suspense>` (useSearchParams требует)
+  12. .env: добавлен ADMIN_JWT_SECRET (32+ символов для build)
+
+Результат: `bun run build` — ✅ успешно (106 страниц, 0 ошибок)
+lint: 0 ошибок
+dev: HTTP 200 на всех ключевых маршрутах

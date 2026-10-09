@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { JsonLd } from '@/components/seo/json-ld';
 import { localBusinessLd, breadcrumbsLd } from '@/lib/seo';
 import { QuizWizard } from './quiz-wizard';
@@ -13,7 +14,9 @@ export default function KvizPage() {
   return (
     <>
       <JsonLd data={[localBusinessLd(), breadcrumbsLd([{ name: 'Главная', url: '/' }, { name: 'Подбор фотозоны', url: '/kviz' }])]} />
-      <QuizWizard />
+      <Suspense fallback={<div className="container mx-auto max-w-3xl px-4 py-20 text-center text-muted-foreground">Загрузка квиза…</div>}>
+        <QuizWizard />
+      </Suspense>
     </>
   );
 }

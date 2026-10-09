@@ -161,7 +161,7 @@ export default async function PhotozonePage({ params }: { params: Params }) {
           {/* ГАЛЕРЕЯ + ОТЗЫВЫ */}
           <div className="min-w-0">
             <PhotozoneGallery images={images} videos={videos} title={pz.title} />
-            <PhotozoneReviewsCarousel reviews={reviews.map((r) => ({ ...r, publishedAt: r.publishedAt.toISOString() }))} photozoneTitle={pz.title} />
+            <PhotozoneReviewsCarousel reviews={reviews.map((r) => ({ ...r, publishedAt: r.publishedAt.toISOString(), photos: (r.photos as string[]) || null, videos: (r.videos as string[]) || null }))} photozoneTitle={pz.title} />
           </div>
 
           {/* ИНФО + ОРДЕР */}

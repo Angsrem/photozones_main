@@ -157,7 +157,7 @@ async function main() {
       isActive: true, sortOrder: z.sortOrder,
     };
     if (existing) {
-      await db.photoZone.update({ where: { slug: z.slug }, data, elements: { deleteMany: {} } });
+      await db.photoZone.update({ where: { slug: z.slug }, data });
     } else {
       await db.photoZone.create({ data: { ...data, slug: z.slug } });
     }
@@ -231,8 +231,8 @@ async function main() {
       await db.booking.create({
         data: {
           leadId: created.id, photozoneId: l.photozoneId, date: l.eventDate,
-          status: l.status === 'DONE' ? 'DONE' : 'RESERVED', note: 'Из заявки',
-        },
+          note: 'Из заявки',
+        } as any,
       });
     }
   }

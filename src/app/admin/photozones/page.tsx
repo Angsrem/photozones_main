@@ -389,7 +389,7 @@ function PhotozoneEditor({
   const [isActive, setIsActive] = React.useState<boolean>(
     photozone?.isActive !== false
   );
-  const [elements, setElements] = React.useState<Element[]>(
+  const [elements, setElements] = React.useState<{ id?: string; name: string; price: number; description?: string | null; image?: string | null; category?: string; isActive?: boolean }[]>(
     (photozone?.elements as any) || []
   );
   const [newElName, setNewElName] = React.useState('');

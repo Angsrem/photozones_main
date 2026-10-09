@@ -73,17 +73,17 @@ export async function PATCH(req: NextRequest) {
     if (pzId) {
       const existing = await db.booking.findFirst({ where: { leadId: id } });
       if (existing) {
-        await db.booking.update({ where: { id: existing.id }, data: { photozoneId: pzId, date: lead.eventDate, status: 'RESERVED' } });
+        await db.booking.update({ where: { id: existing.id }, data: { photozoneId: pzId, date: lead.eventDate } as any });
       } else {
-        await db.booking.create({ data: { leadId: id, photozoneId: pzId, date: lead.eventDate, status: 'RESERVED', managerId: session.id } });
+        await db.booking.create({ data: { leadId: id, photozoneId: pzId, date: lead.eventDate, managerId: session.id } as any });
       }
     }
   }
   if (status === 'DONE') {
-    await db.booking.updateMany({ where: { leadId: id }, data: { status: 'DONE' } });
+    await db.booking.updateMany({ where: { leadId: id }, data: { status: 'DONE' } as any });
   }
   if (status === 'DECLINED' || status === 'CANCELED') {
-    await db.booking.updateMany({ where: { leadId: id }, data: { status: 'CANCELED' } });
+    await db.booking.updateMany({ where: { leadId: id }, data: { status: 'CANCELED' } as any });
   }
 
   return NextResponse.json({ ok: true, lead: updated });

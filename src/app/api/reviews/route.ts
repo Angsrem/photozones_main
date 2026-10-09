@@ -113,8 +113,8 @@ export async function POST(req: NextRequest) {
     const review = await db.review.create({
       data: {
         author, text, event, rating,
-        photos: photos.length ? photos : null,
-        videos: videos.length ? videos : null,
+        photos: photos.length ? photos : undefined,
+        videos: videos.length ? videos : undefined,
         isPublished: false, // на модерации
       },
     });

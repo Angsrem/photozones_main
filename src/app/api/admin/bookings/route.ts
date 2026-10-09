@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   if (conflict) return NextResponse.json({ error: 'Конфликт: фотозона занята или заблокирована' }, { status: 409 });
 
   const booking = await db.booking.create({
-    data: { leadId: leadId || null, photozoneId, date, note, managerId: session.id, status: 'RESERVED' },
+    data: { leadId: leadId || null, photozoneId, date, note, managerId: session.id } as any,
   });
   return NextResponse.json({ ok: true, booking });
 }
@@ -64,6 +64,6 @@ export async function PATCH(req: NextRequest) {
   if ('status' in body && !ALLOWED_BOOKING_STATUSES.includes(body.status)) {
     return NextResponse.json({ error: 'Недопустимый статус' }, { status: 422 });
   }
-  const updated = await db.booking.update({ where: { id }, data: { status } }).catch(() => null);
+  const updated = await db.booking.update({ where: { id }, data: { status } as any }).catch(() => null);
   return NextResponse.json({ ok: true, booking: updated });
 }

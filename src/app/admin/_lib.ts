@@ -37,6 +37,7 @@ export type PhotoZone = {
   sizeW: number | null;
   sizeH: number | null;
   images: string[];
+  videos?: string[];
   includes: string[];
   badge: 'HIT' | 'NEW' | null;
   hit: boolean;

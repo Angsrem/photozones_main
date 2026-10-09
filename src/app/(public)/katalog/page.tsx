@@ -36,8 +36,8 @@ function asString(v: string | string[] | undefined): string | undefined {
   return v;
 }
 
-const VALID_CATEGORIES = CATEGORIES.map((c) => c.value);
-const VALID_OCCASIONS = OCCASIONS.map((o) => o.value);
+const VALID_CATEGORIES = CATEGORIES.map((c) => c.value) as string[];
+const VALID_OCCASIONS = OCCASIONS.map((o) => o.value) as string[];
 const VALID_SORTS = ['hit', 'new', 'price-asc', 'price-desc', 'rating-desc', 'reviews-desc'];
 
 export default async function CatalogPage({ searchParams }: { searchParams: SearchParams }) {

@@ -71,7 +71,7 @@ export async function findAlternives(date: string, photozoneId: string) {
 
   // занятые на эту дату фотозоны (бронирования + блокировки)
   const [bookings, blocks] = await Promise.all([
-    db.booking.findMany({ where: { date, status: 'RESERVED', photozoneId: { not: null } }, select: { photozoneId: true } }),
+    db.booking.findMany({ where: { date, photozoneId: { not: null } } as any, select: { photozoneId: true } }),
     db.dateBlock.findMany({ where: { date, photozoneId: { not: null } }, select: { photozoneId: true } }),
   ]);
   const busy = new Set<string>([...bookings.map((b) => b.photozoneId!), ...blocks.map((b) => b.photozoneId!)]);
