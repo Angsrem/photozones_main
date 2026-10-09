@@ -17,6 +17,10 @@ import {
   CheckCircle,
   XCircle,
   FileDown,
+  BarChart3,
+  Filter,
+  Target,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -38,6 +42,14 @@ type Stats = {
   }[];
   byPhotozone: { title: string; count: number }[];
   bySource: { source: string; count: number }[];
+  quiz?: {
+    quizStarts: number;
+    quizCompletes: number;
+    quizAbandons: number;
+    quizByStep: { step: number; count: number }[];
+    quizFunnelConversion: number;
+  };
+  leadMagnetLeads?: number;
 };
 
 type LeadMagnetItem = {
@@ -342,6 +354,159 @@ export default function AdminDashboardPage() {
         </Card>
       )}
 
+      {/* ===== Аналитика: воронка квиза + конверсия лид-магнитов ===== */}
+      {stats.quiz && (
+        <Card>
+          <div className="p-5 border-b">
+            <div className="flex items-start gap-3">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                <BarChart3 className="size-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-display text-base flex items-center gap-2">
+                  Аналитика
+                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px]">
+                    воронки
+                  </Badge>
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Воронка квиза и конверсия лид-магнитов в заявки — главные метрики продуктовой эффективности
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 grid lg:grid-cols-2 gap-6">
+            {/* Левая часть — воронка квиза */}
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Filter className="size-4 text-primary" />
+                  <h4 className="text-sm font-semibold">Воронка квиза</h4>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <FunnelMini
+                    label="Начали"
+                    value={stats.quiz.quizStarts}
+                    tint="bg-sky-50 text-sky-700 border-sky-200"
+                    icon={<Users className="size-3.5" />}
+                  />
+                  <FunnelMini
+                    label="Дошли"
+                    value={stats.quiz.quizCompletes}
+                    tint="bg-emerald-50 text-emerald-700 border-emerald-200"
+                    icon={<CheckCircle2 className="size-3.5" />}
+                  />
+                  <FunnelMini
+                    label="Бросили"
+                    value={stats.quiz.quizAbandons}
+                    tint="bg-amber-50 text-amber-700 border-amber-200"
+                    icon={<AlertCircle className="size-3.5" />}
+                  />
+                </div>
+                <div className="mt-3 text-xs text-muted-foreground">
+                  Конверсия воронки: <b className="text-foreground">{stats.quiz.quizFunnelConversion}%</b>
+                  {' '}· {stats.quiz.quizStarts + stats.quiz.quizAbandons} всего попыток
+                </div>
+              </div>
+
+              {/* Распределение бросаний по шагам */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h5 className="text-xs font-medium text-muted-foreground">Бросили на шаге</h5>
+                  <span className="text-[10px] text-muted-foreground">{stats.quiz.quizAbandons} всего</span>
+                </div>
+                {stats.quiz.quizByStep.length === 0 ? (
+                  <div className="text-sm text-muted-foreground py-3">Нет данных по бросаниям</div>
+                ) : (
+                  <div className="space-y-1.5 max-h-56 overflow-y-auto">
+                    {(() => {
+                      const maxStepCount = Math.max(1, ...stats.quiz.quizByStep.map((s) => s.count));
+                      return stats.quiz.quizByStep.map((s) => (
+                        <div key={s.step} className="flex items-center gap-2 text-sm">
+                          <div className="w-20 shrink-0 text-foreground/80">
+                            Шаг {s.step}
+                          </div>
+                          <div className="flex-1 h-5 rounded-md bg-muted overflow-hidden relative">
+                            <div
+                              className="h-full bg-amber-400 transition-all"
+                              style={{ width: `${(s.count / maxStepCount) * 100}%` }}
+                            />
+                          </div>
+                          <div className="w-10 text-sm font-semibold text-right tabular-nums">{s.count}</div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Правая часть — конверсия лид-магнитов */}
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Target className="size-4 text-primary" />
+                  <h4 className="text-sm font-semibold">Конверсия лид-магнитов</h4>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <FunnelMini
+                    label="Скачиваний"
+                    value={leadMagnets?.totalDownloads ?? 0}
+                    tint="bg-violet-50 text-violet-700 border-violet-200"
+                    icon={<FileDown className="size-3.5" />}
+                  />
+                  <FunnelMini
+                    label="Стало лидами"
+                    value={stats.leadMagnetLeads ?? 0}
+                    tint="bg-emerald-50 text-emerald-700 border-emerald-200"
+                    icon={<CheckCircle2 className="size-3.5" />}
+                  />
+                </div>
+                <div className="mt-3 text-xs text-muted-foreground">
+                  Конверсия в заявку:{' '}
+                  <b className="text-foreground">
+                    {(leadMagnets?.totalDownloads ?? 0) > 0
+                      ? Math.round(((stats.leadMagnetLeads ?? 0) / (leadMagnets?.totalDownloads ?? 1)) * 100)
+                      : 0}
+                    %
+                  </b>
+                  {' '}· скачиваний → заявок (source = leadmagnet)
+                </div>
+                <div className="mt-3 text-xs text-muted-foreground">
+                  Активных гайдов: <b className="text-foreground">{leadMagnets?.activeCount ?? 0}</b>
+                  {' '}из {leadMagnets?.total ?? 0}
+                </div>
+              </div>
+
+              {/* Топ-3 лид-магнита по скачиваниям */}
+              {leadMagnets && leadMagnets.items.length > 0 && (
+                <div>
+                  <h5 className="text-xs font-medium text-muted-foreground mb-2">Топ по скачиваниям</h5>
+                  <div className="space-y-1.5 max-h-56 overflow-y-auto">
+                    {(() => {
+                      const maxDl = Math.max(1, ...leadMagnets.items.map((x) => x.downloads));
+                      return leadMagnets.items.slice(0, 3).map((m) => (
+                        <div key={m.id} className="flex items-center gap-2 text-sm">
+                          <div className="min-w-0 flex-1 truncate text-foreground/80">{m.title}</div>
+                          <div className="flex-1 max-w-32 h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className="h-full bg-primary transition-all"
+                              style={{ width: `${(m.downloads / maxDl) * 100}%` }}
+                            />
+                          </div>
+                          <div className="w-10 text-sm font-semibold text-right tabular-nums">{m.downloads}</div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-3">
         {/* График по статусам — CSS-бары */}
         <Card className="lg:col-span-2">
@@ -474,5 +639,24 @@ function KpiCard({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function FunnelMini({
+  label, value, tint, icon,
+}: {
+  label: string;
+  value: number;
+  tint: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className={`rounded-lg border p-3 ${tint}`}>
+      <div className="flex items-center gap-1.5 text-[11px] font-medium opacity-80">
+        {icon}
+        <span className="truncate">{label}</span>
+      </div>
+      <div className="mt-1 text-2xl font-semibold tabular-nums leading-tight">{value}</div>
+    </div>
   );
 }

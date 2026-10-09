@@ -19,6 +19,8 @@ model Manager {
   passwordHash String
   role         String   @default("MANAGER") // MANAGER | ADMIN
   telegramId   String?
+  // 2FA (TOTP, RFC 6238). base32-секрет. null = 2FA выключена.
+  totpSecret   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

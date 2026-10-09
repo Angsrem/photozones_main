@@ -1,0 +1,302 @@
+     1→# Worklog — ФотоЗона24 (аренда фотозон в Красноярске)
+     2→
+     3→## Общий контекст для всех агентов
+     4→
+     5→Проект: продающий сайт аренды фотозон. Next.js 16 App Router + TypeScript + Tailwind 4 + shadcn/ui + Prisma (SQLite) + Framer Motion. Тёмная премиальная палитра (золото `text-gold`/`bg-gold`, коралл `text-coral`). Шрифт display — `font-display` (Playfair), обычный — Geist.
+     6→
+     7→### ВАЖНЫЕ правила
+     8→- Публичные страницы рендерятся в route-group `src/app/(public)/` (layout уже есть с хедером/футером/sticky-CTA/модалкой быстрого заказа). **Не дублируйте layout.** Просто кладите page.tsx в нужную папку.
+     9→- Все публичные page.tsx — **серверные компоненты** по умолчанию. 'use client' только там, где нужны хуки/события.
+    10→- КЛИЕНТУ НИГДЕ не показываем занятость дат. Только менеджер в /admin.
+    11→- Кнопка «Заказать» везде открывает модалку быстрого заказа через `<OrderButton prefill={...}>` или `openQuickOrder({...})` (из `@/components/site/quick-order-store`). НЕ делайте отдельные формы на страницах — используйте модалку.
+    12→- Используйте существующие shadcn/ui компоненты из `src/components/ui/*`.
+    13→- Изображения — через `next/image`. Папки: `/images/photozones/<slug>.png`, `/images/hero.png`. Seed фотозон уже ссылается на эти пути.
+    14→- Sticky footer уже обеспечен layout'ом (`min-h-screen flex flex-col` + `mt-auto` на футере). Не ломайте.
+    15→- Мобильные отступы: основной контент имеет `pb-20 sm:pb-0` (место под sticky CTA на мобилке).
+    16→
+    17→### Доступные shared-компоненты (импортируйте, не создавайте дубли)
+    18→- `@/components/site/photozone-card` → `PhotozoneCard({ pz, index })`, `TrustBadges({ className })`, `SectionHeading({ eyebrow, title, subtitle, center })`
+    19→- `@/components/site/quick-order-modal` → `OrderButton({ prefill, children, className, variant, size })`
+    20→- `@/components/site/quick-order-store` → `openQuickOrder(prefill)` (для client-компонентов)
+    21→- `@/components/site/cta-band` → `CtaBand({ title, subtitle, prefill })`
+    22→- `@/components/site/faq-accordion` → `FaqAccordion({ items: {q,a}[] })`
+    23→- `@/components/site/phone-input` → `PhoneInput`
+    24→- `@/components/seo/json-ld` → `JsonLd({ data: object | object[] })`
+    25→
+    26→### Data access (серверные запросы к БД)
+    27→- `@/lib/data` → `getPhotozones({ category?, occasion?, search?, sort?, limit? })`, `getPhotozoneBySlug(slug)`, `getReviews(limit)`, `getArticles()`, `getArticleBySlug(slug)`, `asStringArray(json)` 
+    28→- `@/lib/db` → `db` (Prisma client). Модели: PhotoZone, Element, Lead, Booking, DateBlock, Promo, Review, Article, Manager.
+    29→- `@/lib/constants` → `SITE` (телефон/email/адрес/районы/...), `NAV_LINKS`, `OCCASIONS`, `CATEGORIES`, `LEAD_STATUSES`, `BOOKING_STATUSES`
+    30→- `@/lib/format` → `formatPrice(n)`, `formatPriceFrom(n)`, `formatDateRu(iso)`, `formatDateShort(iso)`, `todayISO()`, `addDaysISO(n)`, `pluralize(n, forms)`
+    31→- `@/lib/seo` → `localBusinessLd()`, `productLd(p)`, `breadcrumbsLd(items)`, `faqLd(qa)`, `reviewsLd(reviews)`
+    32→
+    33→### Поля PhotoZone (Prisma)
+    34→id, slug, title, description, category (FRAME|PRESSWALL|TEXTILE|THEME), occasions (Json:string[]), basePrice (int, "от"), sizeW, sizeH (float), images (Json:string[]), includes (Json:string[]), badge ('HIT'|'NEW'|null), hit (bool), isActive, sortOrder, elements[] (relation: {id,name,price}).
+    35→
+    36→### SEO-паттерн для страницы
+    37→```tsx
+    38→import type { Metadata } from 'next';
+    39→export const metadata: Metadata = {
+    40→  title: '...', // попадёт в шаблон "%s — ФотоЗона24 Красноярск"
+    41→  description: '...',
+    42→  alternates: { canonical: '/put' },
+    43→};
+    44→// JSON-LD рендерить в теле страницы: <JsonLd data={[localBusinessLd(), breadcrumbsLd([...]), faqLd(qa)]} />
+    45→```
+    46→
+    47→### Контакты (из SITE)
+    48→Телефон: +7 (391) 219-00-24, WhatsApp: 79999990024, Telegram: fotozona24_krsk, email: order@fotozona24.ru, адрес: г. Красноярск, ул. Парижской Коммуны, 33, часы: Ежедневно 9:00–21:00. Районы: Центральный, Советский, Свердловский, Октябрьский, Железнодорожный, Ленинский, Кировский. Пригороды: Солнечный, Подгорный, Емельяново.
+    49→
+    50→### Тестовые данные (seed уже залит)
+    51→15 фотозон с slug'ами: love-installyaciya, novogodnyaya-mishura, stilyagi, bukvy-i-cifry, press-wall-premium, svadebnaya-flora, edonorog, korporativ-brand, vesna-8-marta, muzhskaya-23-fevralya, vypusknoj-zvezdy, tekstil-shampan, neon-party, rustic-garden, shary-arka. 10 отзывов, 7 заявок (разные статусы), 2 промо, 2 статьи, 1 менеджер (admin@fotozona24.ru / admin123).
+    52→
+    53→---
+    54→
+    55→## Task ID: 9 — Калькулятор-визард `/kalkulyator` и заглушка `/konstruktor`
+    56→
+    57→**Агент:** кодовая задача (fullstack-раздел). Файлы:
+    58→- `src/app/(public)/kalkulyator/page.tsx` — серверная страница (metadata, JSON-LD, hero, рендер wizard, TrustBadges, CtaBand, phone-CTA).
+    59→- `src/app/(public)/kalkulyator/calculator-wizard.tsx` — `'use client'` 4-шаговый wizard.
+    60→- `src/app/(public)/konstruktor/page.tsx` — серверная заглушка конструктора (этап 2).
+    61→
+    62→### `/kalkulyator` — Калькулятор стоимости (wizard)
+    63→- **4 шага** с прогресс-баром (`Progress` + кастомный stepper с состояниями active/done):
+    64→  1. **Повод** — карточки-радио (Свадьба / День рождения / Выпускной / Корпоратив / Сезонный праздник). Значения `WEDDING/BIRTHDAY/GRADUATION/CORPORATE` тянутся из `OCCASIONS`, `SEASONAL` добавлен как обобщающий сезонный повод.
+    65→  2. **Стиль** — радио (Классика/Флора, Неон, Рустик/Бохо, Сезонная, Брендовая). Каждый стиль имеет `modifier`, влияющий на базу: 0 / +2000 / +1500 / +1000 / +3000 ₽.
+    66→  3. **Основа + доп. элементы** — выбор основы (Каркасная S 8900 / M 12900 / L 17900, Пресс-волл 15900, Текстильная 10900) + чекбоксы допов (Световые буквы +3900, Неоновая надпись +3500, Шары 50шт +2500, Гирлянда +1500, Печать логотипа +4500, Доп. час +800).
+    67→  4. **Дата и адрес** — `<input type="date" min={today()}>` (min считается в рендере + `suppressHydrationWarning` от SSR/CSR-мисматча на границе суток; lint-clean, без `setState` в `useEffect`) + инпут адреса + чекбокс «Пригород» (`SITE.suburbSurcharge = 1500`) с подсказкой-списком пригородов из `SITE.suburbs`.
+    68→- Кнопки «Назад»/«Далее», на шаге 4 — «Рассчитать» → результат с breakdown.
+    69→- **Результат**: ориентировочная цена = base + styleModifier + Σaddons + suburb. Показан большой total + детальный breakdown (повод/стиль/основа/каждый доп/пригород/дата/адрес) + дисклеймер «Расчёт ориентировочный. Точную цену менеджер назовёт по телефону за 15 минут.»
+    70→- Кнопка «Зафиксировать расчёт и заказать» → `openQuickOrder({ source:'kalkulyator', sourcePage:'/kalkulyator', occasion, priceEstimate, config: { полный объект: occasion, occasionLabel, style, styleLabel, base{value,label,desc,price}, addons[], date, address, isSuburb, suburbSurcharge, breakdown{base,style,addons,suburb,total} } })`.
+    71→- Состояния доверия: hero-строка (Расчёт за 1 мин / 100+ меропр. / 4.9★) + `TrustBadges` под wizard.
+    72→- Анимации перехода шагов — `framer-motion` `AnimatePresence mode="wait"` (slide-x + fade), результат — slide-y.
+    73→- Все тап-таргеты ≥ 44px: кнопки `h-12` (48px), карточки-радио `min-h-[88px]`, аддон-строки `min-h-[56px]`.
+    74→- **metadata**: title «Калькулятор стоимости фотозоны в Красноярске», canonical `/kalkulyator`. JSON-LD: `localBusinessLd()` + `breadcrumbsLd([Главная → Калькулятор])`.
+    75→
+    76→### `/konstruktor` — Заглушка конструктора (этап 2)
+    77→- H1 «Конструктор фотозон — скоро» (со «скоро» в `text-gradient-gold`).
+    78→- Текст про готовящийся интерактивный конструктор + призыв оставить заявку.
+    79→- Иллюстрация-заглушка: gradient-блок 4:3 с иконкой `Wand2`, pulse-индикатор «В разработке».
+    80→- 2× `OrderButton` с `prefill={{ source:'konstruktor-stub', sourcePage:'/konstruktor', config:{ type:'konstructor-request' } }}` (в hero и в inline-карточке «Хочу конструктор — перезвоните мне») — открывают модалку из layout.
+    81→- Список «Что будет в конструкторе»: Выбор основы / Добавление элементов / Живая цена / Сохранение конфигурации (4 карточки с иконками + нумерацией).
+    82→- `CtaBand` внизу (prefill `source:'konstruktor-cta'`).
+    83→- **metadata**: title «Конструктор фотозон в Красноярске — скоро», canonical `/konstruktor`. JSON-LD: `localBusinessLd()` + `breadcrumbsLd([Главная → Конструктор])`.
+    84→
+    85→### Цвета и техника
+    86→- Палитра строго по дизайн-системе: `text-gold`/`bg-gold`/`text-gradient-gold`/`text-coral`. Без indigo/blue.
+    87→- Импорты только из разрешённых модулей (`@/lib/constants`, `@/lib/format`, `@/components/site/*`, `@/components/seo/json-ld`, `@/lib/seo`, `@/components/ui/*`).
+    88→- Не модифицировал `globals.css`, `layout.tsx`, shared-компоненты.
+    89→- `bun run lint` — **0 ошибок, 0 предупреждений**. Build не запускался.
+    90→- Smoke-тест curl: `/kalkulyator` → 200, `/konstruktor` → 200, ключевой контент рендерится, canonical/title корректны.
+    91→
+    92→### Заметка следующим агентам
+    93→- Wizard полностью клиентский, данные шагов захардкожены внутри `calculator-wizard.tsx` (цены реалистичные, не из БД). При появлении `Element`/цен из БД — заменить `ADDON_OPTIONS`/`BASE_OPTIONS` на данные из `db`.
+    94→- `config` в `openQuickOrder` содержит весь объект расчёта — он попадает в `Lead.config` (JSON) через `/api/leads` (модалка уже сериализует `prefill.config`). Менеджер в `/admin` сможет увидеть конфигурацию.
+    95→- `occasion='SEASONAL'` — обобщённое значение; если нужно уточнить (Новый год/8 марта/23 февраля), это делается на стороне менеджера по комментарию или расширением шага 1.
+    96→
+    97→---
+    98→
+    99→## Task ID: 7 — Публичные страницы `/katalog`, `/katalog/[slug]`, `/ceny`
+   100→
+   101→**Агент:** кодовая задача (fullstack-раздел). Файлы:
+   102→- `src/app/(public)/katalog/page.tsx` — серверная страница каталога (metadata, JSON-LD, hero, фильтры, сетка, пустое состояние, CtaBand).
+   103→- `src/app/(public)/katalog/catalog-filters.tsx` — `'use client'` панель фильтров (поиск + категория + повод + сортировка, обновление URL query).
+   104→- `src/app/(public)/katalog/[slug]/page.tsx` — серверная карточка фотозоны (generateMetadata + generateStaticParams + notFound + JSON-LD Product/Breadcrumbs/LocalBusiness).
+   105→- `src/app/(public)/katalog/[slug]/gallery.tsx` — `'use client'` переключаемая галерея (основное фото + превью с активным состоянием).
+   106→- `src/app/(public)/ceny/page.tsx` — серверная страница тарифов (3 карточки, таблица «что входит», блок доплат, CTA на калькулятор, CtaBand, FAQ+faqLd).
+   107→
+   108→### `/katalog` — Каталог всех фотозон
+   109→- **Хлебные крошки** (Главная → Каталог) через shadcn `Breadcrumb`.
+   110→- **H1** «Каталог фотозон в Красноярске» + SEO-абзац с гео-ключами (районы: Центральный, Советский, Свердловский, Октябрьский; «монтаж за 1 час», «перезвоним за 15 минут»).
+   111→- **Счётчик** в eyebrow: «N фотозон/фотозоны/фотозон» через `pluralize`.
+   112→- **Фильтры** (`CatalogFilters`, `'use client'`): 4 контрола в `grid lg:grid-cols-4`:
+   113→  - Поиск по названию (`<Input type="search">` с иконкой Search, debounce не нужен — фильтрация серверная при submit URL).
+   114→  - Категория (`Select` из `CATEGORIES`: FRAME/PRESSWALL/TEXTILE/THEME + «Все категории»).
+   115→  - Повод (`Select` из `OCCASIONS` + «Любой повод»).
+   116→  - Сортировка (`Select`: Сначала хиты / Новинки / Цена ↑ / Цена ↓).
+   117→  - Все изменения мгновенно `router.push` через `useTransition` (sticky-панель с `backdrop-blur`).
+   118→  - Кнопка «Сбросить фильтры» появляется только когда есть активные фильтры.
+   119→- **Валидация на сервере**: `searchParams` — Promise в Next 16; значения проверяются against `CATEGORIES`/`OCCASIONS`/`['hit','new','price-asc','price-desc']`, иначе игнорируются (защита от мусора в URL).
+   120→- **Сетка карточек**: `grid gap-5 sm:grid-cols-2 lg:grid-cols-3`, каждая через `<PhotozoneCard pz={...} index={i} />`.
+   121→- **Строка активных фильтров** над сеткой («Показываем: Текстильная фотозона · Свадьба · «flora»»).
+   122→- **Пустое состояние**: иконка `SearchX` в золотом круге, заголовок «Ничего не нашли», 2 кнопки — `<OrderButton>` (prefill `source:'catalog-empty'`, передаётся `occasion` если выбран) и «Сбросить фильтры» (Link на `/katalog`).
+   123→- **CtaBand** внизу (prefill `source:'catalog-cta'`).
+   124→- **JSON-LD**: `localBusinessLd()` + `breadcrumbsLd([Главная → Каталог])`.
+   125→- **metadata**: title «Каталог фотозон в Красноярске — аренда с доставкой», description с гео, canonical `/katalog`.
+   126→
+   127→### `/katalog/[slug]` — Карточка фотозоны + быстрый заказ
+   128→- **generateStaticParams**: `db.photoZone.findMany({ where:{ isActive:true }, select:{ slug:true } })` → все slug пререндерятся.
+   129→- **generateMetadata**: берёт `pz.title`, обрезает description до 158 символов + «…», canonical `/katalog/{slug}`, OpenGraph images из `pz.images`.
+   130→- **404**: `notFound()` если фотозона не найдена или `isActive:false`. Smoke-тест `/katalog/non-existent-slug` → 404.
+   131→- **params** — `Promise<{ slug: string }>` (Next 16, await).
+   132→- **Layout**: `grid lg:grid-cols-[1.2fr_1fr]` — слева галерея, справа sticky-сайдбар с инфо и кнопкой заказа.
+   133→- **Галерея** (`PhotozoneGallery`, `'use client'`): основное фото 4:3 + превью-grid (4-5 колонок), активное превью подсвечивается `border-gold` + `ring-gold/30`. Переключение по клику, доступные `aria-label` и `aria-current`.
+   134→- **Бейджи**: HIT/NEW из `pz.badge` (золотой), категория (outline gold), до 3 поводов.
+   135→- **H1** + цена «от N ₽» (`formatPriceFrom`) + размер (Ruler-иконка «3 × 2.4 м»).
+   136→- **Описание** полный текст.
+   137→- **«Что входит в стоимость»** — карточка с checklist из `asStringArray(pz.includes)`, иконка `Layers`, 2 колонки на sm+.
+   138→- **«Дополнительные элементы»** — список из `pz.elements` с ценами через `formatPrice`, divide-y.
+   139→- **CTA-блок (десктоп)** в сайдбаре: trust-строка (перезвон 15 мин / договор), `<OrderButton>` (`bg-gold`, `w-full`), кнопка-тел `tel:` (SITE.phoneRaw), подпись про доставку.
+   140→- **Похожие фотозоны**: `getPhotozones({ category, sort:'hit', limit:4 })` → фильтрую текущую, беру 3, рендерю `<PhotozoneCard>` grid 3 колонки.
+   141→- **CtaBand** с prefill из `orderPrefill` (source меняю на `'photozone-cta'`).
+   142→- **Sticky order bar (мобильные)**: `sm:hidden fixed bottom-0 z-40` — цена «от N ₽» + `<OrderButton>` (prefill `source:'photozone-card'`, `sourcePage:'/katalog/'+slug`). z-40 поверх глобального sticky CTA (z-30), `pb-[calc(0.75rem+env(safe-area-inset-bottom))]` учитывает safe-area.
+   143→- **Хлебные крошки**: Главная → Каталог → Название.
+   144→- **JSON-LD**: `localBusinessLd()` + `productLd({title, slug, description, basePrice, images})` + `breadcrumbsLd([3 элемента])`.
+   145→- **prefill для всех кнопок**: `{ photozoneId, photozoneTitle, photozoneImage, photozonePrice, source:'photozone-card', sourcePage:'/katalog/'+slug }`.
+   146→
+   147→### `/ceny` — Тарифы + калькулятор CTA
+   148→- **Хлебные крошки** (Главная → Цены).
+   149→- **H1** «Цены на аренду фотозон в Красноярске» + лид-абзац.
+   150→- **3 тарифа** карточками (`Card`):
+   151→  - **Эконом** от 8 900 ₽ — световые буквы/цифры, базовая текстильная 2.5×2 м. Для дней рождений и семейных праздников.
+   152→  - **Стандарт** от 12 900 ₽ (badge «Самое популярное» в золоте, рамка `border-2 border-gold`, `lg:-mt-4` — слегка приподнят) — тематические фотозоны (мишура, стиляги, neon party). Для свадеб/юбилеев/корпоративов до 80 чел.
+   153→  - **Премиум** от 19 900 ₽ — пресс-волл с брендом, свадебная флора, LOVE-инсталляция. Для корпоративов от 100 чел и свадеб.
+   154→  - У каждой: иконка (Wallet/Star/Crown), цена (formatPrice), теглайн, описание, блок «Что входит» (checklist с `Check`-иконкой), блок «Для кого подходит», `<OrderButton>` с `prefill source:'ceny-{tier}'`, `priceEstimate`.
+   155→- **Таблица «Что входит в стоимость»** через shadcn `Table`: 7 строк × 4 колонки (Услуга / Эконом / Стандарт / Премиум), `Check` (золото) для включённых, `X` (muted/40) для невключённых. Колонка «Стандарт» подсвечена `text-gold`.
+   156→- **Блок «Доплаты»**: 3 карточки (Доставка в пригород +1 500 ₽ / Доп. час +800 ₽ / Печать логотипа +4 500 ₽) с иконками и подсказками (Солнечный, Подгорный, Емельяново).
+   157→- **CTA на калькулятор**: gradient-блок `border-gold/30` с заголовком, описанием и 2 кнопками — «Открыть калькулятор» (Link на `/kalkulyator`, `bg-gold`) и «Позвонить» (`tel:`).
+   158→- **CtaBand** внизу (prefill `source:'ceny-cta'`).
+   159→- **FAQ** (5 вопросов) через `FaqAccordion` + подпись с кнопками «Смотреть каталог» и «Позвонить».
+   160→- **JSON-LD**: `localBusinessLd()` + `breadcrumbsLd([Главная → Цены])` + `faqLd(FAQ)`.
+   161→- **metadata**: title «Цены на аренду фотозон в Красноярске — тарифы Эконом/Стандарт/Премиум», description, canonical `/ceny`.
+   162→
+   163→### Цвета и техника
+   164→- Палитра строго по дизайн-системе: `text-gold`/`bg-gold`/`border-gold`/`text-gradient-gold`/`text-coral`. Без indigo/blue.
+   165→- Все картинки — `next/image` с осмысленным alt (в `PhotozoneGallery` — «{title} — фото N» / «{title} — превью N»).
+   166→- Серверные компоненты по умолчанию; `'use client'` только для `CatalogFilters` и `PhotozoneGallery`.
+   167→- Импорты только из разрешённых модулей: `@/lib/data`, `@/lib/db`, `@/lib/constants`, `@/lib/format`, `@/lib/seo`, `@/components/site/*`, `@/components/seo/json-ld`, `@/components/ui/*`.
+   168→- Не модифицировал `globals.css`, `layout.tsx`, существующие shared-компоненты.
+   169→- `bun run lint` — **0 ошибок, 0 предупреждений**. Build не запускался.
+   170→- Smoke-тесты curl: `/katalog` → 200 (H1 + card-hover рендерятся), `/katalog/love-installyaciya` → 200 (3 JSON-LD: LocalBusiness/Product/BreadcrumbList, элементы, «Похожие»), `/ceny` → 200 (Эконом/Стандарт/Премиум, 3 JSON-LD), `/katalog?category=TEXTILE&occasion=WEDDING&sort=price-asc&search=flora` → 200, `/katalog?search=zzzzz_nonexistent_zzzzz` → пустое состояние «Ничего не нашли», `/katalog/non-existent-slug` → 404.
+   171→
+   172→### Заметка следующим агентам
+   173→- `CatalogFilters` использует `defaultValue` для search-инпута + `onChange` → router.push (фильтрация серверная при изменении URL). Если захотите debounce — обернуть `onChange` в `setTimeout`/`useDeferredValue`.
+   174→- Мобильный sticky order bar на `/katalog/[slug]` имеет z-40 (поверх глобального sticky CTA z-30). Если на какой-то странице потребуется аналогичный sticky-bar, тот же приём (z-40 + `sm:hidden`).
+   175→- В `generateMetadata` description обрезается до 158 символов + «…» — это укладывается в 160, как требует задача.
+   176→- `generateStaticParams` возвращает все активные slug — все карточки фотозон пререндерятся статики.
+   177→
+   178→## Task ID: 8 — Landing & Content Pages (Code)
+   179→
+   180→**Agent:** Code (Fullstack Web Dev)
+   181→**Task:** Посадочные по поводам (4), сезонные (3), контентные (о компании, отзывы, контакты, блог, статья блога, спасибо).
+   182→
+   183→### Work Log
+   184→- Создано **13 файлов** в `src/app/(public)/...` + **2 shared-компонента** в `(public)/_components/`.
+   185→- **Shared (новые):** `_components/landing-sections.tsx` (`PageBreadcrumbs`, `PageHero`, `WhyUs`, `EmptyPhotozones` — серверные) и `_components/markdown.tsx` (`Markdown` — client, react-markdown v10 с премиальной стилизацией).
+   186→- **Посадочные по поводам:** `svadby` (WEDDING), `detskie-prazdniki` (BIRTHDAY), `vypusknie` (GRADUATION), `korporativy` (CORPORATE). Структура: `JsonLd([localBusinessLd, breadcrumbsLd, faqLd])` → breadcrumbs → hero (H1+eyebrow+intro) → SEO-блок с гео-ключами → `getPhotozones({occasion})` сеткой `PhotozoneCard` → `OrderButton` (prefill source/sourcePage/occasion) → `WhyUs` → доп.блок → FAQ (5-7) → `CtaBand`.
+   187→- **Сезонные:** `prazdniki/novyj-god` (NEW_YEAR) + промо «2 фотозоны по цене одной», `prazdniki/8-marta` (MARCH_8) + промо «Премиум-флористика в подарок», `prazdniki/23-fevralya` (FEB_23) + промо «Брендирование в подарок». Та же структура + захардкоженный промо-блок.
+   188→- **Контентные:**
+   189→  - `o-kompanii` — гарантии (4), шаги (4), районы + пригороды, цифры, FAQ, CtaBand. JSON-LD `localBusinessLd + breadcrumbsLd + faqLd`.
+   190→  - `otzyvy` — `getReviews(100)`, рейтинг-блок с распределением по звёздам, сетка отзывов. JSON-LD `reviewsLd + localBusinessLd + breadcrumbsLd`.
+   191→  - `kontakty` — карточки контактов (телефон/WhatsApp/Telegram/email из `SITE`), адрес + часы, зоны доставки, Яндекс.Карта iframe, OrderButton + «Позвонить». JSON-LD `localBusinessLd + breadcrumbsLd`.
+   192→  - `blog` — список `getArticles()`, карточки. JSON-LD `breadcrumbsLd`.
+   193→  - `blog/[slug]` — `getArticleBySlug`, `generateStaticParams` + `generateMetadata` (params Promise), `notFound()` 404, Markdown-рендер, JSON-LD Article, CtaBand.
+   194→  - `spasibo` — H1 «Заявка принята!», 3-шаговый блок, кнопки «Позвонить/WhatsApp», ссылка на каталог. metadata `robots: { index: false, follow: false }`. Без CtaBand.
+   195→
+   196→### Stage Summary
+   197→- **НЕ модифицированы** `globals.css`, `layout.tsx`, существующие компоненты.
+   198→- Все посадочные — серверные компоненты. `'use client'` только для `Markdown` и существующих client-компонентов.
+   199→- Все «Заказать» — через `<OrderButton prefill={{ source, sourcePage, occasion }}>` (никаких отдельных форм, кроме случаев где логически нужна модалка — используется та же модалка).
+   200→- Цвета: золото `text-gold`/`bg-gold`, коралл `text-coral`. Без indigo/blue.
+   201→- `next/image` с alt везде.
+   202→- SEO-тексты с естественными гео-вхождениями: Красноярск, районы (Центральный, Советский, Свердловский, Октябрьский, Железнодорожный, Ленинский, Кировский), пригороды (Солнечный, Подгорный, Емельяново), надбавка 1500 ₽, перезвон 15 мин.
+   203→- metadata на каждой странице (title, description, canonical). `/blog/[slug]` — `generateMetadata` + `generateStaticParams` + `openGraph`. `/spasibo` — noindex.
+   204→- `params` в `/blog/[slug]` — Promise, корректно `const { slug } = await params;`.
+   205→- **Проверки:**
+   206→  - `bun run lint` — ✅ passed (без ошибок/ворнингов).
+   207→  - `tsc --noEmit` — без ошибок в новых файлах (ошибки только в pre-existing коде вне моей зоны: katalog, admin/stats, examples, prisma/seed, lib/data).
+   208→- Подробный отчёт: `/agent-ctx/8-landing-content-pages.md`.
+   209→
+   210→### Замечания
+   211→- `/spasibo` остаётся в общем `(public)` layout (header+footer+sticky-CTA) — «минимальный layout» = отсутствие CtaBand на самой странице. Полный opt-out потребовал бы отдельной route group.
+   212→- Промо-блоки на сезонных — захардкожены текстом (по ТЗ). Не подтягивают Promo из БД.
+   213→- Все ссылки в header/footer теперь ведут на существующие страницы — нет битых ссылок.
+   214→
+   215→---
+   216→
+   217→## Task ID: 10 — Закрытая админ-панель (`/admin`)
+   218→
+   219→**Агент:** admin-panel. **Статус:** готово.
+   220→
+   221→### Что сделано
+   222→- `src/app/admin/layout.tsx` — клиентский layout: проверка сессии через `/api/admin/me`, редирект на `/admin/login` при 401, светлая тема-обёртка `<div className="light min-h-screen bg-background text-foreground">`, десктоп-сайдбар (Дашборд/Заявки/Календарь/Фотозоны), мобильный `Sheet`, шапка с аватаром менеджера и кнопкой «Выйти». Страница `/admin/login` рендерится без сайдбара.
+   223→- `src/app/admin/login/page.tsx` — форма входа (email+password, pre-fill демо-данных), POST `/api/admin/login`, при успехе `router.replace('/admin')`.
+   224→- `src/app/admin/page.tsx` — дашборд: 4 KPI-карточки (всего/новые/подтверждены/конверсия), BarChart по статусам (recharts), списки «по источникам» и «популярные фотозоны» с прогресс-барами, последние 7 заявок.
+   225→- `src/app/admin/leads/page.tsx` — табы статусов, поиск (debounce), диапазон дат, sticky-header таблица, клик по строке → `Dialog` с деталями + формой смены статуса (Select), выбором фотозоны (Select), `Textarea` заметки, кнопками **tel:** и **wa.me**, обработкой 409-конфликта.
+   226→- `src/app/admin/calendar/page.tsx` — месячная сетка 6×7 (Пн–Вс), переключатель месяца, фильтр по фотозоне, цветные точки броней, блокировки, счётчики заявок. Клик по дню → `Dialog` с бронированиями/блокировками/заявками, формой блокировки (POST type=block), формой добавления брони (POST type=booking), панелью «Свободные аналоги» (`alternativesFor`).
+   227→- `src/app/admin/photozones/page.tsx` — CRUD: таблица с превью, поиск, кнопка «Добавить», `Dialog`-редактор со всеми полями (включая occasions-чекбоксы, images/includes построчно, Switch для hit/isActive, элементы name+price), `AlertDialog` для удаления.
+   228→- `src/app/admin/_lib.ts` — общие типы и хелперы (`api()`, `waLink`, `telLink`, `phoneDigits`, статус-стили для светлой темы).
+   229→
+   230→### Исправлено в существующем API
+   231→- `src/app/api/admin/stats/route.ts` — добавлены явные `_count` и `orderBy` в `db.lead.groupBy` для `photozoneId` и `source` (без них Prisma падала с `P2019` из-за дефолтной сортировки по `id`, не входящему в `by`). Без фикса дашборд падал с 500.
+   232→
+   233→### Тесты
+   234→- `bun run lint` — чисто.
+   235→- Все 5 роутов (`/admin/login`, `/admin`, `/admin/leads`, `/admin/calendar`, `/admin/photozones`) — 200.
+   236→- API (с сессией): login/me/stats/leads/calendar(month)/calendar(date)/calendar(alternativesFor)/photozones — все 200, данные корректны.
+   237→- Демо-доступ подтверждён: `admin@fotozona24.ru / admin123` → менеджер «Анна Менеджер» (ADMIN).
+   238→
+   239→### Известные ограничения
+   240→1. Элементы фотозоны (Element) при создании/редактировании не сохраняются — существующий API `POST/PATCH /api/admin/photozones` не принимает `elements`. UI показывает подсказку: сначала создайте фотозону, потом добавьте элементы. Чтобы починить — нужно расширить API (в задании запрещено создавать новые).
+   241→2. Пагинация заявок на клиенте не сделана (API отдаёт до 200, скролл с `max-h-[70vh] overflow-y-auto`). Для демо-объёма (7 заявок) достаточно.
+   242→3. Цвета точек фотозон в календаре — детерминированы из хеша id, не настраиваются.
+   243→4. Recharts-цвета зашиты вручную (для светлой темы ок).
+   244→
+   245→### Контакты для следующих агентов
+   246→- Светлая тема — обёртка `<div className="light ...">`, переменные берутся из `.light` блока в `globals.css`.
+   247→- Все импорты общих хелперов: `'./_lib'` для `admin/page.tsx` и `'../_lib'` для вложенных (`admin/leads/page.tsx`, `admin/calendar/page.tsx`, `admin/photozones/page.tsx`, `admin/login/page.tsx`).
+   248→- Авторизация — httpOnly cookie; в `api()` обязательно `credentials: 'include'`.
+   249→
+   250→---
+   251→Task ID: ORCHESTRATOR (final)
+   252→Agent: main (Z.ai Code)
+   253→Task: Оркестрация проекта аренды фотозон в Красноярске — сборка, интеграция subagents, self-verify
+   254→
+   255→Work Log:
+   256→- Спроектирована и залита Prisma-схема (PhotoZone, Element, Lead, Booking, DateBlock, Promo, Review, Article, Manager) + db:push
+   257→- Seed: 15 фотозон, 10 элементов, 10 отзывов, 7 заявок (с бронированиями), 2 промо, 2 статьи, менеджер admin@fotozona24.ru/admin123
+   258→- Дизайн-система: тёмная премиум-палитра (золото oklch(0.82 0.13 84) + коралл), Playfair Display для заголовков, кастомный скроллбар, glass-эффекты
+   259→- Foundation: lib (auth scrypt+HMAC JWT, notify telegram/email, leads, data, seo, format, constants), shared-компоненты (QuickOrderModal+store, SiteHeader, SiteFooter, StickyCta, PhotozoneCard, CtaBand, FaqAccordion, PhoneInput, JsonLd)
+   260→- API: /api/leads (POST), /api/photozones, /api/photozones/[slug], /api/admin/{login,me,leads,leads/[id],calendar,bookings,photozones,photozones/[id],stats}
+   261→- Главная страница (hero с AI-изображением, оффер, occasions, лучшие фотозоны, как работаем, отзывы, CtaBand, FAQ)
+   262→- Запущены 4 параллельных subagent'а (Task 7-10): каталог+карточка+цены, посадочные+контент, калькулятор+конструктор, админ-панель
+   263→- Расширил API /api/admin/photozones/[id] для синхронизации элементов (create/update/delete)
+   264→- Фикс критического бага: /api/admin/stats возвращал count как объект ({source:1}) из-за groupBy _count → React падал на рендере {s.count}. Исправлено на _count:{_all:true} + маппинг в число
+   265→- Заменил recharts в дашборде на CSS-бары (надёжнее + легче)
+   266→- SEO: app/sitemap.ts (динамический: статики + фотозоны + статьи), app/robots.ts, удалён статичный public/robots.txt
+   267→- Изображения: AI-генерация (hero, love, svadebnaya-flora — 3 готовых), остальные 12 — брендовые градиентные placeholder'ы через sharp с названием фотозоны
+   268→- Self-verify через agent-browser (все golden paths): главная рендерится; модалка быстрого заказа → заполнение → отправка → экран успеха; заявка попадает в БД и видна в /admin/leads; логин admin@fotozona24.ru/admin123 → дашборд/заявки/календарь/фотозоны; мобильный sticky-CTA; каталог (15 карточек) с фильтрами; калькулятор-визард 4 шага → расчёт 12 900 ₽ → «Зафиксировать» открывает модалку с config+ценой
+   269→- lint: 0 ошибок; все 21 маршрут возвращают 200; runtime-ошибок в dev.log нет
+   270→
+   271→Stage Summary:
+   272→- Проект полностью функционален и проверен в браузере end-to-end
+   273→- Ключевые критерии приёмки закрыты: заявка ≤ 3 кликов с любой страницы; занятость дат нигде не показывается клиенту (только /admin); менеджер видит календарь по фотозонам/элементам/дням с блокировками и подбором аналогов; уведомления Telegram+email (fallback в лог без ключей); заявки хранятся с источником/utm/составом; мобильная адаптация + sticky CTA; /admin закрыт авторизацией (JWT cookie)
+   274→- Демо-доступ админки: admin@fotozona24.ru / admin123
+   275→- Известное ограничение окружения: dev-сервер нестабилен между bash-вызовами (внешний SIGKILL) — в превью панели должен работать под супервизором окружения
+   276→
+   277→---
+   278→Task ID: ORCHESTRATOR-2 (продолжение)
+   279→Agent: main (Z.ai Code)
+   280→Task: Доработки после первого раунда — промо-интеграция, элементы фотозон, /admin/promo
+   281→
+   282→Work Log:
+   283→- Чиню getPromosForPage: некорректное `OR2` заменено на `AND: [{OR:...}, {OR:...}]` + добавлена фильтрация по pages (Json-массив) с fallback "без привязки = показывать везде"
+   284→- Создан серверный компонент `PromoStrip({ page })` — рендерит активные промо из БД золотыми карточками с бейджем скидки
+   285→- PromoStrip интегрирован на: главная (`/`), каталог (`/katalog`), цены (`/ceny`), и 3 сезонные (`/prazdniki/{novyj-god,8-marta,23-fevralya}`) — теперь промо управляются из БД, а не только захардкожены
+   286→- Расширен API `/api/admin/photozones/[id]` PATCH для синхронизации элементов (create/update/delete по id)
+   287→- В админ-странице фотозон: добавлена отправка `elements` в payload сохранения (раньше элементы добавлялись в UI, но не сохранялись — замечание Task 10 закрыто)
+   288→- Создан API `/api/admin/promos` (GET/POST) и `/api/admin/promos/[id]` (PATCH/DELETE)
+   289→- Создана страница `/admin/promo` — таблица акций + форма создания/редактирования (название, описание, скидка %, период, страницы показа, активность)
+   290→- В навигацию админки добавлен пункт «Акции» (иконка Tag)
+   291→- AI-изображения: сгенерированы ещё 3 ключевые (novyj-god, detskaya-edinorog, press-wall) в foreground; итого 6 из 16 (hero + 5 фотозон). Остальные 10 — брендовые градиентные placeholder'ы с названиями, фоновая генерация продолжается
+   292→- Self-verify через agent-browser: промо-блок из БД виден на главной («Раннее бронирование — скидка 10%»); страница /admin/promo рендерится с таблицей 2 промо из seed; создание тестовой акции через UI — успешно (стало 3 промо)
+   293→- lint: 0 ошибок; все маршруты 200
+   294→
+   295→Stage Summary:
+   296→- Промо теперь управляются менеджером из админки и подтягиваются на посадочные через БД (раньше только захардкоженные)
+   297→- Элементы фотозон сохраняются через UI админки (CRUD через PATCH)
+   298→- Добавлен раздел /admin/promo (CRUD акций) + пункт в навигации
+   299→- 6 AI-изображений (hero + 5 ключевых фотозон), остальные — placeholder'ы
+   300→
+
+[showing lines 1-300 of 1444; use offset=301 with limit to continue reading]

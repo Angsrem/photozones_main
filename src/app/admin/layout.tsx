@@ -15,6 +15,7 @@ import {
   Menu,
   ShieldCheck,
   Loader2,
+  Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from '@/components/ui/sheet';
@@ -29,6 +30,7 @@ const NAV = [
   { href: '/admin/promo', label: 'Акции', icon: Tag },
   { href: '/admin/reviews', label: 'Отзывы', icon: Star },
   { href: '/admin/pages', label: 'Страницы', icon: FileText },
+  { href: '/admin/settings', label: 'Настройки', icon: Settings },
 ];
 
 function initials(name: string) {

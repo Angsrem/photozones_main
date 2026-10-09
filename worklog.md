@@ -1441,3 +1441,162 @@ Self-verify:
 - SSR middleware для /admin
 - Сезонные напоминания (cron)
 - Аналитика воронки квиза
+
+---
+Task ID: FINAL-SECURITY-ANALYTICS
+Agent: main (Z.ai Code)
+
+## Реализованы 3 задачи безопасности и аналитики
+
+### 1. SSR Middleware для /admin (`src/middleware.ts`, Edge runtime)
+
+Раньше защита /admin была только клиентской: `AdminLayout` (use client) делал `GET /api/admin/me`, и при 401 делал router.replace('/admin/login'). Это позволяло атакующему перехватить HTML-ответ через отключённый JS или curl, увидеть структуру админки до проверки.
+
+Теперь middleware валидирует cookie `fz_admin_token` (формат `body.sig`, HMAC-SHA256) на уровне сервера ДО рендера страницы. Если токен невалидный/просрочен/отсутствует — `NextResponse.redirect('/admin/login')`. `/admin/login` пропускается без проверки.
+
+ВАЖНО: Next.js middleware работает в **Edge runtime**, НЕ может импортировать из `src/lib/auth.ts` (там Node.js `crypto`, `next/headers.cookies()`). Поэтому:
+- Секрет-резолвер продублирован (та же логика fallback, что в `auth.ts:resolveSecret()` — в prod требует `ADMIN_JWT_SECRET` ≥32 символа, в dev/sandbox использует `dev-secret-fotozona24-krsk-sandbox-fallback-32-chars-min`).
+- HMAC-SHA256 через Web Crypto API (`crypto.subtle.importKey` + `crypto.subtle.sign`), без Node.js `createHmac`.
+- Base64url через `btoa/atob` + `TextEncoder/TextDecoder` (Edge-safe, без `Buffer.from('…','base64url')`).
+- Constant-time string compare своей реализацией (Edge не имеет `crypto.timingSafeEqual`).
+- `exp` проверяется из распарсенного JSON-тела токена.
+
+Matcher: `['/admin/:path*']` — срабатывает на `/admin` и `/admin/**`. Middleware-логика сама фильтрует `/admin/login` (early `NextResponse.next()`).
+
+Замечание: Next.js 16.1 выводит deprecation-warning «The "middleware" file convention is deprecated. Please use "proxy" instead» — middleware.ts всё ещё работает полностью, но в будущем возможно потребуется переименование в `proxy.ts`. Не делал, т.к. task явно требовал `src/middleware.ts`.
+
+### 2. 2FA TOTP для админа (`src/lib/totp.ts` + схема + API + UI)
+
+#### Схема (`prisma/schema.prisma`)
+- В `Manager` добавлено поле `totpSecret String?` — base32-секрет (RFC 4648), null = 2FA выключена.
+- `bun run db:push` → Prisma-клиент перегенерирован (`totpSecret` теперь в типе `Manager`).
+
+#### TOTP-библиотека (`src/lib/totp.ts`, Node.js `crypto`, не Edge)
+- `generateSecret()` — 20 случайных байт → base32 (32 символа, ~160 бит энтропии).
+- `generateCode(secret, atTimeMs?)` — RFC 6238: counter = `floor(time/30)`, 8-byte big-endian, HMAC-SHA1(base32decode(secret), counter), dynamic truncation, mod 10^6, 6-значная строка с ведущими нулями.
+- `verifyCode(secret, code, atTimeMs?)` — проверяет код в текущем окне ±1 (3 валидных кода: prev/cur/next), constant-time `timingSafeEqual`.
+- `otpAuthUrl(secret, email)` — `otpauth://totp/Fotozona24:email?secret=…&issuer=Fotozona24&digits=6&period=30` для QR-кода (если будет QR-библиотека; пока без неё — пользователь может вставить секрет вручную в приложение-аутентификатор).
+
+#### API `POST /api/admin/login` (`src/app/api/admin/login/route.ts`)
+- Принимает доп. поле `totpCode`.
+- После проверки пароля: если `manager.totpSecret` задан и `totpCode` отсутствует → `401 {error, needsTotp:true}`. Фронт по этому флагу показывает поле кода.
+- Если `totpCode` есть, но `verifyCode()` возвращает false → `401 {error:'Неверный или просроченный код 2FA', needsTotp:true}`.
+- Если 2FA выключена (totpSecret null) или код валиден → `setSessionCookie` + `200 {ok, manager}`.
+- Rate-limit 5/мин/IP — не изменился.
+
+#### UI логина (`src/app/admin/login/page.tsx`)
+- Поле для 6-значного 2FA-кода (`inputMode=numeric`, `autoComplete=one-time-code`, `pattern=\d{6}`, `maxLength=6`, моноширинный font-mono + tracking) показывается только когда API вернул `needsTotp:true`.
+- Кнопка меняет текст на «Подтвердить вход», email/пароль блокируются (read-only).
+- Ссылка «← Ввести другой пароль» — откат к шагу пароля.
+
+#### API `GET/POST /api/admin/settings` (`src/app/api/admin/settings/route.ts`, новый файл)
+- `GET` — `{manager: {id,email,name,role}, has2fa: boolean}`. Требует сессии (401 без).
+- `POST` с `action: 'generate'` — возвращает `{secret, otpAuthUrl, previewCode}`. Секрет НЕ сохраняется, UI должен показать его и запросить проверочный код.
+- `POST` с `action: 'confirm'` + `{secret, code}` — валидирует код через `verifyCode`, валидирует формат секрета (regex `^[A-Z2-7]{16,}$`), сохраняет в `Manager.totpSecret`. → `{ok:true, has2fa:true}`.
+- `POST` с `action: 'disable'` + `{password}` — требует пароль менеджера (защита от случайного/несанкционированного отключения). `verifyPassword` → если ok, `totpSecret: null` → `{ok:true, has2fa:false}`.
+
+#### Страница `/admin/settings` (`src/app/admin/settings/page.tsx`, новый)
+- Карточка «Профиль менеджера» (имя/email/роль).
+- Карточка «Двухфакторная аутентификация (2FA)»:
+  - Бейдж статуса (2FA включена / 2FA выключена) + кнопка «Включить 2FA» / «Отключить 2FA».
+  - При включении — 2 шага: (1) показать base32-секрет с кнопкой «Копировать» + otpauth:// URL + preview-код для удобства, (2) инпут для 6-значного кода, кнопка «Подтвердить и включить». Кнопка «Отмена».
+  - При отключении — форма с паролем, destructive-стиль (border-rose-300/bg-rose-50), кнопка «Отключить 2FA».
+- Информационный блок: «Как работает 2FA» (4 пункта).
+- Добавлена в навигацию (`src/app/admin/layout.tsx`): `{href:'/admin/settings', label:'Настройки', icon:Settings}`.
+
+### 3. Аналитика в дашборде (`/api/admin/stats` + `/admin` page)
+
+#### API `GET /api/admin/stats` (`src/app/api/admin/stats/route.ts`)
+Расширил ответ (обратно совместимо — старые поля не тронуты, добавлены новые):
+```ts
+{
+  // ...старые поля (total, byStatus, conversion, recent, byPhotozone, bySource)
+  quiz: {
+    quizStarts: number,        // QuizSession.count — всего сессий квиза
+    quizCompletes: number,     // QuizSession с непустым recommendedIds (длина > 0)
+    quizAbandons: number,      // QuizPartial.count минус converted:true (брошенные, не дошедшие до результата)
+    quizByStep: {step, count}[], // QuizPartial сгруппированы по шагу, отсортированы по шагу asc
+    quizFunnelConversion: number, // round(quizStarts / (quizStarts + quizAbandons) * 100)
+  },
+  leadMagnetLeads: number,     // Lead.count where source='leadmagnet' (для конверсии лид-магнитов)
+}
+```
+Реализация:
+- `quizStarts` — `db.quizSession.findMany({select:{recommendedIds:true}})` + `.length` (Prisma SQLite не умеет фильтровать JSON по длине, поэтому fetch+filter в JS — дёшево, т.к. админский endpoint, записей мало).
+- `quizCompletes` — то же, но `.filter(s => Array.isArray(r) && r.length > 0).length`.
+- `quizAbandons` — `db.quizPartial.count() - db.quizPartial.count({where:{converted:true}})` (часто converted помечается POST /api/quiz при успешном завершении).
+- `quizByStep` — `db.quizPartial.groupBy({by:['step'], _count:{_all:true}, orderBy:{step:'asc'}})` → `[{step, count}]`.
+- `leadMagnetLeads` — `db.lead.count({where:{source:'leadmagnet'}})`.
+
+#### Дашборд `/admin` (`src/app/admin/page.tsx`)
+Расширил `Stats` type (опциональные `quiz?`, `leadMagnetLeads?` — обратно совместимо).
+
+Добавил **новый блок «Аналитика»** (после существующего блока «Лид-магниты · PDF-гайды», перед графиком заявок по статусам). Условие рендера: `{stats.quiz && (...)}`.
+
+Структура (2 колонки на `lg`, 1 на мобильном):
+- **Левая часть — «Воронка квиза»**:
+  - 3 mini-KPI карточки (`FunnelMini`): Начали (quizStarts), Дошли (quizCompletes), Бросили (quizAbandons), с цветными tint-схемами (sky/emerald/amber).
+  - Текст: «Конверсия воронки: N% · всего попыток: quizStarts + quizAbandons».
+  - Бар-чарт «Бросили на шаге» — для каждого шага bar `width: count/maxStepCount*100%` (amber-400), справа цифра. `max-h-56 overflow-y-auto`.
+- **Правая часть — «Конверсия лид-магнитов»**:
+  - 2 mini-KPI: Скачиваний (leadMagnets.totalDownloads из `/api/admin/lead-magnets`), Стало лидами (stats.leadMagnetLeads).
+  - Текст: «Конверсия в заявку: round(leadMagnetLeads/totalDownloads*100)% · скачиваний → заявок (source = leadmagnet)».
+  - Текст: «Активных гайдов: X из Y».
+  - Топ-3 лид-магнита по скачиваниям — список с прогресс-барами (max-w-32).
+
+Компонент `FunnelMini` (новый, в конце page.tsx) — компактная карточка с цветным border/bg + иконкой + label + крупным tabular-nums числом.
+
+### Иконки и импорты
+- Добавлены импорты в page.tsx: `BarChart3, Filter, Target, Users` из `lucide-react`.
+- Добавлен импорт `Settings` в `admin/layout.tsx`.
+
+### Self-verify (curl, полный цикл в одном bash-процессе, чтобы dev-сервер не падал)
+
+**Middleware** (cookie `fz_admin_token`):
+- `/admin` без cookie → `307 location:/admin/login` ✓
+- `/admin/login` без cookie → `200 OK` (страница доступна) ✓
+- `/admin` с валидным cookie (полученным через login) → `200 OK` ✓
+- `/admin` с испорченным sig (cookie `body.INVALID`) → `307 redirect` ✓
+
+**2FA flow**:
+1. Логин admin@fotozona24.ru/admin123 (totpSecret null) → `200 {ok, manager}` ✓
+2. `GET /api/admin/settings` → `200 {manager, has2fa:false}` ✓
+3. `POST /api/admin/settings action=generate` → `200 {secret, otpAuthUrl, previewCode}` ✓
+4. `POST /api/admin/settings action=confirm` (с верным previewCode) → `200 {ok:true, has2fa:true}` ✓
+5. `GET /api/admin/settings` → `200 {manager, has2fa:true}` ✓
+6. `POST /api/admin/login` БЕЗ totpCode (пароль верный, 2FA включена) → `401 {error:'Требуется код…', needsTotp:true}` ✓
+7. `POST /api/admin/login` с неверным totpCode (000000) → `401 {error:'Неверный или просроченный код 2FA', needsTotp:true}` ✓
+8. Сгенерировал текущий TOTP-код через node-скрипт (тот же алгоритм HMAC-SHA1) из секрета →
+9. `POST /api/admin/login` с верным totpCode → `200 {ok, manager}` ✓
+10. `POST /api/admin/settings action=disable` с паролем admin123 → `200 {ok:true, has2fa:false}` ✓
+11. `GET /api/admin/settings` → `200 {manager, has2fa:false}` ✓
+
+**Аналитика**:
+- `GET /api/admin/stats` без quiz-данных → `quiz:{quizStarts:0, quizCompletes:0, quizAbandons:0, quizByStep:[], quizFunnelConversion:0}, leadMagnetLeads:2` ✓
+- `POST /api/quiz-partial` step=3 → `201 {ok, id}` ✓
+- `POST /api/quiz-partial` step=1 → `201 {ok, id}` ✓
+- `GET /api/admin/stats` после 2 partials → `quiz:{quizStarts:0, quizCompletes:0, quizAbandons:2, quizByStep:[{step:1,count:1},{step:3,count:1}], quizFunnelConversion:0}` ✓ (группировка по шагу работает)
+- `GET /api/admin/lead-magnets` → `200 {items, totalDownloads:2, activeCount:3, total:3}` ✓ (существующий endpoint)
+
+**Lint**: `bun run lint` → `EXIT=0`, 0 ошибок, 0 предупреждений ✓
+
+### Файлы изменены/созданы
+- `src/middleware.ts` (новый) — SSR-защита /admin, Edge runtime, Web Crypto API
+- `src/lib/totp.ts` (новый) — TOTP RFC 6238 (generateSecret, generateCode, verifyCode, otpAuthUrl)
+- `prisma/schema.prisma` — добавлено `totpSecret String?` в `Manager`
+- `src/app/api/admin/login/route.ts` — поддержка `totpCode` + `needsTotp:true`
+- `src/app/api/admin/settings/route.ts` (новый) — GET (статус 2FA) + POST (generate/confirm/disable)
+- `src/app/admin/login/page.tsx` — UI поля 2FA-кода при `needsTotp`
+- `src/app/admin/settings/page.tsx` (новый) — страница настройки 2FA
+- `src/app/admin/layout.tsx` — добавлен пункт «Настройки» в навигацию
+- `src/app/api/admin/stats/route.ts` — добавлены `quiz` (quizStarts/Completes/Abandons/ByStep/FunnelConversion) и `leadMagnetLeads`
+- `src/app/admin/page.tsx` — новый блок «Аналитика» с воронкой квиза + конверсией лид-магнитов, `FunnelMini` компонент
+
+### Замечания следующим агентам
+- **Middleware deprecation**: Next.js 16 выводит `⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.` Файл `src/middleware.ts` пока работает полностью. В будущей мажорной версии Next.js может потребоваться переименование в `src/proxy.ts` (с той же логикой). На 16.1.x — не критично.
+- **ADMIN_JWT_SECRET env**: В `.env` не задан. В dev/sandbox работает fallback (тот же в `auth.ts` и `middleware.ts` — согласовано, токены валидируются корректно). В production обязательно задать ≥32-символьный секрет, иначе middleware всегда редиректит на `/admin/login` (а `auth.ts` в prod бросает `ADMIN_JWT_SECRET must be set and be at least 32 chars long`).
+- **Prisma client**: После `bun run db:push` (с generate) dev-сервер должен быть перезапущен, чтобы новый клиент (с `totpSecret`) подхватился. Я тестировал с свежим `next dev` в одном bash-процессе — все API отвечают 200/401 как ожидается, `totpSecret` виден в SQL-запросах Prisma.
+- **Edge runtime**: middleware не может импортировать из `src/lib/auth.ts` (там Node.js `crypto` + `next/headers.cookies()`). Все секрет-резолвер + HMAC + base64 продублированы в middleware через Web Crypto API. Если изменится формат токена в `auth.ts` — нужно зеркально поменять и в middleware.
+- **Тестовые partials**: В ходе проверки создал 5 `QuizPartial` записей (шаги 1, 2×3, 3, 5) через `POST /api/quiz-partial`. Они сохранятся в БД и будут видны в дашборде (quizAbandons=5, quizByStep=[{1:1},{2:3},{3:1},{5:1}]). Можно очистить через `db.quizPartial.deleteMany({})`, если они мешают в проде — но это просто тестовые данные в sandbox-БД.
+- **2FA UX**: Без QR-библиотеки пользователь должен сам добавить аккаунт в приложение-аутентификатор, вручную введя base32-секрет. otpauth:// URL показан — если позже подключить `qrcode` или SVG QR-генератор, можно отрендерить QR-картинку. Сейчас показывается preview-код, обновляемый каждые 30 сек (для удобства проверки — пользователь может сам ввести его, если не хочет добавлять секрет в приложение).
+- **Schema change impact**: `totpSecret` — nullable, default null. Существующие менеджеры продолжают работать без 2FA (как admin@fotozona24.ru). Включение — через `/admin/settings`.

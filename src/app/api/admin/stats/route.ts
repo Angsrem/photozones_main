@@ -30,6 +30,36 @@ export async function GET() {
   const converted = (statusMap['CONFIRMED'] || 0) + (statusMap['DONE'] || 0);
   const conversion = total ? Math.round((converted / total) * 100) : 0;
 
+  // ===== Аналитика квиза =====
+  // quizStarts — всего сессий квиза (каждая = «начали и дошли до отправки ответов»).
+  // quizCompletes — число сессий с непустым recommendedIds (дошли до выдачи рекомендаций).
+  // quizAbandons — всего partial-записей (брошенные квизы).
+  // quizByStep — распределение abandons по шагам.
+  const [quizSessionsRaw, partialsTotal, partialsByStepRaw, leadMagnetLeads, quizConverted] = await Promise.all([
+    db.quizSession.findMany({ select: { recommendedIds: true } }),
+    db.quizPartial.count(),
+    db.quizPartial.groupBy({ by: ['step'], _count: { _all: true }, orderBy: { step: 'asc' } }),
+    db.lead.count({ where: { source: 'leadmagnet' } }),
+    db.quizPartial.count({ where: { converted: true } }),
+  ]);
+
+  const quizStarts = quizSessionsRaw.length;
+  const quizCompletes = quizSessionsRaw.filter((s) => {
+    const r = s.recommendedIds;
+    return Array.isArray(r) && r.length > 0;
+  }).length;
+  const quizAbandons = Math.max(0, partialsTotal - quizConverted);
+  const quizByStep = partialsByStepRaw.map((x) => ({
+    step: x.step,
+    count: (x._count as any)._all ?? 0,
+  }));
+
+  // Конверсия: дошло до результата / (дошло + бросило), в процентах.
+  const quizFunnelConversion =
+    quizStarts + quizAbandons > 0
+      ? Math.round((quizStarts / (quizStarts + quizAbandons)) * 100)
+      : 0;
+
   return NextResponse.json({
     total,
     byStatus: statusMap,
@@ -37,5 +67,14 @@ export async function GET() {
     recent,
     byPhotozone,
     bySource: bySourceRaw.map((x) => ({ source: x.source || '—', count: (x._count as any)._all ?? 0 })),
+    // ===== Аналитика =====
+    quiz: {
+      quizStarts,
+      quizCompletes,
+      quizAbandons,
+      quizByStep,
+      quizFunnelConversion,
+    },
+    leadMagnetLeads,
   });
 }
