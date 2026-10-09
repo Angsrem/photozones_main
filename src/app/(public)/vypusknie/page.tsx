@@ -11,6 +11,7 @@ import { OrderButton } from '@/components/site/quick-order-modal';
 import { Button } from '@/components/ui/button';
 import { Sparkles, GraduationCap, School } from 'lucide-react';
 import { PageBreadcrumbs, PageHero, WhyUs, EmptyPhotozones } from '../_components/landing-sections';
+import { LeadMagnetBlock } from '@/components/site/lead-magnet-block';
 
 export const metadata: Metadata = {
   title: 'Фотозоны на выпускной в Красноярске — 9 и 11 класс, детсад',
@@ -103,6 +104,9 @@ export default async function VypuskniePage() {
       </section>
 
       <QuizStrip />
+
+      {/* Лид-магнит: Чек-лист родкомитета */}
+      <LeadMagnetBlock slug="vypusknoj-cheklist" sourcePage="/vypusknie" />
 
       {/* Сетка фотозон */}
       <section className="container mx-auto max-w-7xl px-4 py-10">

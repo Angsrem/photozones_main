@@ -12,6 +12,7 @@ import { Sparkles, Snowflake, Gift, Tag } from 'lucide-react';
 import { PageBreadcrumbs, PageHero, WhyUs, EmptyPhotozones } from '../../_components/landing-sections';
 import { PromoStrip } from '@/components/site/promo-strip';
 import { QuizStrip } from '@/components/site/quiz-button';
+import { LeadMagnetBlock } from '@/components/site/lead-magnet-block';
 
 export const metadata: Metadata = {
   title: 'Новогодняя фотозона в Красноярске — аренда на корпоратив',
@@ -94,6 +95,9 @@ export default async function NovyjGodPage() {
       <PromoStrip page="/prazdniki/novyj-god" />
 
       <QuizStrip />
+
+      {/* Лид-магнит: 20 идей новогодней фотозоны */}
+      <LeadMagnetBlock slug="ng-20-idey" sourcePage="/prazdniki/novyj-god" />
 
       {/* Промо-блок (захардкоженный сезонный оффер) */}
       <section className="container mx-auto max-w-7xl px-4 py-6">

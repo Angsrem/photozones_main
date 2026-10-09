@@ -11,6 +11,7 @@ import { OrderButton } from '@/components/site/quick-order-modal';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight, Heart } from 'lucide-react';
 import { PageBreadcrumbs, PageHero, WhyUs, EmptyPhotozones } from '../_components/landing-sections';
+import { LeadMagnetBlock } from '@/components/site/lead-magnet-block';
 
 export const metadata: Metadata = {
   title: 'Фотозоны на свадьбу в Красноярске — аренда свадебных фотозон',
@@ -126,6 +127,9 @@ export default async function SvadbyPage() {
       </section>
 
       <QuizStrip />
+
+      {/* Лид-магнит: 47 пунктов оформления свадьбы */}
+      <LeadMagnetBlock slug="svadba-47-punktov" sourcePage="/svadby" />
 
       {/* Сетка фотозон */}
       <section className="container mx-auto max-w-7xl px-4 py-10">

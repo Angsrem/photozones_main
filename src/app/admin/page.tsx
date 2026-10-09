@@ -16,6 +16,7 @@ import {
   Bell,
   CheckCircle,
   XCircle,
+  FileDown,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -39,6 +40,29 @@ type Stats = {
   bySource: { source: string; count: number }[];
 };
 
+type LeadMagnetItem = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  fileUrl: string;
+  occasion: string | null;
+  isActive: boolean;
+  downloads: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+const OCCASION_LABELS: Record<string, string> = {
+  WEDDING: 'Свадьба',
+  BIRTHDAY: 'День рождения',
+  GRADUATION: 'Выпускной',
+  CORPORATE: 'Корпоратив',
+  NEW_YEAR: 'Новый год',
+  MARCH_8: '8 марта',
+  FEB_23: '23 февраля',
+};
+
 const STATUS_BAR_COLORS: Record<LeadStatus, string> = {
   NEW: 'bg-amber-400',
   CALLED: 'bg-sky-400',
@@ -54,19 +78,22 @@ export default function AdminDashboardPage() {
   const [partials, setPartials] = React.useState<any[]>([]);
   const [notifyStatus, setNotifyStatus] = React.useState<{ telegram: { configured: boolean; chatId: string | null }; email: { configured: boolean; to: string } } | null>(null);
   const [testingNotify, setTestingNotify] = React.useState(false);
+  const [leadMagnets, setLeadMagnets] = React.useState<{ items: LeadMagnetItem[]; totalDownloads: number; activeCount: number; total: number } | null>(null);
 
   const load = React.useCallback(async () => {
     setLoading(true);
     setErr(null);
     try {
-      const [data, pData, nStatus] = await Promise.all([
+      const [data, pData, nStatus, lmData] = await Promise.all([
         api<Stats>('/api/admin/stats'),
         api<{ items: any[] }>('/api/quiz-partial?limit=10'),
         api<any>('/api/admin/notify-status').catch(() => null),
+        api<{ items: LeadMagnetItem[]; totalDownloads: number; activeCount: number; total: number }>('/api/admin/lead-magnets').catch(() => null),
       ]);
       setStats(data);
       setPartials(pData.items || []);
       if (nStatus) setNotifyStatus(nStatus);
+      if (lmData) setLeadMagnets(lmData);
     } catch (e: any) {
       setErr(e?.message || 'Не удалось загрузить статистику');
     } finally {
@@ -245,6 +272,69 @@ export default function AdminDashboardPage() {
                   ) : (
                     <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300 shrink-0">Бросил</Badge>
                   )}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* Лид-магниты — счётчик скачиваний по каждому гайду */}
+      {leadMagnets && leadMagnets.items.length > 0 && (
+        <Card>
+          <div className="p-5 border-b">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-start gap-3">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
+                  <FileDown className="size-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base flex items-center gap-2">
+                    Лид-магниты <span className="text-muted-foreground font-normal text-sm">· PDF-гайды</span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Скачиваний всего: <b className="text-foreground">{leadMagnets.totalDownloads}</b> · активных гайдов: {leadMagnets.activeCount} из {leadMagnets.total}
+                  </p>
+                </div>
+              </div>
+              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                {leadMagnets.totalDownloads} скачиваний
+              </Badge>
+            </div>
+          </div>
+          <div className="divide-y max-h-80 overflow-y-auto">
+            {leadMagnets.items.map((m) => {
+              const maxDl = Math.max(1, ...leadMagnets.items.map((x) => x.downloads));
+              return (
+                <div key={m.id} className="px-5 py-3 flex items-start justify-between gap-3 text-sm">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium truncate">{m.title}</span>
+                      {m.occasion && (
+                        <Badge variant="outline" className="text-[10px] shrink-0">
+                          {OCCASION_LABELS[m.occasion] || m.occasion}
+                        </Badge>
+                      )}
+                      {!m.isActive && (
+                        <Badge variant="outline" className="text-[10px] bg-rose-50 text-rose-700 border-rose-300 shrink-0">
+                          Скрыт
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      slug: <code className="bg-muted px-1 rounded text-[10px]">{m.slug}</code> · {m.fileUrl}
+                    </div>
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden mt-2 max-w-xs">
+                      <div
+                        className="h-full bg-primary transition-all"
+                        style={{ width: `${(m.downloads / maxDl) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-xl font-semibold tabular-nums">{m.downloads}</div>
+                    <div className="text-[10px] text-muted-foreground">скачиваний</div>
+                  </div>
                 </div>
               );
             })}

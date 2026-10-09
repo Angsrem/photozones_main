@@ -1256,3 +1256,188 @@ Work Log:
 ---
 Task ID: ORCHESTRATOR-34 (статус — что осталось)
 Agent: main (Z.ai Code)
+
+## Task ID: CONSTRUCTOR — Интерактивный конструктор фотозон на `/konstruktor`
+
+**Агент:** кодовая задача (fullstack-раздел). Статус: готово.
+
+### Что сделано
+- `src/app/(public)/konstruktor/page.tsx` — переписан как серверный: metadata (title `«Конструктор фотозоны в Красноярске — соберите конфигурацию и узнайте цену»`, canonical `/konstruktor`), JSON-LD (`localBusinessLd()` + `breadcrumbsLd([Главная → Конструктор])`), компактный hero (бейдж «Соберите фотозону за 2 минуты», H1 с `text-gradient-gold`, trust-строка: Живая цена / 100+ меропр. / 4.9★ / Без обязательств), рендер `<ConstructorBuilder />`, `TrustBadges` + `CtaBand` (prefill `source:'konstruktor-cta'`).
+- `src/app/(public)/konstruktor/constructor-builder.tsx` — `'use client'` 4-шаговый конструктор с live-ценой.
+- `src/app/api/elements/route.ts` — **новый** публичный GET-эндпойнт (без авторизации), возвращает `{ items: Element[] }` для `where:{ isActive:true, photozoneId:null }` (опциональный query `?category=` для фильтра). `runtime='nodejs'`.
+
+### `ConstructorBuilder` — 4 шага
+1. **Основа** — 5 карточек-радио (Каркасная S 8900 / M 12900 / L 17900, Пресс-волл 19900, Текстильная 10900). Размеры и цены строго по ТЗ.
+2. **Стиль** — 5 карточек-радио (Классика +0, Неон +2000, Рустик +1500, Сезонная +1000, Брендовая +3000). Модификатор бейджем `+N ₽` или «включено» для Классики.
+3. **Доп. элементы** — fetch `/api/elements` в `useEffect` (`cache:'no-store'`) при монтировании, группировка по 5 категориям из `CATEGORY_META` (lighting → «Освещение», decor → «Декор», prop → «Реквизит», letter → «Буквы и цифры», service → «Услуги») + резервная группа «Прочее» для неизвестных категорий. Чекбоксы на всю ширину (`grid sm:grid-cols-2`), цена `+N ₽`. Состояния: skeleton (6 шт) при загрузке, error-блок в `text-coral` если fetch упал, empty-блок если нет глобальных элементов. Шаг не обязателен (`canNext()` → true).
+4. **Дата и адрес** — `<input type="date" min={todayISO()}>` с `suppressHydrationWarning` (SSR/CSR-мисматч на границе суток), инпут адреса (`autoComplete="street-address"`), чекбокс «Пригород» + бейдж `+1500 ₽` + подсказка со списком `SITE.suburbs`.
+
+### Live-цена (всегда видна)
+- **Десктоп (lg+):** правая sticky-колонка `lg:sticky top-4` (`grid lg:grid-cols-[1fr_320px]`) — карточка «Ваша конфигурация» со списком (основа / стиль / каждый доп / пригород) + «Итого» + кнопка «Зафиксировать и заказать».
+- **Мобильные:** sticky-бар `lg:hidden fixed bottom-0 inset-x-0 z-40 glass` (поверх глобального sticky-CTA z-30, как на `/katalog/[slug]`), «Итого: N ₽» + кнопка «Заказать». `paddingBottom: max(0.5rem, env(safe-area-inset-bottom))` — учитывает safe-area.
+- Пересчёт через `useMemo` при любом изменении `base/style/extras/isSuburb`. Кнопка `disabled={!baseOpt}`.
+
+### Прогресс-бар
+- `STEPS = ['Основа','Стиль','Доп. элементы','Дата и адрес']` — кастомный stepper (active/done/до) + shadcn `Progress` (`[&>div]:bg-gold`). Шаги кликабельные через «Назад»/«Далее», на шаге 4 primary-кнопка превращается в «Зафиксировать и заказать» (дублирует sticky-кнопку для удобства).
+
+### Анимации
+- `framer-motion` `AnimatePresence mode="wait"` — slide-x ±24px + fade между шагами (`duration:0.25`).
+
+### `openQuickOrder` prefill
+```ts
+openQuickOrder({
+  source: 'constructor',
+  sourcePage: '/konstruktor',
+  priceEstimate: breakdown.total,
+  config: {
+    base: { value, label, desc, price },
+    style: { value, label, modifier },
+    extras: [{ id, name, price, category }],
+    date, address,
+    surcharge, isSuburb,
+    breakdown: { base, style, extras, surcharge, total },
+  },
+});
+```
+`config` сериализуется в `Lead.config` (JSON) через `/api/leads` (модалка уже это делает) — менеджер в `/admin` увидит конфигурацию.
+
+### Цвета и техника
+- Палитра строго по дизайн-системе: `text-gold`/`bg-gold`/`border-gold`/`text-gradient-gold`/`text-coral`. Без indigo/blue.
+- Импорты только из разрешённых модулей (`@/lib/constants`, `@/lib/format`, `@/components/site/quick-order-store`, `@/components/ui/*`).
+- `next/image` не использован (нет фото основ — только иконки `Frame`/`Layers`/`Shirt`).
+- Серверный `page.tsx` + клиентский `constructor-builder.tsx`.
+- Не модифицировал `globals.css`, `layout.tsx`, `sticky-cta.tsx`, shared-компоненты, Prisma-схему.
+- Тап-таргеты ≥ 44px: кнопки `h-12`, карточки `min-h-[120px]` (основа) / `min-h-[88px]` (стиль), аддон-строки `min-h-[56px]`.
+
+### Проверки
+- `bun run lint` — **0 ошибок, 0 предупреждений** (eslint . EXIT=0).
+- Smoke-тесты curl:
+  - `GET /konstruktor` → **200** (title `«Конструктор фотозоны в Красноярске — соберите конфигурацию и узнайте цену — ФотоЗона24 Красноярск»`, canonical `https://fotozona24.ru/konstruktor`, H1 «Конструктор фотозоны в Красноярске» рендерится, JSON-LD `LocalBusiness` + `BreadcrumbList`).
+  - `GET /api/elements` → **200**, возвращает 7 глобальных активных элементов (5 lighting + 2 service).
+  - `GET /api/elements?category=lighting` → **200**, возвращает 5 элементов только категории lighting.
+
+### Заметка следующим агентам
+- Sticky-бар на мобильных `/konstruktor` имеет z-40 (поверх глобального sticky-CTA z-30). Глобальный sticky-cta НЕ скрывается на этом пути (не правлю `sticky-cta.tsx`) — он просто перекрывается визуально, как на `/katalog/[slug]`. Плавающие кнопки WhatsApp/телефон (z-30, `bottom-[88px]`) остаются доступны.
+- API `/api/elements` публичный — без `getSession`. Если потребуется закрывать цены для неактивных элементов — фильтр `isActive:true` уже стоит. Категория `?category=` опциональна, кладётся в Prisma `where` без валидации (защита от мусора не нужна, Prisma вернёт пустой массив для неизвестной категории).
+- В БД сейчас 7 глобальных элементов (5 lighting + 2 service). Категории `decor/prop/letter` пустые — соответствующие секции в шаге 3 просто не рендерятся (условие `items.length > 0`). Если в админке добавят элементы в эти категории — они автоматически появятся в конструкторе, ничего менять не нужно.
+- Все цены основ захардкожены в `BASE_OPTIONS` (взяты из ТЗ). Если появятся основы из БД — заменить `BASE_OPTIONS` на `db.photoZone.findMany(...)` (но сейчас это намеренно хардкод, как и в `calculator-wizard`).
+
+---
+Task ID: LEAD-MAGNETS
+Agent: main (Z.ai Code)
+Task: Система лид-магнитов (PDF-гайды за контакт) для сайта аренды фотозон
+
+Work Log:
+
+1. СХЕМА:
+- Добавлена модель LeadMagnet (id, slug @unique, title, description, fileUrl, occasion?, isActive, downloads, timestamps)
+- `bun run db:push` + `bun run db:generate` — Prisma-клиент обновлён
+- ВАЖНО: после schema-изменения потребовался рестарт dev-сервера (старый PrismaClient в globalForPrisma.prisma не имел getter'а leadMagnet). Запустил через повторный init-fullstack — поднялся fresh.
+
+2. SEED 3 ЛИД-МАГНИТА (`scripts/seed-lead-magnets.ts`, идемпотентный):
+- svadba-47-punktov — «47 пунктов оформления свадьбы в Красноярске» (WEDDING, fileUrl: /downloads/svadba-47-punktov.pdf)
+- vypusknoj-cheklist — «Чек-лист родкомитета: выпускной без хаоса» (GRADUATION, fileUrl: /downloads/vypusknoj-cheklist.pdf)
+- ng-20-idey — «20 идей новогодней фотозоны: от 5 000 ₽» (NEW_YEAR, fileUrl: /downloads/ng-20-idey.pdf)
+- PDF пока заглушки (файлы не созданы), fileUrl указывает на будущие пути.
+
+3. API POST /api/lead-magnets (`src/app/api/lead-magnets/route.ts`):
+- Принимает: slug, name, phone (маска +7), email (опц.)
+- Валидация: name обязателен, phone через isPhoneValid, email регуляркой, slug существует+активен (404)
+- Rate-limit: 5/мин на IP (через существующий rateLimit + getClientIp) — 429 при превышении
+- Создаёт Lead со source='leadmagnet', config: { type, leadMagnetSlug, leadMagnetTitle, email, promoCode:'QUIZ5', promoDiscount:5 }, occasion из магнита, eventDate=+14д (заглушка — клиент не обязан указывать дату)
+- Инкрементирует LeadMagnet.downloads через `update({ data: { downloads: { increment: 1 } } })`
+- Запускает sendDripEmail(email, 1, slug, { name, leadId }) для шага 1 (только если email) — fire-and-forget
+- Возвращает { ok, id, fileUrl, title, promoCode:'QUIZ5', promoDiscount:5, expiresAt:+5д } (201)
+- GET /api/lead-magnets — публичный список активных (для SSR)
+
+4. API GET /api/admin/lead-magnets (`src/app/api/admin/lead-magnets/route.ts`):
+- Защищён сессией (getSession — 401 без)
+- Возвращает { items, totalDownloads, activeCount, total } — отсортировано по downloads desc
+
+5. КОМПОНЕНТ LeadMagnetBlock (`src/components/site/lead-magnet-block.tsx`, серверный):
+- Тянет магнит из БД по slug (props). Если не найден/неактивен — null (молча)
+- Карточка: золотая обёртка border-gold/30 + bg-gradient-to-br from-gold/10, иконка «PDF» в круге, бейдж «Бесплатный гайд», заголовок, описание, кнопка «Скачать PDF»
+
+6. МОДАЛКА LeadMagnetModal (`src/components/site/lead-magnet-modal.tsx`, клиентская):
+- Форма: имя*, телефон* (PhoneInput), email (опц.) + валидация
+- POST /api/lead-magnets → success-экран: иконка ✓, кнопка-ссылка `<a href={fileUrl} download>`, блок промокода QUIZ5 со сроком, подсказка про перезвон 15 мин
+- framer-motion (fade + spring), тап-таргеты ≥44px (h-12), доступность через Dialog/DialogTitle/Description
+
+7. РАЗМЕЩЕНИЕ:
+- /svadby — LeadMagnetBlock slug="svadba-47-punktov" (после QuizStrip, перед сеткой)
+- /vypusknie — LeadMagnetBlock slug="vypusknoj-cheklist"
+- /prazdniki/novyj-god — LeadMagnetBlock slug="ng-20-idey" (после QuizStrip, перед промо-блоком)
+
+8. ДОЖИМ-ЦЕПОЧКА (3 касания) в src/lib/notify.ts:
+- sendDripEmail(to, step, slug, ctx) — функции-заготовки без cron
+- Шаг 1 (сразу): PDF + промокод QUIZ5. Тема «Ваш PDF «<title>» + промокод QUIZ5», кнопка «⬇ Скачать PDF» (SITE.url + fileUrl)
+- Шаг 2 (+2 дня): «Успеем рассчитать под вашу дату» — кнопки «Открыть калькулятор»/«В каталог», напоминание что QUIZ5 ещё действует
+- Шаг 3 (+5 дней): «Промокод QUIZ5 истекает завтра» — кнопки «Выбрать фотозону»/«Позвонить», красный хедер, отписка «если не актуально — просто не отвечайте»
+- HTML в фирменном стиле (золото/коралл). Если нет RESEND_API_KEY — fallback в лог (как и для других email)
+- Шаг 1 вызывается автоматически из POST API; шаги 2-3 — для будущего cron
+
+9. АДМИН-ДАШБОРД (src/app/admin/page.tsx):
+- В Promise.all добавлен /api/admin/lead-magnets (с .catch для устойчивости)
+- Новый блок «Лид-магниты · PDF-гайды» (между «Брошенные квизы» и графиком):
+  - Иконка FileDown, сводка «Скачиваний всего: N · активных X из Y», бейдж общего числа
+  - Список магнитов: название + бейдж повода (Свадьба/Выпускной/Новый год через OCCASION_LABELS) + бейдж «Скрыт», slug + fileUrl, прогресс-бар по downloads, число скачиваний справа
+  - max-h-80 overflow-y-auto
+
+Self-verify (curl, полный цикл):
+- GET /api/lead-magnets → 200, 3 магнита ✓
+- POST валидный (+email) → 201, { ok, id, fileUrl, title, promoCode:'QUIZ5', promoDiscount:5, expiresAt } ✓
+- POST пустой name → 422 «Укажите имя» ✓
+- POST короткий phone → 422 «Введите корректный телефон» ✓
+- POST несуществующий slug → 404 ✓
+- POST невалидный email → 422 «Некорректный email» ✓
+- Rate-limit 5/мин: после 5 запросов → 429 ✓
+- GET /api/admin/lead-magnets без сессии → 401 ✓
+- GET /api/admin/lead-magnets с сессией (после login admin@fotozona24.ru/admin123) → 200, { items, totalDownloads:2, activeCount:3, total:3 } ✓
+- GET /svadby → 200, в HTML «Бесплатный гайд», «47 пунктов», «svadba-47-punktov», «Скачать PDF» ✓
+- GET /vypusknie → 200, «Чек-лист родкомитета», «vypusknoj-cheklist» ✓
+- GET /prazdniki/novyj-god → 200, «20 идей новогодней», «ng-20-idey» ✓
+- GET /api/admin/leads?limit=2 → лиды со source='leadmagnet', occasion из магнита, config { type, leadMagnetSlug, leadMagnetTitle, email, promoCode, promoDiscount } ✓
+- dev.log: `[notify:drip] step 1 → <email> (magnet=<slug>, lead=<id>)` + `[notify:email] ... Ваш PDF «<title>» + промокод QUIZ5` (fallback в лог без RESEND_API_KEY) ✓
+- bun run lint: 0 ошибок, 0 предупреждений ✓
+
+Stage Summary:
+- Система лид-магнитов полностью функциональна: 3 PDF-гайда (свадебный, выпускной, новогодний) раздаются за контакт (имя+телефон, email опц.)
+- Lead создаётся со source='leadmagnet' + config с slug магнита → менеджер в /admin/leads видит источник и какой именно гайд скачали
+- Downloads инкрементируются → в /admin дашборде новый блок показывает N скачиваний по каждому магниту
+- Промокод QUIZ5 (5%, 5 дней) выдаётся каждому скачавшему — попадает в Lead.config и в drip-email
+- Дожим-цепочка: 3 шаблона писем (шаг 1 сразу с PDF, шаг 2 +2д «успеем рассчитать», шаг 3 +5д «истекает завтра»). Шаг 1 уже автоматически вызывается. Шаги 2-3 — заготовки для cron.
+- Серверный компонент LeadMagnetBlock безопасно размещён на 3 посадочных — если магнит скрыт/удалён, блок просто не рендерится (null), страница не падает
+- PDF-файлы пока заглушки (fileUrl → /downloads/<slug>.pdf). Когда будут готовы — положить в public/downloads/
+
+---
+Task ID: ORCHESTRATOR-35 (лид-магниты + конструктор — итог)
+Agent: main (Z.ai Code)
+
+ЛИД-МАГНИТЫ:
+- Модель LeadMagnet в БД + 3 seed-магнита
+- API POST /api/lead-magnets: валидация, rate limit 5/мин, создание лида, инкремент downloads
+- API GET /api/admin/lead-magnets: статистика для дашборда
+- Компонент LeadMagnetBlock + LeadMagnetModal на /svadby, /vypusknie, /prazdniki/novyj-god
+- Дожим-цепочка: sendDripEmail (3 шага) — шаг 1 автоматически при email
+- Дашборд: блок «Лид-магниты · PDF-гайды» с прогресс-барами скачиваний
+
+КОНСТРУКТОР ФОТОЗОН:
+- /konstruktor — 4-шаговый wizard (основа → стиль → доп.элементы → дата/адрес)
+- 5 основ, 5 стилей, доп.элементы из БД через /api/elements
+- Live-цена с пересчётом, sticky-бар (десктоп справа, мобайл снизу)
+- Прогресс-бар, анимации Framer Motion, кнопка → openQuickOrder с config
+- Адаптивность, JSON-LD, metadata
+
+Self-verify:
+- /konstruktor: H1 «Конструктор фотозоны в Красноярске», шаги, цена ✓
+- /svadby: «47 пунктов» — лид-магнит ✓
+- /api/lead-magnets: 3 магнита ✓
+- /api/elements: 7 элементов ✓
+- lint: 0 ошибок
+
+ОСТАЛОСЬ:
+- PDF-гайды (содержание) — пока заглушки
+- 2FA для админа
+- SSR middleware для /admin
+- Сезонные напоминания (cron)
+- Аналитика воронки квиза

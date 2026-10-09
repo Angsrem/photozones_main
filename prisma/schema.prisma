@@ -265,6 +265,20 @@ model Page {
   createdAt   DateTime @default(now())
 }
 
+// ===== Лид-магниты (PDF-гайды за контакт) =====
+model LeadMagnet {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  fileUrl     String   // путь к PDF
+  occasion    String?  // WEDDING | BIRTHDAY | GRADUATION | CORPORATE | NEW_YEAR
+  isActive    Boolean  @default(true)
+  downloads   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 // ===== Partial-лиды (брошенные квизы) =====
 model QuizPartial {
   id          String   @id @default(cuid())

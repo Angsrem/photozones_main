@@ -1,4 +1,5 @@
 import { SITE } from './constants';
+import { db } from './db';
 
 // ===== Уведомления менеджеру: Telegram + Email =====
 // Если env-ключи не заданы — graceful fallback в лог (для dev/демо).
@@ -173,6 +174,135 @@ export async function notifyNewLead(data: {
   );
 
   return { telegram: telegramResult, emailSent: !!process.env.RESEND_API_KEY };
+}
+
+// ===== Дожим-цепочка для лид-магнитов (3 касания) =====
+// Пока функции-заготовки без cron — для демо и ручного вызова.
+// Шаг 1 (сразу): PDF + промокод QUIZ5
+// Шаг 2 (+2 дня): «Успеем рассчитать под вашу дату»
+// Шаг 3 (+5 дней): «Промокод истекает завтра»
+//
+// Тексты писем — человекочитаемые HTML (через sendEmail, определённую выше).
+// Если RESEND_API_KEY не задан — письмо не отправляется (fallback в лог в dev).
+
+const DRIP_TEMPLATES: Record<
+  number,
+  { subject: (title: string) => string; body: (name: string, magnetTitle: string, fileUrl: string) => string }
+> = {
+  1: {
+    subject: (title) => `Ваш PDF «${title}» + промокод QUIZ5`,
+    body: (name, magnetTitle, fileUrl) => `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;background:#faf7f2;padding:24px;border-radius:12px">
+        <div style="background:#1a1428;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;text-align:center">
+          <h2 style="margin:0;color:#e8c878">🎁 Ваш гайд готов, ${escapeHtml(name)}!</h2>
+        </div>
+        <div style="background:#fff;padding:20px;border:1px solid #e5dcc9;border-top:none;border-radius:0 0 8px 8px">
+          <p style="margin:0 0 12px;font-size:15px;line-height:1.6">
+            Спасибо за интерес к ФотоЗона24! Вы запросили гайд
+            <b>«${escapeHtml(magnetTitle)}»</b>.
+            Скачать PDF можно по кнопке ниже.
+          </p>
+          <div style="text-align:center;margin:20px 0">
+            <a href="${SITE.url}${fileUrl}" style="display:inline-block;padding:12px 28px;background:#b8860b;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">⬇ Скачать PDF</a>
+          </div>
+          <div style="padding:14px;background:#fff4d6;border-radius:6px;text-align:center;color:#8a6600;font-weight:600">
+            🎟 Промокод <code style="background:#fff;padding:2px 6px;border-radius:4px">QUIZ5</code> — скидка 5% на любой заказ.
+            Действует 5 дней.
+          </div>
+          <p style="margin:16px 0 0;font-size:13px;color:#888;line-height:1.5">
+            Менеджер перезвонит в течение 15 минут, чтобы помочь с выбором фотозоны под вашу дату.
+            Или позвоните нам: <a href="tel:${SITE.phoneRaw}" style="color:#b8860b">${SITE.phone}</a>.
+          </p>
+        </div>
+      </div>`,
+  },
+  2: {
+    subject: (title) => `Успеем рассчитать фотозону под вашу дату (${title})`,
+    body: (name, magnetTitle) => `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;background:#faf7f2;padding:24px;border-radius:12px">
+        <div style="background:#1a1428;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;text-align:center">
+          <h2 style="margin:0;color:#e8c878">⏰ Успеем рассчитать под вашу дату</h2>
+        </div>
+        <div style="background:#fff;padding:20px;border:1px solid #e5dcc9;border-top:none;border-radius:0 0 8px 8px">
+          <p style="margin:0 0 12px;font-size:15px;line-height:1.6">
+            ${escapeHtml(name)}, вы скачали гайд <b>«${escapeHtml(magnetTitle)}»</b> пару дней назад.
+            Подскажите дату мероприятия — менеджер за 15 минут подберёт 2–3 варианта фотозоны под бюджет
+            и проверит наличие.
+          </p>
+          <div style="text-align:center;margin:20px 0">
+            <a href="${SITE.url}/kalkulyator" style="display:inline-block;padding:12px 28px;background:#b8860b;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">📐 Открыть калькулятор</a>
+            <a href="${SITE.url}/katalog" style="display:inline-block;padding:12px 28px;background:#1a1428;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin-left:8px">📋 В каталог</a>
+          </div>
+          <p style="margin:16px 0 0;font-size:13px;color:#888;line-height:1.5">
+            Промокод <code style="background:#fff4d6;padding:2px 6px;border-radius:4px">QUIZ5</code> ещё действует — скидка 5%.
+          </p>
+        </div>
+      </div>`,
+  },
+  3: {
+    subject: (title) => `Промокод QUIZ5 истекает завтра — успейте заказать (${title})`,
+    body: (name, magnetTitle) => `
+      <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;background:#faf7f2;padding:24px;border-radius:12px">
+        <div style="background:#7f1d1d;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;text-align:center">
+          <h2 style="margin:0;color:#fcd34d">⏳ Завтра истекает промокод</h2>
+        </div>
+        <div style="background:#fff;padding:20px;border:1px solid #e5dcc9;border-top:none;border-radius:0 0 8px 8px">
+          <p style="margin:0 0 12px;font-size:15px;line-height:1.6">
+            ${escapeHtml(name)}, промокод <code style="background:#fff4d6;padding:2px 6px;border-radius:4px">QUIZ5</code>
+            на скидку 5% перестанет действовать <b>завтра</b>. Вы скачивали гайд
+            <b>«${escapeHtml(magnetTitle)}»</b> — мы хотим, чтобы успели воспользоваться скидкой.
+          </p>
+          <div style="text-align:center;margin:20px 0">
+            <a href="${SITE.url}/katalog" style="display:inline-block;padding:12px 28px;background:#b8860b;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Выбрать фотозону</a>
+            <a href="tel:${SITE.phoneRaw}" style="display:inline-block;padding:12px 28px;background:#1a1428;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;margin-left:8px">📞 Позвонить</a>
+          </div>
+          <p style="margin:16px 0 0;font-size:13px;color:#888;line-height:1.5">
+            Если уже не актуально — просто не отвечайте, мы больше не побеспокоим.
+          </p>
+        </div>
+      </div>`,
+  },
+};
+
+/**
+ * Отправляет шаг дожим-цепочки (1, 2 или 3) по лид-магниту.
+ * @param to — email клиента
+ * @param step — 1 (сразу), 2 (+2 дня), 3 (+5 дней)
+ * @param leadMagnetSlug — slug магнита, для которого тянем цепочку
+ * @param ctx — { name, leadId } — имя клиента для персонализации
+ */
+export async function sendDripEmail(
+  to: string,
+  step: 1 | 2 | 3,
+  leadMagnetSlug: string,
+  ctx: { name: string; leadId?: string },
+) {
+  const tpl = DRIP_TEMPLATES[step];
+  if (!tpl) {
+    console.warn('[notify:drip] unknown step', step);
+    return { ok: false, reason: 'unknown-step' };
+  }
+
+  // Подтягиваем лид-магнит из БД (для заголовка и fileUrl)
+  try {
+    const magnet = await db.leadMagnet.findUnique({ where: { slug: leadMagnetSlug } });
+    if (!magnet) {
+      console.warn('[notify:drip] magnet not found', leadMagnetSlug);
+      return { ok: false, reason: 'magnet-not-found' };
+    }
+    const subject = tpl.subject(magnet.title);
+    const html = tpl.body(ctx.name || 'Гость', magnet.title, magnet.fileUrl);
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[notify:drip] step ${step} → ${to} (magnet=${leadMagnetSlug}, lead=${ctx.leadId || '—'})`);
+    }
+
+    await sendEmail(to, subject, html);
+    return { ok: true, step, to, magnet: leadMagnetSlug };
+  } catch (e: any) {
+    console.error('[notify:drip] error', e?.message);
+    return { ok: false, reason: 'error', error: e?.message };
+  }
 }
 
 // Статус конфигурации уведомлений (для админки — чтобы видеть, настроено ли)

@@ -1,0 +1,640 @@
+     1→'use client';
+     2→
+     3→import { useMemo, useState } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import {
+     6→  Heart, Cake, GraduationCap, Building2, Snowflake,
+     7→  Flower2, Zap, Leaf, CalendarHeart, Building,
+     8→  Frame, Layers, Shirt, Lightbulb, Type, CircleDot, Printer, Clock,
+     9→  MapPin, Calendar, ArrowLeft, ArrowRight, Check, Sparkles, RotateCcw, Info,
+    10→  ShieldCheck,
+    11→} from 'lucide-react';
+    12→import { Button } from '@/components/ui/button';
+    13→import { Checkbox } from '@/components/ui/checkbox';
+    14→import { Input } from '@/components/ui/input';
+    15→import { Label } from '@/components/ui/label';
+    16→import { Badge } from '@/components/ui/badge';
+    17→import { Progress } from '@/components/ui/progress';
+    18→import { openQuickOrder } from '@/components/site/quick-order-store';
+    19→import { SITE } from '@/lib/constants';
+    20→import { formatPrice, todayISO } from '@/lib/format';
+    21→
+    22→/* ============ Данные wizard'а ============ */
+    23→
+    24→type OccasionOpt = { value: string; label: string; icon: React.ElementType; hint: string };
+    25→type StyleOpt = { value: string; label: string; icon: React.ElementType; modifier: number; hint: string };
+    26→type BaseOpt = { value: string; label: string; desc: string; price: number; icon: React.ElementType };
+    27→type AddonOpt = { value: string; label: string; price: number; icon: React.ElementType };
+    28→
+    29→// Шаг 1 — Повод (значения тянутся из OCCASIONS где возможно + «Сезонный праздник»)
+    30→const OCCASION_OPTIONS: OccasionOpt[] = [
+    31→  { value: 'WEDDING', label: 'Свадьба', icon: Heart, hint: 'Торжество, банкет, выездная регистрация' },
+    32→  { value: 'BIRTHDAY', label: 'День рождения', icon: Cake, hint: 'Взрослый или детский праздник' },
+    33→  { value: 'GRADUATION', label: 'Выпускной', icon: GraduationCap, hint: 'Детский сад, школа, ВУЗ' },
+    34→  { value: 'CORPORATE', label: 'Корпоратив', icon: Building2, hint: 'Новый год, юбилей компании, тимбилдинг' },
+    35→  { value: 'SEASONAL', label: 'Сезонный праздник', icon: Snowflake, hint: 'Новый год, 8 марта, 23 февраля' },
+    36→];
+    37→
+    38→// Шаг 2 — Тематика/стиль (влияет на базу цены)
+    39→const STYLE_OPTIONS: StyleOpt[] = [
+    40→  { value: 'classic-flora', label: 'Классика / Флора', icon: Flower2, modifier: 0, hint: 'Цветы, пастель, благородство' },
+    41→  { value: 'neon', label: 'Неон', icon: Zap, modifier: 2000, hint: 'Светящиеся надписи, неоновые линии' },
+    42→  { value: 'rustic-boho', label: 'Рустик / Бохо', icon: Leaf, modifier: 1500, hint: 'Дерево, текстиль, макраме' },
+    43→  { value: 'seasonal', label: 'Сезонная', icon: CalendarHeart, modifier: 1000, hint: 'Зима, весна, тематика праздника' },
+    44→  { value: 'brand', label: 'Брендовая', icon: Building, modifier: 3000, hint: 'Фирменные цвета и логотип' },
+    45→];
+    46→
+    47→// Шаг 3 — Тип основы
+    48→const BASE_OPTIONS: BaseOpt[] = [
+    49→  { value: 'frame-s', label: 'Каркасная S', desc: '2 × 2 м · компактно', price: 8900, icon: Frame },
+    50→  { value: 'frame-m', label: 'Каркасная M', desc: '3 × 2.5 м · оптимально', price: 12900, icon: Frame },
+    51→  { value: 'frame-l', label: 'Каркасная L', desc: '4 × 3 м · масштаб', price: 17900, icon: Frame },
+    52→  { value: 'presswall', label: 'Пресс-волл', desc: '3 × 2.5 м · бренд', price: 15900, icon: Layers },
+    53→  { value: 'textile', label: 'Текстильная', desc: '3 × 2.5 м · мягко', price: 10900, icon: Shirt },
+    54→];
+    55→
+    56→// Шаг 3 — Доп. элементы
+    57→const ADDON_OPTIONS: AddonOpt[] = [
+    58→  { value: 'light-letters', label: 'Световые буквы', price: 3900, icon: Lightbulb },
+    59→  { value: 'neon-sign', label: 'Неоновая надпись', price: 3500, icon: Type },
+    60→  { value: 'balloons-50', label: 'Шары 50 шт', price: 2500, icon: CircleDot },
+    61→  { value: 'garland', label: 'Гирлянда', price: 1500, icon: Sparkles },
+    62→  { value: 'logo-print', label: 'Печать логотипа', price: 4500, icon: Printer },
+    63→  { value: 'extra-hour', label: 'Доп. час работы', price: 800, icon: Clock },
+    64→];
+    65→
+    66→const STEPS = ['Повод', 'Стиль', 'Основа', 'Дата и адрес'] as const;
+    67→
+    68→/* ============ Компонент ============ */
+    69→
+    70→export function CalculatorWizard() {
+    71→  const [step, setStep] = useState(0); // 0..3
+    72→  const [calculated, setCalculated] = useState(false);
+    73→
+    74→  const [occasion, setOccasion] = useState<string>('');
+    75→  const [style, setStyle] = useState<string>('');
+    76→  const [base, setBase] = useState<string>('');
+    77→  const [addons, setAddons] = useState<string[]>([]);
+    78→  const [date, setDate] = useState<string>('');
+    79→  const [address, setAddress] = useState<string>('');
+    80→  const [isSuburb, setIsSuburb] = useState(false);
+    81→
+    82→  // min date — считаем в рендере; добавляем suppressHydrationWarning на input,
+    83→  // чтобы избежать предупреждения о разнице SSR/CSR на границе суток.
+    84→  const minDate = todayISO();
+    85→
+    86→  const occasionOpt = OCCASION_OPTIONS.find((o) => o.value === occasion);
+    87→  const styleOpt = STYLE_OPTIONS.find((s) => s.value === style);
+    88→  const baseOpt = BASE_OPTIONS.find((b) => b.value === base);
+    89→  const selectedAddons = ADDON_OPTIONS.filter((a) => addons.includes(a.value));
+    90→
+    91→  const breakdown = useMemo(() => {
+    92→    const basePrice = baseOpt?.price ?? 0;
+    93→    const styleModifier = styleOpt?.modifier ?? 0;
+    94→    const addonsTotal = selectedAddons.reduce((s, a) => s + a.price, 0);
+    95→    const suburb = isSuburb ? SITE.suburbSurcharge : 0;
+    96→    const total = basePrice + styleModifier + addonsTotal + suburb;
+    97→    return { basePrice, styleModifier, addonsTotal, suburb, total };
+    98→  }, [baseOpt, styleOpt, selectedAddons, isSuburb]);
+    99→
+   100→  const canNext = () => {
+   101→    if (step === 0) return !!occasion;
+   102→    if (step === 1) return !!style;
+   103→    if (step === 2) return !!base;
+   104→    if (step === 3) return !!date;
+   105→    return false;
+   106→  };
+   107→
+   108→  const next = () => {
+   109→    if (step < 3) setStep(step + 1);
+   110→    else setCalculated(true);
+   111→  };
+   112→  const back = () => {
+   113→    if (calculated) { setCalculated(false); return; }
+   114→    if (step > 0) setStep(step - 1);
+   115→  };
+   116→
+   117→  const toggleAddon = (v: string) => {
+   118→    setAddons((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
+   119→  };
+   120→
+   121→  const handleOrder = () => {
+   122→    const config = {
+   123→      occasion: occasionOpt?.value ?? occasion,
+   124→      occasionLabel: occasionOpt?.label ?? occasion,
+   125→      style: styleOpt?.value ?? style,
+   126→      styleLabel: styleOpt?.label ?? style,
+   127→      base: baseOpt
+   128→        ? { value: baseOpt.value, label: baseOpt.label, desc: baseOpt.desc, price: baseOpt.price }
+   129→        : null,
+   130→      addons: selectedAddons.map((a) => ({ value: a.value, label: a.label, price: a.price })),
+   131→      date,
+   132→      address,
+   133→      isSuburb,
+   134→      suburbSurcharge: isSuburb ? SITE.suburbSurcharge : 0,
+   135→      breakdown: {
+   136→        base: breakdown.basePrice,
+   137→        style: breakdown.styleModifier,
+   138→        addons: breakdown.addonsTotal,
+   139→        suburb: breakdown.suburb,
+   140→        total: breakdown.total,
+   141→      },
+   142→    };
+   143→    openQuickOrder({
+   144→      source: 'kalkulyator',
+   145→      sourcePage: '/kalkulyator',
+   146→      occasion: occasionOpt?.value ?? occasion,
+   147→      priceEstimate: breakdown.total,
+   148→      config,
+   149→    });
+   150→  };
+   151→
+   152→  const progressValue = calculated ? 100 : ((step + 1) / 4) * 100;
+   153→
+   154→  return (
+   155→    <div className="rounded-3xl border border-border bg-card/60 backdrop-blur p-4 sm:p-6 lg:p-8 shadow-2xl">
+   156→      {/* ===== Stepper / Progress ===== */}
+   157→      <div className="mb-6">
+   158→        <div className="flex items-center justify-between gap-1 mb-3">
+   159→          {STEPS.map((label, i) => {
+   160→            const done = calculated || i < step;
+   161→            const active = !calculated && i === step;
+   162→            return (
+   163→              <div key={label} className="flex-1 flex items-center gap-1 min-w-0">
+   164→                <div
+   165→                  className={[
+   166→                    'flex items-center gap-2 rounded-full px-2 sm:px-3 h-9 sm:h-10 text-xs sm:text-sm transition-colors whitespace-nowrap',
+   167→                    active ? 'bg-gold text-primary-foreground font-semibold'
+   168→                      : done ? 'bg-gold/15 text-gold'
+   169→                      : 'bg-muted/50 text-muted-foreground',
+   170→                  ].join(' ')}
+   171→                >
+   172→                  <span className="flex items-center justify-center w-5 h-5 rounded-full text-[11px]">
+   173→                    {done ? <Check className="w-3.5 h-3.5" /> : i + 1}
+   174→                  </span>
+   175→                  <span className="hidden sm:inline">{label}</span>
+   176→                </div>
+   177→                {i < STEPS.length - 1 && (
+   178→                  <div className="flex-1 h-px bg-border hidden sm:block" />
+   179→                )}
+   180→              </div>
+   181→            );
+   182→          })}
+   183→        </div>
+   184→        <Progress value={progressValue} className="h-1.5 bg-muted/50 [&>div]:bg-gold" />
+   185→      </div>
+   186→
+   187→      {/* ===== Body ===== */}
+   188→      <div className="min-h-[340px]">
+   189→        <AnimatePresence mode="wait">
+   190→          {calculated ? (
+   191→            <motion.div
+   192→              key="result"
+   193→              initial={{ opacity: 0, y: 16 }}
+   194→              animate={{ opacity: 1, y: 0 }}
+   195→              exit={{ opacity: 0, y: -16 }}
+   196→              transition={{ duration: 0.3 }}
+   197→            >
+   198→              <ResultView
+   199→                occasionLabel={occasionOpt?.label ?? occasion}
+   200→                styleLabel={styleOpt?.label ?? style}
+   201→                baseOpt={baseOpt}
+   202→                selectedAddons={selectedAddons}
+   203→                date={date}
+   204→                address={address}
+   205→                isSuburb={isSuburb}
+   206→                breakdown={breakdown}
+   207→                onOrder={handleOrder}
+   208→                onEdit={() => setCalculated(false)}
+   209→              />
+   210→            </motion.div>
+   211→          ) : (
+   212→            <motion.div
+   213→              key={step}
+   214→              initial={{ opacity: 0, x: 24 }}
+   215→              animate={{ opacity: 1, x: 0 }}
+   216→              exit={{ opacity: 0, x: -24 }}
+   217→              transition={{ duration: 0.25 }}
+   218→            >
+   219→              {step === 0 && (
+   220→                <StepOccasion value={occasion} onChange={setOccasion} />
+   221→              )}
+   222→              {step === 1 && (
+   223→                <StepStyle value={style} onChange={setStyle} />
+   224→              )}
+   225→              {step === 2 && (
+   226→                <StepBaseAndAddons
+   227→                  base={base} onBase={setBase}
+   228→                  addons={addons} onToggleAddon={toggleAddon}
+   229→                />
+   230→              )}
+   231→              {step === 3 && (
+   232→                <StepDateAddress
+   233→                  date={date} onDate={setDate}
+   234→                  address={address} onAddress={setAddress}
+   235→                  isSuburb={isSuburb} onSuburb={setIsSuburb}
+   236→                  minDate={minDate}
+   237→                />
+   238→              )}
+   239→            </motion.div>
+   240→          )}
+   241→        </AnimatePresence>
+   242→      </div>
+   243→
+   244→      {/* ===== Nav buttons ===== */}
+   245→      <div className="flex items-center justify-between gap-3 mt-6 pt-5 border-t border-border/60">
+   246→        <Button
+   247→          variant="ghost"
+   248→          onClick={back}
+   249→          disabled={!calculated && step === 0}
+   250→          className="h-12 px-5"
+   251→        >
+   252→          <ArrowLeft className="w-4 h-4 mr-1" /> Назад
+   253→        </Button>
+   254→
+   255→        {!calculated ? (
+   256→          <Button
+   257→            onClick={next}
+   258→            disabled={!canNext()}
+   259→            className="h-12 px-7 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold"
+   260→          >
+   261→            {step === 3 ? <>Рассчитать <Sparkles className="w-4 h-4 ml-1" /></> : <>Далее <ArrowRight className="w-4 h-4 ml-1" /></>}
+   262→          </Button>
+   263→        ) : (
+   264→          <Button
+   265→            onClick={handleOrder}
+   266→            className="h-12 px-7 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold"
+   267→          >
+   268→            <Sparkles className="w-4 h-4 mr-1" /> Зафиксировать расчёт и заказать
+   269→          </Button>
+   270→        )}
+   271→      </div>
+   272→    </div>
+   273→  );
+   274→}
+   275→
+   276→/* ============ Шаг 1 — Повод ============ */
+   277→
+   278→function StepOccasion({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+   279→  return (
+   280→    <div>
+   281→      <StepHeader
+   282→        eyebrow="Шаг 1 из 4"
+   283→        title="Какой повод у мероприятия?"
+   284→        subtitle="От повода зависит подбор стилистики и сезонных предложений"
+   285→      />
+   286→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+   287→        {OCCASION_OPTIONS.map((o) => {
+   288→          const active = value === o.value;
+   289→          return (
+   290→            <button
+   291→              key={o.value}
+   292→              type="button"
+   293→              onClick={() => onChange(o.value)}
+   294→              aria-pressed={active}
+   295→              className={[
+   296→                'group relative flex items-start gap-3 rounded-2xl border p-4 text-left transition-all min-h-[88px]',
+   297→                active ? 'border-gold bg-gold/10 ring-2 ring-gold/40' : 'border-border bg-background hover:border-gold/50',
+   298→              ].join(' ')}
+   299→            >
+   300→              <span className={[
+   301→                'flex items-center justify-center w-11 h-11 rounded-xl shrink-0 transition-colors',
+   302→                active ? 'bg-gold text-primary-foreground' : 'bg-muted text-gold',
+   303→              ].join(' ')}>
+   304→                <o.icon className="w-5 h-5" />
+   305→              </span>
+   306→              <span className="flex-1 min-w-0">
+   307→                <span className="block font-display text-lg leading-tight">{o.label}</span>
+   308→                <span className="block text-sm text-muted-foreground mt-1">{o.hint}</span>
+   309→              </span>
+   310→              <span className={[
+   311→                'mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
+   312→                active ? 'border-gold bg-gold' : 'border-muted-foreground/40',
+   313→              ].join(' ')}>
+   314→                {active && <Check className="w-3 h-3 text-primary-foreground" />}
+   315→              </span>
+   316→            </button>
+   317→          );
+   318→        })}
+   319→      </div>
+   320→    </div>
+   321→  );
+   322→}
+   323→
+   324→/* ============ Шаг 2 — Стиль ============ */
+   325→
+   326→function StepStyle({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+   327→  return (
+   328→    <div>
+   329→      <StepHeader
+   330→        eyebrow="Шаг 2 из 4"
+   331→        title="Тематика и стиль фотозоны"
+   332→        subtitle="Стиль влияет на базовую стоимость — неоновые и брендовые решения сложнее в производстве"
+   333→      />
+   334→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+   335→        {STYLE_OPTIONS.map((s) => {
+   336→          const active = value === s.value;
+   337→          return (
+   338→            <button
+   339→              key={s.value}
+   340→              type="button"
+   341→              onClick={() => onChange(s.value)}
+   342→              aria-pressed={active}
+   343→              className={[
+   344→                'group relative flex items-start gap-3 rounded-2xl border p-4 text-left transition-all min-h-[88px]',
+   345→                active ? 'border-gold bg-gold/10 ring-2 ring-gold/40' : 'border-border bg-background hover:border-gold/50',
+   346→              ].join(' ')}
+   347→            >
+   348→              <span className={[
+   349→                'flex items-center justify-center w-11 h-11 rounded-xl shrink-0 transition-colors',
+   350→                active ? 'bg-gold text-primary-foreground' : 'bg-muted text-gold',
+   351→              ].join(' ')}>
+   352→                <s.icon className="w-5 h-5" />
+   353→              </span>
+   354→              <span className="flex-1 min-w-0">
+   355→                <span className="flex items-center gap-2 flex-wrap">
+   356→                  <span className="font-display text-lg leading-tight">{s.label}</span>
+   357→                  {s.modifier > 0 && (
+   358→                    <Badge variant="outline" className="text-gold border-gold/40">+{formatPrice(s.modifier)}</Badge>
+   359→                  )}
+   360→                </span>
+   361→                <span className="block text-sm text-muted-foreground mt-1">{s.hint}</span>
+   362→              </span>
+   363→              <span className={[
+   364→                'mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
+   365→                active ? 'border-gold bg-gold' : 'border-muted-foreground/40',
+   366→              ].join(' ')}>
+   367→                {active && <Check className="w-3 h-3 text-primary-foreground" />}
+   368→              </span>
+   369→            </button>
+   370→          );
+   371→        })}
+   372→      </div>
+   373→    </div>
+   374→  );
+   375→}
+   376→
+   377→/* ============ Шаг 3 — Основа + доп. элементы ============ */
+   378→
+   379→function StepBaseAndAddons({
+   380→  base, onBase, addons, onToggleAddon,
+   381→}: {
+   382→  base: string; onBase: (v: string) => void;
+   383→  addons: string[]; onToggleAddon: (v: string) => void;
+   384→}) {
+   385→  return (
+   386→    <div>
+   387→      <StepHeader
+   388→        eyebrow="Шаг 3 из 4"
+   389→        title="Размер, тип основы и доп. элементы"
+   390→        subtitle="Выберите основу — и добавьте детали, которые сделают фотозону ярче"
+   391→      />
+   392→
+   393→      <h3 className="font-display text-base text-gold mt-5 mb-3 flex items-center gap-2">
+   394→        <Frame className="w-4 h-4" /> Тип основы
+   395→      </h3>
+   396→      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+   397→        {BASE_OPTIONS.map((b) => {
+   398→          const active = base === b.value;
+   399→          return (
+   400→            <button
+   401→              key={b.value}
+   402→              type="button"
+   403→              onClick={() => onBase(b.value)}
+   404→              aria-pressed={active}
+   405→              className={[
+   406→                'group relative flex flex-col rounded-2xl border p-4 text-left transition-all min-h-[112px]',
+   407→                active ? 'border-gold bg-gold/10 ring-2 ring-gold/40' : 'border-border bg-background hover:border-gold/50',
+   408→              ].join(' ')}
+   409→            >
+   410→              <span className="flex items-center justify-between mb-2">
+   411→                <span className={[
+   412→                  'flex items-center justify-center w-10 h-10 rounded-lg transition-colors',
+   413→                  active ? 'bg-gold text-primary-foreground' : 'bg-muted text-gold',
+   414→                ].join(' ')}>
+   415→                  <b.icon className="w-5 h-5" />
+   416→                </span>
+   417→                <span className={[
+   418→                  'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors',
+   419→                  active ? 'border-gold bg-gold' : 'border-muted-foreground/40',
+   420→                ].join(' ')}>
+   421→                  {active && <Check className="w-3 h-3 text-primary-foreground" />}
+   422→                </span>
+   423→              </span>
+   424→              <span className="font-display text-base leading-tight">{b.label}</span>
+   425→              <span className="text-xs text-muted-foreground mt-0.5">{b.desc}</span>
+   426→              <span className="text-gold font-semibold mt-2">{formatPrice(b.price)}</span>
+   427→            </button>
+   428→          );
+   429→        })}
+   430→      </div>
+   431→
+   432→      <h3 className="font-display text-base text-gold mt-7 mb-3 flex items-center gap-2">
+   433→        <Sparkles className="w-4 h-4" /> Дополнительные элементы
+   434→      </h3>
+   435→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+   436→        {ADDON_OPTIONS.map((a) => {
+   437→          const checked = addons.includes(a.value);
+   438→          return (
+   439→            <label
+   440→              key={a.value}
+   441→              htmlFor={`addon-${a.value}`}
+   442→              className={[
+   443→                'flex items-center gap-3 rounded-xl border p-3.5 cursor-pointer transition-all min-h-[56px]',
+   444→                checked ? 'border-gold bg-gold/10' : 'border-border bg-background hover:border-gold/50',
+   445→              ].join(' ')}
+   446→            >
+   447→              <Checkbox id={`addon-${a.value}`} checked={checked} onCheckedChange={() => onToggleAddon(a.value)} />
+   448→              <a.icon className="w-5 h-5 text-gold shrink-0" />
+   449→              <span className="flex-1 text-sm font-medium">{a.label}</span>
+   450→              <span className="text-sm text-gold font-semibold whitespace-nowrap">+{formatPrice(a.price)}</span>
+   451→            </label>
+   452→          );
+   453→        })}
+   454→      </div>
+   455→    </div>
+   456→  );
+   457→}
+   458→
+   459→/* ============ Шаг 4 — Дата и адрес ============ */
+   460→
+   461→function StepDateAddress({
+   462→  date, onDate, address, onAddress, isSuburb, onSuburb, minDate,
+   463→}: {
+   464→  date: string; onDate: (v: string) => void;
+   465→  address: string; onAddress: (v: string) => void;
+   466→  isSuburb: boolean; onSuburb: (v: boolean) => void;
+   467→  minDate: string;
+   468→}) {
+   469→  return (
+   470→    <div>
+   471→      <StepHeader
+   472→        eyebrow="Шаг 4 из 4"
+   473→        title="Дата и адрес мероприятия"
+   474→        subtitle="Укажем логистику и подтверждение наличия на дату"
+   475→      />
+   476→
+   477→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+   478→        <div className="space-y-1.5">
+   479→          <Label htmlFor="calc-date" className="flex items-center gap-1.5">
+   480→            <Calendar className="w-4 h-4 text-gold" /> Дата мероприятия <span className="text-coral">*</span>
+   481→          </Label>
+   482→          <Input
+   483→            id="calc-date"
+   484→            type="date"
+   485→            min={minDate}
+   486→            value={date}
+   487→            onChange={(e) => onDate(e.target.value)}
+   488→            className="h-12"
+   489→            suppressHydrationWarning
+   490→          />
+   491→        </div>
+   492→        <div className="space-y-1.5">
+   493→          <Label htmlFor="calc-address" className="flex items-center gap-1.5">
+   494→            <MapPin className="w-4 h-4 text-gold" /> Адрес (ресторан, лофт, улица)
+   495→          </Label>
+   496→          <Input
+   497→            id="calc-address"
+   498→            value={address}
+   499→            onChange={(e) => onAddress(e.target.value)}
+   500→            placeholder="г. Красноярск, ул. ..."
+   501→            className="h-12"
+   502→            autoComplete="street-address"
+   503→          />
+   504→        </div>
+   505→      </div>
+   506→
+   507→      <div className="mt-5 rounded-2xl border border-border bg-background p-4">
+   508→        <label htmlFor="calc-suburb" className="flex items-start gap-3 cursor-pointer">
+   509→          <Checkbox
+   510→            id="calc-suburb"
+   511→            checked={isSuburb}
+   512→            onCheckedChange={(v) => onSuburb(v === true)}
+   513→            className="mt-0.5"
+   514→          />
+   515→          <div className="flex-1">
+   516→            <div className="flex items-center gap-2 flex-wrap">
+   517→              <span className="font-medium">Мероприятие в пригороде</span>
+   518→              <Badge variant="outline" className="text-gold border-gold/40">+{formatPrice(SITE.suburbSurcharge)}</Badge>
+   519→            </div>
+   520→            <div className="flex items-start gap-1.5 mt-1 text-sm text-muted-foreground">
+   521→              <Info className="w-3.5 h-3.5 mt-0.5 text-gold shrink-0" />
+   522→              <span>
+   523→                Надбавка за доставку за город: {SITE.suburbs.join(', ')}.
+   524→                По городу доставка бесплатна.
+   525→              </span>
+   526→            </div>
+   527→          </div>
+   528→        </label>
+   529→      </div>
+   530→
+   531→      <div className="mt-5 flex items-center gap-3 text-sm text-muted-foreground">
+   532→        <ShieldCheck className="w-4 h-4 text-gold shrink-0" />
+   533→        <span>Дата и адрес нужны для расчёта логистики. Точная цена и наличие подтверждаются менеджером по телефону.</span>
+   534→      </div>
+   535→    </div>
+   536→  );
+   537→}
+   538→
+   539→/* ============ Результат ============ */
+   540→
+   541→function ResultView({
+   542→  occasionLabel, styleLabel, baseOpt, selectedAddons, date, address, isSuburb,
+   543→  breakdown, onOrder, onEdit,
+   544→}: {
+   545→  occasionLabel: string; styleLabel: string;
+   546→  baseOpt: BaseOpt | undefined;
+   547→  selectedAddons: AddonOpt[];
+   548→  date: string; address: string; isSuburb: boolean;
+   549→  breakdown: { basePrice: number; styleModifier: number; addonsTotal: number; suburb: number; total: number };
+   550→  onOrder: () => void; onEdit: () => void;
+   551→}) {
+   552→  return (
+   553→    <div>
+   554→      <StepHeader
+   555→        eyebrow="Готово"
+   556→        title="Ориентировочная стоимость"
+   557→        subtitle="Расчёт сложился из выбранной основы, стиля, доп. элементов и логистики"
+   558→      />
+   559→
+   560→      {/* Total */}
+   561→      <div className="rounded-3xl border border-gold/30 bg-gradient-to-br from-card via-card to-gold/10 p-6 sm:p-8 text-center mt-5">
+   562→        <div className="text-sm text-muted-foreground mb-1">Примерная стоимость аренды</div>
+   563→        <div className="font-display text-4xl sm:text-5xl text-gradient-gold leading-none">
+   564→          {formatPrice(breakdown.total)}
+   565→        </div>
+   566→        <div className="text-xs text-muted-foreground mt-2">
+   567→          Доставка по городу, монтаж и демонтаж включены
+   568→        </div>
+   569→      </div>
+   570→
+   571→      {/* Breakdown */}
+   572→      <div className="rounded-2xl border border-border bg-background p-5 mt-4">
+   573→        <h3 className="font-display text-base mb-3 flex items-center gap-2">
+   574→          <Sparkles className="w-4 h-4 text-gold" /> Состав расчёта
+   575→        </h3>
+   576→        <ul className="space-y-2 text-sm">
+   577→          <BreakdownRow label={`Повод: ${occasionLabel}`} />
+   578→          <BreakdownRow label={`Стиль: ${styleLabel}`} value={breakdown.styleModifier} />
+   579→          {baseOpt && (
+   580→            <BreakdownRow label={`Основа: ${baseOpt.label} (${baseOpt.desc})`} value={breakdown.basePrice} />
+   581→          )}
+   582→          {selectedAddons.map((a) => (
+   583→            <BreakdownRow key={a.value} label={`Доп.: ${a.label}`} value={a.price} />
+   584→          ))}
+   585→          {isSuburb && (
+   586→            <BreakdownRow label="Доставка в пригород" value={breakdown.suburb} />
+   587→          )}
+   588→          {date && <BreakdownRow label={`Дата: ${date}`} />}
+   589→          {address && <BreakdownRow label={`Адрес: ${address}`} />}
+   590→        </ul>
+   591→        <div className="border-t border-border mt-4 pt-3 flex items-center justify-between">
+   592→          <span className="font-medium">Итого</span>
+   593→          <span className="font-display text-2xl text-gold">{formatPrice(breakdown.total)}</span>
+   594→        </div>
+   595→      </div>
+   596→
+   597→      {/* Disclaimer */}
+   598→      <p className="text-xs text-muted-foreground text-center mt-4 leading-relaxed">
+   599→        Расчёт ориентировочный. Точную цену менеджер назовёт по телефону за 15 минут —
+   600→        с учётом занятости на вашу дату и нюансов площадки.
+   601→      </p>
+   602→
+   603→      {/* Actions */}
+   604→      <div className="flex flex-col sm:flex-row gap-3 mt-5">
+   605→        <Button onClick={onOrder} className="h-12 px-7 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold flex-1">
+   606→          <Sparkles className="w-4 h-4 mr-1.5" /> Зафиксировать расчёт и заказать
+   607→        </Button>
+   608→        <Button onClick={onEdit} variant="outline" className="h-12 px-6">
+   609→          <RotateCcw className="w-4 h-4 mr-1.5" /> Изменить параметры
+   610→        </Button>
+   611→      </div>
+   612→    </div>
+   613→  );
+   614→}
+   615→
+   616→function BreakdownRow({ label, value }: { label: string; value?: number }) {
+   617→  return (
+   618→    <li className="flex items-center justify-between gap-3">
+   619→      <span className="text-muted-foreground">{label}</span>
+   620→      {value != null && (
+   621→        <span className={value === 0 ? 'text-muted-foreground' : 'text-foreground font-medium'}>
+   622→          {value === 0 ? 'включено' : `+${formatPrice(value)}`}
+   623→        </span>
+   624→      )}
+   625→    </li>
+   626→  );
+   627→}
+   628→
+   629→/* ============ Shared header для шагов ============ */
+   630→
+   631→function StepHeader({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle?: string }) {
+   632→  return (
+   633→    <div>
+   634→      <span className="inline-block text-xs font-semibold uppercase tracking-widest text-gold mb-1.5">{eyebrow}</span>
+   635→      <h2 className="font-display text-2xl sm:text-3xl leading-tight">{title}</h2>
+   636→      {subtitle && <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{subtitle}</p>}
+   637→    </div>
+   638→  );
+   639→}
+   640→
