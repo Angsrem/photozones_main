@@ -1252,3 +1252,7 @@ Work Log:
 - /prazdniki/novyj-god: 22 (было 18)
 - /katalog: 48 (было 43)
 - lint: 0 ошибок, все изображения HTTP 200
+
+---
+Task ID: ORCHESTRATOR-34 (статус — что осталось)
+Agent: main (Z.ai Code)
