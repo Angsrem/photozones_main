@@ -1600,3 +1600,177 @@ Matcher: `['/admin/:path*']` — срабатывает на `/admin` и `/admin
 - **Тестовые partials**: В ходе проверки создал 5 `QuizPartial` записей (шаги 1, 2×3, 3, 5) через `POST /api/quiz-partial`. Они сохранятся в БД и будут видны в дашборде (quizAbandons=5, quizByStep=[{1:1},{2:3},{3:1},{5:1}]). Можно очистить через `db.quizPartial.deleteMany({})`, если они мешают в проде — но это просто тестовые данные в sandbox-БД.
 - **2FA UX**: Без QR-библиотеки пользователь должен сам добавить аккаунт в приложение-аутентификатор, вручную введя base32-секрет. otpauth:// URL показан — если позже подключить `qrcode` или SVG QR-генератор, можно отрендерить QR-картинку. Сейчас показывается preview-код, обновляемый каждые 30 сек (для удобства проверки — пользователь может сам ввести его, если не хочет добавлять секрет в приложение).
 - **Schema change impact**: `totpSecret` — nullable, default null. Существующие менеджеры продолжают работать без 2FA (как admin@fotozona24.ru). Включение — через `/admin/settings`.
+
+---
+
+## PDF-GUIDES — Создание 3 PDF-лид-магнитов (Creative Flow)
+
+**Агент:** PDF-GUIDES (HTML → PDF, single-agent задача)
+**Статус:** готово
+**Task ID:** PDF-GUIDES
+
+### Контекст
+LEAD-MAGNETS-zai заложил схему `LeadMagnet`, seed 3 магнита с `fileUrl: /downloads/<slug>.pdf` (заглушка), API POST `/api/lead-magnets`, компонент `LeadMagnetBlock` на посадочных, drip-email. **Самих PDF-файлов не было** — заказчик должен был скачать PDF по кнопке «Скачать PDF», но файла не существовало.
+
+Эта задача: создать 3 PDF-гайда (многостраничные лид-магнита) в тёмной премиальной палитре (#1a1428 / #b8860b / #f5f0e8), A4, на русском.
+
+### Что сделано
+
+#### 0. Установка pagedjs
+- `bun add pagedjs@0.4.3` — Paged.js polyfill для html2pdf-next.js (не был установлен, скрипт падал с `pagedjs not found`)
+- Установка заняла <1с, 8 пакетов, без postinstall
+
+#### 1. Свадебный гайд `svadba-47-punktov`
+- HTML: `public/guides/svadba-47-punktov.html` (38 KB, self-contained inline CSS)
+- PDF: `public/downloads/svadba-47-punktov.pdf` (**10 страниц**, 737 KB, A4 594×842pt)
+- Структура:
+  - Стр 1: Обложка (tag, eyebrow, title «47 пунктов оформления свадьбы в Красноярске», subtitle, image `svadby/cover.jpg`, footer)
+  - Стр 2-3: Глава 1 «Выбор стиля фотозоны» — header + intro + 4 style-cards в grid 2×2 (LOVE/Флора/Текстиль/Пресс-волл, 3 с фото `svadby/{flora,textile}.jpg` и cover.jpg — фпfile 1 — с placeholder-стилем «LOVE»)
+  - Стр 4-5: Глава 2 «47 пунктов чек-листа» — 6 секций в 1-колоночном layout (Зал 8 / Церемония 7 / Фотозона 8 / Свет 6 / Флористика 8 / Реквизит 10 = 47 ✓), каждая секция — `border-left: 1mm solid var(--gold)` + `bg-2` фон, items с золотым checkbox-квадратом
+  - Стр 6: Глава 3 «Тайминг дня 09:00–23:00» — timeline с 10 events (09:00, 11:00, 12:00, 13:00, 14:30, 15:30, 17:00, 19:00, 21:00, 23:00)
+  - Стр 7: Глава 4 «Площадки Красноярска» — 3 place-groups (рестораны, лофты, природа) с ценами аренды
+  - Стр 8: Глава 5 «Бюджет» — таблица 5 статей × 3 тарифа (Эконом/Стандарт/Премиум), ИТОГО 31 500/76 500/151 000 ₽
+  - Стр 9: Standalone CTA — title, promo-box `QUIZ5` (28pt gold, 5% скидка), 3 steps (открыть каталог / позвонить / получить договор), телефон менеджера
+  - Стр 10: Standalone Контакты — 4 contact-cards (телефон/email/сайт/шоурум), footer с логотипом ФотоЗона24
+
+#### 2. Гайд для выпускного `vypusknoj-cheklist`
+- HTML: `public/guides/vypusknoj-cheklist.html` (32 KB)
+- PDF: `public/downloads/vypusknoj-cheklist.pdf` (**8 страниц**, 439 KB, A4)
+- Структура:
+  - Стр 1: Обложка («Чек-лист родкомитета: выпускной без хаоса», image `vypusknoj/cover.jpg`)
+  - Стр 2-3: Глава 1 «30 пунктов чек-листа» — 8 секций в 1-колоночном layout (Бюджет 4 / Рассылка 4 / Зал 5 / Декор 4 / Фото 4 / Музыка 3 / Транспорт 3 / Что взять 3 = 30 ✓)
+  - Стр 4: Глава 2 «Разделение расходов» — split-таблица 6 статей с расчётом «на 1 ребёнка» (30 чел, ИТОГО 164 000 ₽ / 5 466 ₽ на реб.), сноска про индивидуальные расходы
+  - Стр 5: Глава 3 «Выбор фотозоны» — 3 pz-cards в grid 3×1 (Звёзды с `vypusknoj/stars.jpg` / Шары-арка с `vypusknoj/cover.jpg` / Цифры года 2026 с placeholder «2026»)
+  - Стр 6: Глава 4 «Бюджет фотозоны» — таблица 5 статей × 3 тарифа (14 500/26 500/44 000 ₽), сноска про промокод
+  - Стр 7: Standalone CTA — `QUIZ5` промокод + 3 steps
+  - Стр 8: Standalone Контакты
+
+#### 3. Новогодний гайд `ng-20-idey`
+- HTML: `public/guides/ng-20-idey.html` (36 KB)
+- PDF: `public/downloads/ng-20-idey.pdf` (**9 страниц**, 844 KB, A4)
+- Структура:
+  - Стр 1: Обложка («20 идей новогодней фотозоны: от 5 000 ₽», image `novyj-god/cover.jpg`)
+  - Стр 2-5: Глава 1 «20 идей» — 20 idea-cards в горизонтальной grid-layout `[visual 40mm | content | price 28mm]`:
+    - Идея 1: image `novyj-god/arhka.jpg`
+    - Идеи 2-20: текстовая `num-visual` (золотой градиент + крупная цифра 28pt)
+    - Каждая карточка ~44mm высоты, 5/6 cards на страницу
+  - В конце главы — `ideas-summary` block (5 буллетов «Как выбрать формат»: домашний / корп 50-100 / корп от 200 / детский / когда бронировать) — заполняет хвост 4-й страницы идей
+  - Стр 6: Глава 2 «Бюджет» — таблица 5 статей × 3 тарифа (7 500/22 000/42 000 ₽), сноска про пик 28-31 декабря
+  - Стр 6-7: Глава 3 «Сезонные советы» — 4 tip-blocks (Когда бронировать / Что входит / Что не входит / Скидки), первый блок на стр 6, остальные на стр 7
+  - Стр 8: Standalone CTA
+  - Стр 9: Standalone Контакты
+
+### Технические детали
+
+#### Pipeline: Creative Flow (html2pdf-next.js)
+- Все 3 PDF сгенерированы через `node /home/z/my-project/skills/pdf/scripts/html2pdf-next.js <html> --output <pdf> --width 210mm --height 297mm --title "..."`
+- Paged.js polyfill инжектируется скриптом → чёткая пагинация через CSS `break-inside: avoid` на карточках/таблицах и `break-after: avoid` на chapter-headers
+- Пост-обработка через pdf-lib: метаданные (Title, Producer, CreationDate)
+
+#### Дизайн-палитра (одинаковая для всех 3 гайдов)
+```css
+--bg:        #1a1428;  /* тёмно-фиолетовый фон */
+--bg-2:      #221a35;  /* карточки */
+--gold:      #b8860b;  /* акцент (DarkGoldenrod) */
+--gold-2:    #d4a534;  /* светлый акцент */
+--text:      #f5f0e8;  /* тёплый белый текст */
+--muted:     #b8b0c8;
+--muted-2:   #8a8298;
+```
+Шрифт: system sans-serif `-apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif` (кириллица работает без веб-шрифтов, не зависит от интернет).
+
+#### Pagination strategy
+- Cover: `width: 210mm; height: 297mm; break-after: page; overflow: hidden;` + декоративные круги `::before` / `::after` (золотые, opacity 0.18/0.12, позиционирование за пределами cover)
+- Main content: один контейнер `.main-content { padding: 18mm 18mm 14mm 18mm; }`, главы отделены `.chapter-header { margin-top: 8mm; break-after: avoid; break-inside: avoid; }`
+- Карточки: `break-inside: avoid; margin-bottom: 3-5mm;` (≤ 4.2mm = 16px, по brief)
+- Standalone-страницы (CTA, Контакты): `width: 210mm; height: 297mm; break-before: page; overflow: hidden;` — fixed-height для гарантии 1 страницы
+- @page: `size: 210mm 297mm; margin: 0;` (concrete mm values, без var())
+
+#### Cover layout (3 гайда, одинаково)
+- padding 20mm 22mm 18mm 22mm (top right bottom left)
+- cover-tag (uppercase gold border, 8pt), cover-eyebrow, cover-title 30-32pt (с `<em>` подсветкой золота), cover-subtitle 12pt, cover-image aspect-ratio 2/1, cover-footer (mt-auto, brand · season · pagecount)
+- Декор: 2 золотых круга `::before`/`::after` по углам, opacity 0.18 / 0.12
+
+#### Изображения
+- HTML использует относительные пути рядом с файлом (`svadby/cover.jpg`, `vypusknoj/cover.jpg`, `novyj-god/arhka.jpg` и т.д.)
+- Все изображения уже лежали в `public/guides/<occasion>/<file>.jpg` (от PRE-IMAGE-AGENT, см. worklog ранее) — НЕ генерировались здесь
+- 2 фото на гайд (cover + 1-2 контекстных), недостающие — стилизованные placeholder'ы (gradient + large gold number/text)
+- Изображения через `<img>` с `object-fit: cover` + `aspect-ratio`, БЕЗ `overflow:hidden` на контейнерах контента (только на cover и standalone-pages)
+
+#### `bun add pagedjs`
+- Не было в зависимостях → html2pdf-next.js падал с `pagedjs not found. Run: npm install pagedjs`
+- `bun add pagedjs` → `pagedjs@0.4.3`, 8 пакетов, lockfile обновлён
+- После установки все 3 PDF конвертируются без ошибок
+
+### Проверки
+
+#### Размеры PDF (pdfinfo)
+- svadba: 10 страниц, 737 KB, A4 594.96×841.92pt, Title «47 пунктов оформления свадьбы в Красноярске» ✓
+- vypusknoj: 8 страниц, 439 KB, A4, Title «Чек-лист родкомитета: выпускной без хаоса» ✓
+- ng: 9 страниц, 844 KB, A4, Title «20 идей новогодней фотозоны: от 5 000 ₽» ✓
+
+#### Соответствие структуре ТЗ (по страницам через pdftotext -f N -l N)
+- Svadba: Cover → Styles (гл 1, стр 2-3) → Checklist 47 (гл 2, стр 4-5) → Timing (гл 3, стр 6) → Places (гл 4, стр 7) → Budget (гл 5, стр 8) → CTA standalone (стр 9) → Contacts standalone (стр 10) ✓
+- Vypusknoj: Cover → 30 checklist (стр 2-3) → Split table (стр 4) → Photozone variants (стр 5) → Budget (стр 6) → CTA (стр 7) → Contacts (стр 8) ✓
+- NG: Cover → 20 ideas + summary (стр 2-5) → Budget (стр 6) → Seasonal tips (стр 6-7) → CTA (стр 8) → Contacts (стр 9) ✓
+
+#### Промокод `QUIZ5` присутствует во всех 3 PDF (на CTA-странице)
+- Svadba стр 9: «Промокод QUIZ5 даёт скидку 5% на любую фотозону из каталога» ✓
+- Vypusknoj стр 7: «Промокод QUIZ5 даёт скидку 5% на любую фотозону для выпускного» ✓
+- NG стр 8: «Промокод QUIZ5 даёт скидку 5% на любую новогоднюю фотозону» ✓
+
+#### БД: LeadMagnet.fileUrl (bun -e скрипт)
+Запущен `bun -e` с обновлением `db.leadMagnet.update()` для 3 слугов — idempotent, установило `fileUrl` и `isActive:true`:
+- `svadba-47-punktov` → `/downloads/svadba-47-punktov.pdf` (occasion WEDDING, downloads=1 из теста)
+- `vypusknoj-cheklist` → `/downloads/vypusknoj-cheklist.pdf` (occasion GRADUATION, downloads=0)
+- `ng-20-idey` → `/downloads/ng-20-idey.pdf` (occasion NEW_YEAR, downloads=1 из теста)
+
+### Файлы созданы
+- `public/guides/svadba-47-punktov.html` (38 KB, self-contained)
+- `public/guides/vypusknoj-cheklist.html` (32 KB)
+- `public/guides/ng-20-idey.html` (36 KB)
+- `public/downloads/svadba-47-punktov.pdf` (737 KB, 10 стр)
+- `public/downloads/vypusknoj-cheklist.pdf` (439 KB, 8 стр)
+- `public/downloads/ng-20-idey.pdf` (844 KB, 9 стр)
+
+### Файлы изменены
+- `package.json` + `bun.lock` — добавлен `pagedjs@0.4.3` в dependencies
+- БД: `LeadMagnet.{svadba-47-punktov,vypusknoj-cheklist,ng-20-idey}` — `fileUrl`/`title`/`isActive` подтверждены через `bun -e`
+
+### Замечания следующим агентам
+- **Cover overflow 94px — это OK**: html2pdf-next.js репортит `div.cover: 94px clipped → overflow:visible` для всех 3 гайдов. Это не баг — декоративные `::before`/`::after` круги спозиционированы за пределами cover (`top:-40mm` / `bottom:-25mm`), scrollHeight считает их, скрипт снимает `overflow:hidden`. На итоговый PDF НЕ влияет — cover остаётся на 1 странице (Paged.js режет по `break-after: page`), текст/изображения все на месте (проверено через `pdftotext -f 1 -l 1`). Если хочется убрать warning — переместить круги внутрь cover или убрать.
+- **HTML не должны меняться в production**: HTML-файлы self-contained (inline CSS, относительные пути к `images/*`), но **path-relative к .html**, а не к корню сайта. Поэтому HTML нельзя открывать напрямую через `/guides/svadba-47-punktov.html` на проде — он откроется, но images/covers разрешатся относительно `public/guides/` (правильно). Главное — НЕ переносить HTML в другое место без переноса подпапок `svadby/`, `vypusknoj/`, `novyj-god/`.
+- **PDF-пути захардкожены**: `fileUrl: /downloads/<slug>.pdf` в БД. Если переименуете PDF — обязательно `db.leadMagnet.update()` с новым `fileUrl`, иначе modal `LeadMagnetModal` покажет 404.
+- **Промокод QUIZ5** — единственный для всех 3 гайдов, упоминается в тексте PDF, в API `POST /api/lead-magnets`, в drip-email шаге 1 (`notify.ts:sendDripEmail`). Если появится персональный (как FOTO-XXXX из ORCHESTRATOR-16), нужно синхронно обновить шаблоны в HTML+API+drip.
+- **Размеры PDF**: svadba 737KB, ng 844KB (много текста), vypusknoj 439KB. Не критично, но если будет проблема с загрузкой на мобиле — можно пережать через `gs -dPDFSETTINGS=/ebook` (~50% сжатие с потерей качества изображений).
+- **Paged.js зависимость**: теперь в `package.json` (не в devDependencies). Если кто-то будет делать clean install — `bun install` подтянет pagedjs автоматически. Запуск html2pdf-next.js без pagedjs падает с понятным сообщением `pagedjs not found. Run: npm install pagedjs`.
+- **Lint**: изменений TS/TSX-кода не было — `bun run lint` пропускал (не запускался, т.к. только HTML/PDF/БД-обновление). Если добавляете компонент с ссылкой на PDF — стандартный процесс lint.
+
+### CTA в PDF не кликабельны (намеренно)
+PDF-CTA показывает промокод QUIZ5 + 3 шага + телефон, но **не делает авто-переход** на сайт. Это сознательно: PDF — это лид-магнит, пользователь скачал, читает оффлайн. Переход на сайт — через CTA-кнопку в success-экране модалки `LeadMagnetModal` (там `<a href={fileUrl} download>`). URL сайта (`fotozona24.ru`, `fotozona24.ru/vypusknie`, `fotozona24.ru/prazdniki/novyj-god`) упомянут в тексте PDF — пользователь может ввести вручную или кликнуть, если просмотрщик PDF поддерживает ссылки (Acrobat Reader и др.).
+
+---
+Task ID: ORCHESTRATOR-36 (PDF-гайды — итог)
+Agent: main (Z.ai Code)
+
+Work Log:
+- Созданы 3 PDF-гайда через Creative Flow pipeline (Playwright + html2pdf-next.js):
+  1. «47 пунктов оформления свадьбы в Красноярске» — 10 стр, 737 KB
+  2. «Чек-лист родкомитета: выпускной без хаоса» — 8 стр, 439 KB
+  3. «20 идей новогодней фотозоны: от 5 000 ₽» — 9 стр, 844 KB
+- Дизайн: тёмная премиальная палитра (#1a1428 / #b8860b золото / #f5f0e8)
+- Содержание: чек-листы, таблицы бюджетов, фото, CTA с промокодом QUIZ5
+- Изображения: из существующих фото фотозон (public/guides/ подпапки)
+- БД LeadMagnet.fileUrl обновлены на /downloads/*.pdf, isActive=true
+- HTML-исходники сохранены в public/guides/ (можно редактировать)
+
+Self-verify:
+- PDF скачиваются: 200 application/pdf (737KB/439KB/844KB) ✓
+- Лид-магниты на страницах: «47 пунктов» / «Чек-лист родкомитета» / «20 идей» + «Скачать PDF» ✓
+- lint: 0 ошибок
+
+Stage Summary:
+- Все 3 лид-магнита созданы с реальным PDF-контентом
+- Механика: форма (имя+телефон+email) → PDF + промокод QUIZ5 → лид в админку
+- Дожим-цепочка: 3 касания (сразу/+2д/+5д)
+- Проект готов к деплою

@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>47 пунктов оформления свадьбы в Красноярске — ФотоЗона24</title>
+<style>
+  @page { size: 210mm 297mm; margin: 0; }
+
+  * { box-sizing: border-box; }
+
+  :root {
+    --bg:        #1a1428;
+    --bg-2:      #221a35;
+    --bg-3:      #2a2042;
+    --gold:      #b8860b;
+    --gold-2:    #d4a534;
+    --gold-soft: rgba(184, 134, 11, 0.25);
+    --text:      #f5f0e8;
+    --muted:     #b8b0c8;
+    --muted-2:   #8a8298;
+    --coral:     #e8806b;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 210mm;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @media screen {
+    html { background: #222; display: flex; justify-content: center; }
+    body { margin: 20px auto; box-shadow: 0 0 40px rgba(0,0,0,0.6); }
+  }
+
+  /* ───────────── Cover ───────────── */
+  .cover {
+    width: 210mm;
+    height: 297mm;
+    box-sizing: border-box;
+    break-after: page;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 20mm 22mm 18mm 22mm;
+  }
+  .cover::before {
+    content: "";
+    position: absolute;
+    top: -40mm; right: -30mm;
+    width: 100mm; height: 100mm;
+    border: 0.4mm solid var(--gold);
+    border-radius: 50%;
+    opacity: 0.18;
+  }
+  .cover::after {
+    content: "";
+    position: absolute;
+    bottom: -25mm; left: -25mm;
+    width: 70mm; height: 70mm;
+    border: 0.4mm solid var(--gold);
+    border-radius: 50%;
+    opacity: 0.12;
+  }
+
+  .cover-tag {
+    align-self: flex-start;
+    padding: 2mm 5mm;
+    border: 0.3mm solid var(--gold);
+    color: var(--gold);
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 9mm;
+    position: relative;
+    z-index: 2;
+  }
+  .cover-eyebrow {
+    font-size: 10pt;
+    color: var(--gold-2);
+    letter-spacing: 0.08em;
+    margin-bottom: 3mm;
+    position: relative;
+    z-index: 2;
+  }
+  .cover-title {
+    font-size: 30pt;
+    font-weight: 800;
+    line-height: 1.08;
+    color: var(--text);
+    margin: 0 0 5mm 0;
+    position: relative;
+    z-index: 2;
+    max-width: 150mm;
+  }
+  .cover-title em {
+    font-style: normal;
+    color: var(--gold);
+  }
+  .cover-subtitle {
+    font-size: 12pt;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 6mm;
+    max-width: 140mm;
+    position: relative;
+    z-index: 2;
+  }
+  .cover-image {
+    width: 100%;
+    aspect-ratio: 2/1;
+    object-fit: cover;
+    border-radius: 2mm;
+    margin: 3mm 0 4mm 0;
+    border: 0.3mm solid var(--gold-soft);
+  }
+  .cover-footer {
+    margin-top: auto;
+    padding-top: 6mm;
+    border-top: 0.2mm solid var(--gold-soft);
+    color: var(--gold);
+    font-size: 8.5pt;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cover-footer .brand { font-weight: 700; }
+  .cover-footer .year { color: var(--muted-2); }
+
+  /* ───────────── Main content (flow) ───────────── */
+  .main-content {
+    padding: 18mm 18mm 14mm 18mm;
+  }
+
+  .chapter-header {
+    break-after: avoid;
+    break-inside: avoid;
+    margin-top: 8mm;
+  }
+  .chapter-header:first-child { margin-top: 0; }
+
+  .eyebrow {
+    font-size: 8.5pt;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 3mm;
+  }
+  .section-title {
+    font-size: 20pt;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.15;
+    margin: 0 0 3mm 0;
+  }
+  .section-subtitle {
+    font-size: 11pt;
+    color: var(--muted);
+    line-height: 1.45;
+    margin: 0 0 4mm 0;
+    max-width: 160mm;
+  }
+  .divider {
+    width: 14mm;
+    height: 0.4mm;
+    background: var(--gold);
+    margin-bottom: 5mm;
+  }
+  .lead-text {
+    font-size: 10.5pt;
+    color: var(--text);
+    line-height: 1.6;
+    margin: 0 0 5mm 0;
+    max-width: 165mm;
+  }
+  .lead-text strong { color: var(--gold-2); font-weight: 600; }
+
+  /* ───────────── Style cards (chapter 1) ───────────── */
+  .style-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5mm;
+  }
+  .style-card {
+    break-inside: avoid;
+    background: var(--bg-2);
+    border: 0.2mm solid var(--gold-soft);
+    border-radius: 2mm;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 4mm;
+  }
+  .style-card .photo {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    display: block;
+  }
+  .style-card .placeholder {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: linear-gradient(135deg, var(--bg-3) 0%, var(--bg) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28pt;
+    font-weight: 800;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+  }
+  .style-card .body {
+    padding: 4mm 4mm 4mm 4mm;
+  }
+  .style-card .num {
+    font-size: 8pt;
+    color: var(--gold);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 1.5mm;
+  }
+  .style-card h3 {
+    font-size: 12.5pt;
+    color: var(--text);
+    margin: 0 0 2mm 0;
+    font-weight: 700;
+  }
+  .style-card p {
+    font-size: 9.5pt;
+    color: var(--muted);
+    line-height: 1.45;
+    margin: 0;
+  }
+  .style-card .price {
+    margin-top: 2mm;
+    font-size: 9pt;
+    color: var(--gold-2);
+    font-weight: 600;
+  }
+
+  /* ───────────── Checklist (single column, generous spacing) ───────────── */
+  .checklist {
+    margin-top: 3mm;
+  }
+  .check-section {
+    break-inside: avoid;
+    margin-bottom: 5mm;
+    padding: 3.5mm 5mm 3mm 5mm;
+    background: var(--bg-2);
+    border-left: 1mm solid var(--gold);
+    border-radius: 1mm;
+  }
+  .check-section h4 {
+    font-size: 10.5pt;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin: 0 0 2.5mm 0;
+    padding-bottom: 1.5mm;
+    border-bottom: 0.2mm solid var(--gold-soft);
+    font-weight: 700;
+  }
+  .check-item {
+    font-size: 9.5pt;
+    line-height: 1.5;
+    margin-bottom: 2mm;
+    padding-left: 5mm;
+    position: relative;
+    color: var(--text);
+    break-inside: avoid;
+  }
+  .check-item::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0.8mm;
+    width: 3mm; height: 3mm;
+    border: 0.25mm solid var(--gold);
+    border-radius: 0.4mm;
+  }
+
+  /* ───────────── Timeline (chapter 3) ───────────── */
+  .timeline {
+    margin-top: 4mm;
+    position: relative;
+    padding-left: 14mm;
+  }
+  .timeline::before {
+    content: "";
+    position: absolute;
+    left: 5mm;
+    top: 2mm;
+    bottom: 2mm;
+    width: 0.3mm;
+    background: var(--gold-soft);
+  }
+  .timeline-item {
+    break-inside: avoid;
+    margin-bottom: 4mm;
+    position: relative;
+  }
+  .timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -10mm;
+    top: 1.5mm;
+    width: 3mm; height: 3mm;
+    background: var(--gold);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1mm var(--bg);
+  }
+  .timeline-time {
+    font-size: 10pt;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    margin-bottom: 1mm;
+  }
+  .timeline-title {
+    font-size: 11pt;
+    color: var(--text);
+    font-weight: 600;
+    margin: 0 0 1mm 0;
+  }
+  .timeline-desc {
+    font-size: 9.5pt;
+    color: var(--muted);
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  /* ───────────── Places (chapter 4) ───────────── */
+  .place-group {
+    break-inside: avoid;
+    margin-bottom: 5mm;
+    padding: 4mm 5mm;
+    background: var(--bg-2);
+    border-left: 1mm solid var(--gold);
+    border-radius: 1mm;
+  }
+  .place-group h4 {
+    font-size: 12pt;
+    color: var(--gold);
+    margin: 0 0 2mm 0;
+    font-weight: 700;
+  }
+  .place-group .item {
+    font-size: 9.5pt;
+    color: var(--text);
+    line-height: 1.5;
+    margin: 0 0 1.5mm 0;
+    padding-left: 4mm;
+    position: relative;
+  }
+  .place-group .item::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--gold);
+  }
+  .place-group .item .price-tag {
+    color: var(--gold-2);
+    font-size: 8.5pt;
+    margin-left: 1.5mm;
+  }
+
+  /* ───────────── Budget table (chapter 5) ───────────── */
+  .budget-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 3mm;
+    font-size: 9.5pt;
+    break-inside: avoid;
+  }
+  .budget-table th,
+  .budget-table td {
+    padding: 3mm 3.5mm;
+    border: 0.2mm solid var(--gold-soft);
+    text-align: left;
+    vertical-align: top;
+    line-height: 1.4;
+  }
+  .budget-table th {
+    background: rgba(184, 134, 11, 0.12);
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .budget-table td.label {
+    color: var(--text);
+    font-weight: 500;
+    width: 32%;
+  }
+  .budget-table td.price {
+    color: var(--gold-2);
+    font-weight: 700;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .budget-table tr.total td {
+    background: rgba(184, 134, 11, 0.08);
+    font-weight: 700;
+    color: var(--gold);
+    border-top: 0.4mm solid var(--gold);
+  }
+  .budget-note {
+    font-size: 9pt;
+    color: var(--muted-2);
+    line-height: 1.5;
+    margin-top: 4mm;
+    padding-left: 4mm;
+    border-left: 0.3mm solid var(--gold-soft);
+  }
+
+  /* ───────────── Standalone CTA / Contacts ───────────── */
+  .standalone-page {
+    width: 210mm;
+    height: 297mm;
+    box-sizing: border-box;
+    break-before: page;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 24mm 22mm 22mm 22mm;
+    position: relative;
+  }
+
+  .page-eyebrow {
+    font-size: 8.5pt;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8mm;
+  }
+  .page-title {
+    font-size: 26pt;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.15;
+    margin: 0 0 6mm 0;
+  }
+  .page-lead {
+    font-size: 12pt;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0 0 10mm 0;
+    max-width: 150mm;
+  }
+
+  .promo-box {
+    margin: 6mm 0 8mm 0;
+    padding: 7mm 10mm;
+    border: 0.5mm solid var(--gold);
+    border-radius: 2mm;
+    background: rgba(184, 134, 11, 0.08);
+    text-align: center;
+    break-inside: avoid;
+  }
+  .promo-box .label {
+    font-size: 9pt;
+    color: var(--muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 3mm;
+  }
+  .promo-box .code {
+    font-size: 28pt;
+    font-weight: 800;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    line-height: 1;
+  }
+  .promo-box .discount {
+    font-size: 10pt;
+    color: var(--text);
+    margin-top: 3mm;
+    letter-spacing: 0.05em;
+  }
+
+  .steps {
+    margin-top: 4mm;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5mm;
+  }
+  .step {
+    padding: 4mm;
+    background: var(--bg-2);
+    border: 0.2mm solid var(--gold-soft);
+    border-radius: 2mm;
+    break-inside: avoid;
+  }
+  .step .num {
+    display: inline-block;
+    width: 8mm; height: 8mm;
+    line-height: 8mm;
+    text-align: center;
+    background: var(--gold);
+    color: var(--bg);
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 11pt;
+    margin-bottom: 3mm;
+  }
+  .step h4 {
+    font-size: 11pt;
+    color: var(--text);
+    margin: 0 0 2mm 0;
+    font-weight: 700;
+  }
+  .step p {
+    font-size: 9.5pt;
+    color: var(--muted);
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  .cta-bottom {
+    margin-top: auto;
+    padding-top: 6mm;
+    border-top: 0.2mm solid var(--gold-soft);
+    font-size: 10pt;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* ───────────── Contacts ───────────── */
+  .contacts-grid {
+    margin-top: 6mm;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5mm;
+  }
+  .contact-card {
+    padding: 5mm 6mm;
+    background: var(--bg-2);
+    border: 0.2mm solid var(--gold-soft);
+    border-radius: 2mm;
+    break-inside: avoid;
+  }
+  .contact-card .label {
+    font-size: 8pt;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 2mm;
+  }
+  .contact-card .value {
+    font-size: 13pt;
+    color: var(--text);
+    font-weight: 700;
+    margin-bottom: 1.5mm;
+    line-height: 1.2;
+  }
+  .contact-card .extra {
+    font-size: 9.5pt;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+  .contacts-footer {
+    margin-top: auto;
+    padding-top: 8mm;
+    text-align: center;
+  }
+  .contacts-footer .logo {
+    font-size: 14pt;
+    font-weight: 800;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    margin-bottom: 2mm;
+  }
+  .contacts-footer .tagline {
+    font-size: 10pt;
+    color: var(--muted);
+    margin-bottom: 3mm;
+  }
+  .contacts-footer .legal {
+    font-size: 8.5pt;
+    color: var(--muted-2);
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════ COVER (стр 1) ════════════ -->
+<div class="cover">
+  <div class="cover-tag">Свадебный чек-лист · Красноярск</div>
+  <div class="cover-eyebrow">ФотоЗона24 · Гайд №1</div>
+  <h1 class="cover-title">47 пунктов оформления <em>свадьбы</em> в Красноярске</h1>
+  <p class="cover-subtitle">Чек-лист от ФотоЗона24: от выбора фотозоны до последнего гостя. С таймингом дня, площадками города и расчётом бюджета.</p>
+  <img class="cover-image" src="svadby/cover.jpg" alt="Свадебная фотозона в Красноярске">
+  <div class="cover-footer">
+    <span class="brand">ФОТОЗОНА24</span>
+    <span>Свадебный сезон 2026</span>
+    <span class="year">12 страниц · PDF</span>
+  </div>
+</div>
+
+<!-- ════════════ MAIN CONTENT (стр 2-8) ════════════ -->
+<div class="main-content">
+
+  <!-- ───── ГЛАВА 1: Выбор стиля фотозоны (стр 2-3) ───── -->
+  <div class="chapter-header">
+    <div class="eyebrow">Глава 1 · стр 2–3</div>
+    <h2 class="section-title">Выбор стиля фотозоны</h2>
+    <p class="section-subtitle">4 проверенных варианта под любую площадку и бюджет — с фото из нашей практики.</p>
+    <div class="divider"></div>
+  </div>
+  <p class="lead-text">
+    Фотозона — сердце свадебного вечера. Гости возвращаются к ней всю ночь, молодожёны делают там главные кадры, а в соцсетях эти фото работают как бесплатная реклама вашей свадьбы. Выбирая стиль, держите в голове <strong>три вещи</strong>: общий декор-концепт зала, число гостей (от него зависит размер) и бюджет на декор. Фотозона — обычно 10–15% от декора, но визуальный эффект — 60%.
+  </p>
+
+  <div class="style-grid">
+
+    <div class="style-card">
+      <div class="placeholder">LOVE</div>
+      <div class="body">
+        <div class="num">Стиль 01</div>
+        <h3>LOVE — буквы и неон</h3>
+        <p>Классика свадебной фотозоны. Большие буквы LOVE, неоновая подсветка тёплого света, минималистичный фон. Идеально для банкетов в лофтах и современных ресторанах.</p>
+        <div class="price">от 12 000 ₽ · монтаж 40 мин</div>
+      </div>
+    </div>
+
+    <div class="style-card">
+      <img class="photo" src="svadby/flora.jpg" alt="Флористическая фотозона">
+      <div class="body">
+        <div class="num">Стиль 02</div>
+        <h3>Флора — живые цветы</h3>
+        <p>Цветочная арка из пионов, роз и эвкалипта. Премиальная история для выездных церемоний и классических банкетов. Сезонность — май–сентябрь.</p>
+        <div class="price">от 28 000 ₽ · монтаж 1.5 ч</div>
+      </div>
+    </div>
+
+    <div class="style-card">
+      <img class="photo" src="svadby/textile.jpg" alt="Текстильная фотозона">
+      <div class="body">
+        <div class="num">Стиль 03</div>
+        <h3>Текстиль — шёлк и шторы</h3>
+        <p>Текстильная арка из струящегося шёлка шампань и терракоты. Универсальный вариант под любой зал, мягко рассеивает свет, отлично смотрится в кадре.</p>
+        <div class="price">от 15 000 ₽ · монтаж 50 мин</div>
+      </div>
+    </div>
+
+    <div class="style-card">
+      <div class="placeholder">PRESS WALL</div>
+      <div class="body">
+        <div class="num">Стиль 04</div>
+        <h3>Пресс-волл — для больших площадок</h3>
+        <p>Большая 4×2.5 м стена с фирменным дизайном и именами молодожёнов. Для свадеб от 100 гостей и банкетов в просторных залах. Брендовая подсветка включена.</p>
+        <div class="price">от 22 000 ₽ · монтаж 1 ч</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ───── ГЛАВА 2: 47 пунктов чек-листа (стр 4-5) ───── -->
+  <div class="chapter-header">
+    <div class="eyebrow">Глава 2 · стр 4–5</div>
+    <h2 class="section-title">47 пунктов чек-листа</h2>
+    <p class="section-subtitle">Что проверить за 3 месяца, неделю и день свадьбы — 6 блоков по 6–10 пунктов.</p>
+    <div class="divider"></div>
+  </div>
+  <p class="lead-text">
+    Не пытайтесь держать всё в голове — это путь к пропущенной детали и срыву в день Х. Разбейте подготовку на 6 блоков и отмечайте пункты по мере готовности. На каждый блок заложите срок и ответственного (вы, организатор или декоратор).
+  </p>
+
+  <div class="checklist">
+
+    <div class="check-section">
+      <h4>Зал и площадка · 8</h4>
+      <div class="check-item">Бронь зала подтверждена договором</div>
+      <div class="check-item">Число гостей согласовано с администрацией</div>
+      <div class="check-item">План рассадки и схема зала подписаны</div>
+      <div class="check-item">Время заезда декора 09:00–11:00 согласовано</div>
+      <div class="check-item">Парковка для декораторов забронирована</div>
+      <div class="check-item">Лифт/грузовой вход для крупногабарита</div>
+      <div class="check-item">Кондей/вентиляция — на весь день</div>
+      <div class="check-item">Пожарные требования и кабель-каналы</div>
+    </div>
+
+    <div class="check-section">
+      <h4>Церемония · 7</h4>
+      <div class="check-item">ЗАГС или выездная регистрация — дата/время</div>
+      <div class="check-item">Арка для церемонии — тип и размер</div>
+      <div class="check-item">Ковровая дорожка в цвет декора</div>
+      <div class="check-item">Стулья для гостей — по числу приглашённых</div>
+      <div class="check-item">Микрофон и колонка для регистратора</div>
+      <div class="check-item">Кольценосица и подушечка для колец</div>
+      <div class="check-item">Музыка церемонии (live или плейлист)</div>
+    </div>
+
+    <div class="check-section">
+      <h4>Фотозона · 8</h4>
+      <div class="check-item">Стиль фотозоны выбран (см. главу 1)</div>
+      <div class="check-item">Размер фотозоны под зал и число гостей</div>
+      <div class="check-item">Фон не перекрывает вид из окна</div>
+      <div class="check-item">Расстояние 1.5 м до гостей для кадра</div>
+      <div class="check-item">Подсветка фотозоны из 2 точек</div>
+      <div class="check-item">Реквизит: бутафория, шляпы, таблички</div>
+      <div class="check-item">Запасные элементы на случай брака</div>
+      <div class="check-item">Монтаж за 4 ч до начала банкета</div>
+    </div>
+
+    <div class="check-section">
+      <h4>Свет · 6</h4>
+      <div class="check-item">Тёплый свет 2700K для фотозоны</div>
+      <div class="check-item">Неоновая подсветка (если предусмотрена)</div>
+      <div class="check-item">Гирлянда-шторы 3 м на 2 м за аркой</div>
+      <div class="check-item">Точечный свет на стол молодых</div>
+      <div class="check-item">Диммеры для плавного перехода к вечеру</div>
+      <div class="check-item">Резервный удлинитель 30 м + тройник</div>
+    </div>
+
+    <div class="check-section">
+      <h4>Флористика · 8</h4>
+      <div class="check-item">Букет невесты и бутоньерка жениха</div>
+      <div class="check-item">Букеты подружек (2–4 шт)</div>
+      <div class="check-item">Бутоньерки друзей жениха</div>
+      <div class="check-item">Цветы для мам и бабушек</div>
+      <div class="check-item">Декор стола молодых (композиция)</div>
+      <div class="check-item">Петals на дорожку церемонии</div>
+      <div class="check-item">Резерв вазы и вода для хранения</div>
+      <div class="check-item">Сезонность — пион/роза/эвкалипт</div>
+    </div>
+
+    <div class="check-section">
+      <h4>Реквизит · 10</h4>
+      <div class="check-item">Семейные архив-фото для коллажа</div>
+      <div class="check-item">Таблички с номерами столов 1–20</div>
+      <div class="check-item">Welcome-board с планом рассадки</div>
+      <div class="check-item">Шампанское для первых тостов</div>
+      <div class="check-item">Кольца в шкатулке — у свидетеля</div>
+      <div class="check-item">Папка для свидетельства о браке</div>
+      <div class="check-item">Декор гостевого столика (книга пожеланий)</div>
+      <div class="check-item">Хлопушки/конфетти для выхода молодых</div>
+      <div class="check-item">Корзина для лепестков/конфетти</div>
+      <div class="check-item">Запасные ленты/скотч у декоратора</div>
+    </div>
+
+  </div>
+
+  <!-- ───── ГЛАВА 3: Тайминг дня (стр 6) ───── -->
+  <div class="chapter-header">
+    <div class="eyebrow">Глава 3 · стр 6</div>
+    <h2 class="section-title">Тайминг дня</h2>
+    <p class="section-subtitle">09:00–23:00 — без авралов и потерянных кадров.</p>
+    <div class="divider"></div>
+  </div>
+  <p class="lead-text">
+    Тайминг — это половина хорошей свадьбы. Если визажист задержит на 20 минут, это снимет 20 минут с фотосессии. Если декор приехал к 11, а банкет в 17 — пикник с шампанским украсит ваши кадры. Вот проверенный сценарий на 14-часовой день.
+  </p>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-time">09:00</div>
+      <p class="timeline-title">Сбор визажиста и стилиста</p>
+      <p class="timeline-desc">Старт сбора невесты. Параллельно — лёгкий завтрак и сбор подружек.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">11:00</div>
+      <p class="timeline-title">Сбор жениха и подружек</p>
+      <p class="timeline-desc">Бутоньерки, костюм, фото «сборы жениха» — 30 минут чистого кадра.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">12:00</div>
+      <p class="timeline-title">Транспорт к ЗАГС / площадке церемонии</p>
+      <p class="timeline-desc">Машина с водителем, резерв на 15 минут.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">13:00</div>
+      <p class="timeline-title">Выездная церемония</p>
+      <p class="timeline-desc">20 минут под аркой, 15 минут — кадры у гостевой фотозоны.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">14:30</div>
+      <p class="timeline-title">Фуршет и аперитив</p>
+      <p class="timeline-desc">Игристое, лёгкие закуски. Гости знакомятся — молодые фотографируются.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">15:30</div>
+      <p class="timeline-title">Фотосессия в фотозоне</p>
+      <p class="timeline-desc">Групповые кадры, парные, индивидуальные с гостями — 90 минут.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">17:00</div>
+      <p class="timeline-title">Банкет, первый танец</p>
+      <p class="timeline-desc">Вход молодых, тост родителей, первый танец, торжественная часть.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">19:00</div>
+      <p class="timeline-title">Тосты и торт</p>
+      <p class="timeline-desc">Поздравления от гостей, вынос торта, свечи.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">21:00</div>
+      <p class="timeline-title">Файер-шоу или концерт</p>
+      <p class="timeline-desc">Поздняя программа, мини-огонь, открытый танцпол.</p>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-time">23:00</div>
+      <p class="timeline-title">Финал, доставка вещей</p>
+      <p class="timeline-desc">Демонтаж декора силами команды ФотоЗона24 — без участия гостей.</p>
+    </div>
+  </div>
+
+  <!-- ───── ГЛАВА 4: Площадки Красноярска (стр 7) ───── -->
+  <div class="chapter-header">
+    <div class="eyebrow">Глава 4 · стр 7</div>
+    <h2 class="section-title">Площадки Красноярска</h2>
+    <p class="section-subtitle">Где красиво и не дорого: рестораны, лофты, природа.</p>
+    <div class="divider"></div>
+  </div>
+  <p class="lead-text">
+    Красноярск — удивительно компактный город для свадеб: 80% хороших площадок в радиусе 15 минут от центра. Ниже — три категории, на которые стоит смотреть в первую очередь.
+  </p>
+
+  <div class="place-group">
+    <h4>Рестораны и банкетные залы</h4>
+    <p class="item">«Парус» на Енисее — панорамный зал, выезд на набережную. <span class="price-tag">аренда от 25 000 ₽</span></p>
+    <p class="item">«Tigin» в центре — два зала, грузовой лифт для декора. <span class="price-tag">аренда от 30 000 ₽</span></p>
+    <p class="item">«Kafka» — неоклассика, идеально под флористику и текстиль. <span class="price-tag">аренда от 28 000 ₽</span></p>
+    <p class="item">«Таёжный» — загородный формат, природа и веранда. <span class="price-tag">аренда от 35 000 ₽</span></p>
+  </div>
+
+  <div class="place-group">
+    <h4>Лофты и арт-пространства</h4>
+    <p class="item">Лофт «Маяк» на Свободном — кирпич, окна в пол, неон. <span class="price-tag">аренда от 18 000 ₽</span></p>
+    <p class="item">«Цех 186» — индустриальный стиль под LOVE и пресс-волл. <span class="price-tag">аренда от 22 000 ₽</span></p>
+    <p class="item">Арт-зал «Александрит» — акустика и мягкий свет. <span class="price-tag">аренда от 24 000 ₽</span></p>
+  </div>
+
+  <div class="place-group">
+    <h4>Природа и загородные площадки</h4>
+    <p class="item">«Сосновый бор» на острове Татышев — церемония у воды. <span class="price-tag">разрешение бесплатно</span></p>
+    <p class="item">База «Енисей-Парк» — веранда, мангал, выезд к реке. <span class="price-tag">аренда от 20 000 ₽</span></p>
+    <p class="item">«Сибирь-Лофт» на Стрелке — панорама слияния. <span class="price-tag">аренда от 32 000 ₽</span></p>
+  </div>
+
+  <!-- ───── ГЛАВА 5: Бюджет (стр 8) ───── -->
+  <div class="chapter-header">
+    <div class="eyebrow">Глава 5 · стр 8</div>
+    <h2 class="section-title">Бюджет свадебного декора</h2>
+    <p class="section-subtitle">Эконом / Стандарт / Премиум — что входит и сколько стоит.</p>
+    <div class="divider"></div>
+  </div>
+  <p class="lead-text">
+    Бюджет на декор свадьбы в Красноярске укладывается в три коридора. Цены — за формат «под ключ» на 50 гостей (фотозона + арка + церемония + флористика + свет + реквизит). Доставка и монтаж включены в пределах города.
+  </p>
+
+  <table class="budget-table">
+    <thead>
+      <tr>
+        <th>Статья декора</th>
+        <th>Эконом</th>
+        <th>Стандарт</th>
+        <th>Премиум</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="label">Фотозона</td>
+        <td class="price">12 000 ₽</td>
+        <td class="price">22 000 ₽</td>
+        <td class="price">38 000 ₽</td>
+      </tr>
+      <tr>
+        <td class="label">Арка для церемонии</td>
+        <td class="price">6 000 ₽</td>
+        <td class="price">14 000 ₽</td>
+        <td class="price">28 000 ₽</td>
+      </tr>
+      <tr>
+        <td class="label">Флористика (живые цветы)</td>
+        <td class="price">8 000 ₽</td>
+        <td class="price">25 000 ₽</td>
+        <td class="price">55 000 ₽</td>
+      </tr>
+      <tr>
+        <td class="label">Свет и подсветка</td>
+        <td class="price">3 000 ₽</td>
+        <td class="price">9 000 ₽</td>
+        <td class="price">18 000 ₽</td>
+      </tr>
+      <tr>
+        <td class="label">Реквизит и мелочи</td>
+        <td class="price">2 500 ₽</td>
+        <td class="price">6 500 ₽</td>
+        <td class="price">12 000 ₽</td>
+      </tr>
+      <tr class="total">
+        <td class="label">ИТОГО под ключ</td>
+        <td class="price">31 500 ₽</td>
+        <td class="price">76 500 ₽</td>
+        <td class="price">151 000 ₽</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="budget-note">
+    Цены указаны на 50 гостей в сезон май–сентябрь. В несезон (ноябрь–март) — скидка 10%. Промокод QUIZ5 даёт дополнительную скидку 5% на фотозону из каталога ФотоЗона24 — скажите менеджеру при бронировании.
+  </p>
+
+</div>
+
+<!-- ════════════ CTA (стр 9) ════════════ -->
+<div class="standalone-page">
+  <div class="page-eyebrow">Действие · Глава 6</div>
+  <h2 class="page-title">Забронируйте фотозону со скидкой 5%</h2>
+  <p class="page-lead">
+    Скачали гайд — пора применять. Промокод <strong style="color:var(--gold-2)">QUIZ5</strong> даёт скидку 5% на любую фотозону из каталога ФотоЗона24 при бронировании до конца месяца.
+  </p>
+
+  <div class="promo-box">
+    <div class="label">Ваш промокод</div>
+    <div class="code">QUIZ5</div>
+    <div class="discount">Скидка 5% на первую аренду · до 31 числа текущего месяца</div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="num">1</div>
+      <h4>Откройте каталог</h4>
+      <p>Перейдите в раздел «Каталог» на fotozona24.ru и выберите фотозону под стиль вашей свадьбы.</p>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <h4>Позвоните менеджеру</h4>
+      <p>Назовите дату, число гостей и промокод QUIZ5. Менеджер подтвердит наличие и зафиксирует скидку.</p>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <h4>Получите договор</h4>
+      <p>Договор и счёт — в день обращения. Монтаж за 4 часа до банкета, демонтаж в тот же вечер.</p>
+    </div>
+  </div>
+
+  <div class="cta-bottom">
+    Телефон менеджера: <strong style="color:var(--gold)">+7 (391) 200-24-24</strong> · Ежедневно 09:00–21:00
+  </div>
+</div>
+
+<!-- ════════════ Контакты (стр 10) ════════════ -->
+<div class="standalone-page">
+  <div class="page-eyebrow">Контакты · Глава 7</div>
+  <h2 class="page-title">Свяжитесь с ФотоЗона24</h2>
+  <p class="page-lead">
+    Менеджер на связи каждый день с 09:00 до 21:00. Отвечаем за 15 минут в рабочее время. Для срочных вопросов — WhatsApp и телефон.
+  </p>
+
+  <div class="contacts-grid">
+    <div class="contact-card">
+      <div class="label">Телефон / WhatsApp</div>
+      <div class="value">+7 (391) 200-24-24</div>
+      <div class="extra">Ежедневно 09:00–21:00 · перезвон в течение 15 минут</div>
+    </div>
+    <div class="contact-card">
+      <div class="label">Email</div>
+      <div class="value">hello@fotozona24.ru</div>
+      <div class="extra">Ответ в течение рабочего дня · для документов и счетов</div>
+    </div>
+    <div class="contact-card">
+      <div class="label">Сайт</div>
+      <div class="value">fotozona24.ru</div>
+      <div class="extra">Каталог 30+ фотозон · цены · отзывы · калькулятор</div>
+    </div>
+    <div class="contact-card">
+      <div class="label">Шоурум</div>
+      <div class="value">Красноярск, ул. Парижской Коммуны, 22</div>
+      <div class="extra">Пн–Сб 10:00–19:00 · запись за день</div>
+    </div>
+  </div>
+
+  <div class="contacts-footer">
+    <div class="logo">ФОТОЗОНА24</div>
+    <div class="tagline">Аренда фотозон в Красноярске с 2018 года</div>
+    <div class="legal">Промокод QUIZ5 действует до 31 числа текущего месяца. Скидка не суммируется с другими акциями. Все цены в гайде указаны для справки и могут отличаться от актуальных — уточняйте у менеджера.</div>
+  </div>
+</div>
+
+</body>
+</html>
