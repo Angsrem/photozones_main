@@ -1798,3 +1798,21 @@ Work Log:
 Результат: `bun run build` — ✅ успешно (106 страниц, 0 ошибок)
 lint: 0 ошибок
 dev: HTTP 200 на всех ключевых маршрутах
+
+---
+Task ID: ORCHESTRATOR-37 (фикс деплоя)
+Agent: main (Z.ai Code)
+
+Work Log:
+- Проблема: деплой на платформу падал
+- Причина 1: скрипты dev/start использовали `| tee` и `bun` — платформы деплоя не поддерживают
+- Причина 2: `output: "standalone"` в next.config.ts — не нужно для Vercel/VDsine, мешает
+- Фикс 1: dev → `next dev -p 3000` (без tee), start → `next start -p 3000` (без bun/tee)
+- Фикс 2: убран `output: "standalone"` из next.config.ts
+- Фикс 3: добавлен `postinstall: "prisma generate"` — чтобы Prisma Client генерировался при `npm install` на платформе
+- Фикс 4: убран `cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/` из build script (нужно только для standalone)
+
+Self-verify:
+- bun run build → BUILD_ID создан, 0 ошибок ✓
+- bun run lint → 0 ошибок ✓
+- Скрипты теперь стандартные: dev/build/start без нестандартных зависимостей
