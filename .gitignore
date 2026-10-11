@@ -52,3 +52,11 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Junk
+verify-*.png
+*.log
+upload/
+agent-ctx/
+.zscripts/
+worklog.md
+start-dev.sh
