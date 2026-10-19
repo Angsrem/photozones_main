@@ -280,7 +280,7 @@ async function main() {
       description: 'Премиальная стена из бархата с золотой драпировкой, неоновой надписью, 50 шаров и LED-подсветкой. Статусное решение для бренд-ивентов и юбилеев.',
       category: 'TEXTILE', occasions: ['WEDDING', 'BIRTHDAY', 'CORPORATE'],
       basePrice: 32120, sizeW: 3, sizeH: 2.4, hit: false, badge: null, sortOrder: 30,
-      images: [IMGD('novogodnie-dop', 'zoloto-barkhka')],
+      images: [IMGD('novogodnie-dop', 'zoloto-barkhat')],
       includes: ['Доставка', 'Монтаж', 'Демонтаж', 'Аренда до 6 часов', 'Неоновая надпись', 'LED-подсветка'],
     },
     {
