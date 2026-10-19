@@ -14,6 +14,8 @@ import {
   Save,
   X,
   GripVertical,
+  Calculator,
+  ArrowRight,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -343,6 +345,53 @@ export default function AdminPhotozonesPage() {
 // ============ Редактор фотозоны ============
 type Element = { id?: string; name: string; price: number };
 
+// ====== Константы расчёта калькулятора (синхронизированы с /kalkulyator) ======
+const CALC_DELIVERY = 2000;
+const CALC_MONTAGE_FIX = 3000;
+const CALC_MONTAGE_THRESHOLD = 15000; // если sum+delivery >= 15000 → 20% надбавка
+const CALC_MONTAGE_RATIO = 0.20;
+const CALC_DISCOUNT = 0.85; // -15% для карточки фотозоны
+
+type GlobalElement = {
+  id: string;
+  name: string;
+  description?: string | null;
+  price: number;
+  image?: string | null;
+  category: string;
+  isActive: boolean;
+};
+
+type CompositionItem = { elementId: string; qty: number };
+
+// Категории элементов для блока состава
+const COMPOSITION_CATEGORY_OPTIONS: { value: string; label: string }[] = [
+  { value: 'letter', label: 'Буквы' },
+  { value: 'decor', label: 'Декор' },
+  { value: 'prop', label: 'Реквизит' },
+  { value: 'lighting', label: 'Освещение' },
+  { value: 'service', label: 'Услуги' },
+];
+
+function compositionCategoryLabel(cat: string): string {
+  return COMPOSITION_CATEGORY_OPTIONS.find((c) => c.value === cat)?.label || cat;
+}
+
+// Главная формула: calc_price = sum + delivery + montage
+function computeCalcPrice(sum: number): { sum: number; delivery: number; montage: number; total: number } {
+  const delivery = CALC_DELIVERY;
+  const base = sum + delivery;
+  const montage = base >= CALC_MONTAGE_THRESHOLD
+    ? Math.max(CALC_MONTAGE_FIX, Math.round(base * CALC_MONTAGE_RATIO))
+    : CALC_MONTAGE_FIX;
+  return { sum, delivery, montage, total: base + montage };
+}
+
+// basePrice = «психологическая» цена = round(calc × 0.85 / 10) × 10 − 10
+function computeBasePriceFromCalc(calcPrice: number): number {
+  return Math.round(Math.round(calcPrice * CALC_DISCOUNT) / 10) * 10 - 10;
+}
+
 function PhotozoneEditor({
   photozone,
   onClose,
@@ -398,6 +447,105 @@ function PhotozoneEditor({
   const [newElImage, setNewElImage] = React.useState('');
   const [newElDesc, setNewElDesc] = React.useState('');
   const [saving, setSaving] = React.useState(false);
+
+  // ===== Состав фотозоны из калькулятора =====
+  // Глобальные элементы (photozoneId IS NULL) — загружаются один раз.
+  const [globalElements, setGlobalElements] = React.useState<GlobalElement[]>([]);
+  const [globalElementsLoading, setGlobalElementsLoading] = React.useState(false);
+  const [compQuery, setCompQuery] = React.useState('');
+  const [compCategory, setCompCategory] = React.useState<string>('all');
+  // состав: map elementId → qty (undefined = не выбран)
+  const [compositionMap, setCompositionMap] = React.useState<Record<string, number>>(() => {
+    const init: Record<string, number> = {};
+    if (Array.isArray(photozone?.composition)) {
+      for (const c of photozone!.composition as CompositionItem[]) {
+        if (c && c.elementId) init[c.elementId] = Number(c.qty) > 0 ? Math.floor(Number(c.qty)) : 1;
+      }
+    }
+    return init;
+  });
+
+  // Загрузка глобальных элементов при открытии редактора
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setGlobalElementsLoading(true);
+      try {
+        const data = await api<{ items: GlobalElement[] }>(
+          '/api/admin/elements?includeInactive=1'
+        );
+        if (!cancelled) setGlobalElements(data.items || []);
+      } catch (e: any) {
+        if (!cancelled) toast.error(e?.message || 'Не удалось загрузить элементы калькулятора');
+      } finally {
+        if (!cancelled) setGlobalElementsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Отфильтрованный список глобальных элементов для UI
+  const filteredGlobalElements = React.useMemo(() => {
+    let list = globalElements;
+    if (compCategory !== 'all') list = list.filter((e) => e.category === compCategory);
+    if (compQuery) {
+      const ql = compQuery.toLowerCase();
+      list = list.filter(
+        (e) =>
+          e.name.toLowerCase().includes(ql) ||
+          (e.description || '').toLowerCase().includes(ql)
+      );
+    }
+    return list;
+  }, [globalElements, compQuery, compCategory]);
+
+  // Выбранные элементы + количества
+  const selectedComposition = React.useMemo<CompositionItem[]>(() => {
+    return Object.entries(compositionMap)
+      .filter(([, qty]) => qty > 0)
+      .map(([elementId, qty]) => ({ elementId, qty }));
+  }, [compositionMap]);
+
+  // Расчёт цены
+  const compositionBreakdown = React.useMemo(() => {
+    let sumElements = 0;
+    for (const { elementId, qty } of selectedComposition) {
+      const el = globalElements.find((e) => e.id === elementId);
+      if (el) sumElements += el.price * qty;
+    }
+    const calc = computeCalcPrice(sumElements);
+    const autoBasePrice = computeBasePriceFromCalc(calc.total);
+    return { ...calc, autoBasePrice };
+  }, [selectedComposition, globalElements]);
+
+  const toggleCompositionItem = (elementId: string) => {
+    setCompositionMap((prev) => {
+      const next = { ...prev };
+      if (next[elementId]) delete next[elementId];
+      else next[elementId] = 1;
+      return next;
+    });
+  };
+
+  const setCompositionQty = (elementId: string, qty: number) => {
+    setCompositionMap((prev) => ({
+      ...prev,
+      [elementId]: qty > 0 ? Math.floor(qty) : 1,
+    }));
+  };
+
+  const applyAutoBasePrice = () => {
+    if (compositionBreakdown.total <= 0) {
+      toast.error('Сначала выберите хотя бы один элемент');
+      return;
+    }
+    setBasePrice(String(compositionBreakdown.autoBasePrice));
+    toast.success(
+      `basePrice автоматически рассчитан: ${formatPrice(compositionBreakdown.autoBasePrice)} (calc_price = ${formatPrice(compositionBreakdown.total)})`
+    );
+  };
 
   // автоген slug
   React.useEffect(() => {
@@ -474,6 +622,7 @@ function PhotozoneEditor({
         image: (e as any).image || null,
         description: (e as any).description || null,
       })),
+      composition: selectedComposition,
     };
     setSaving(true);
     try {
@@ -754,6 +903,168 @@ function PhotozoneEditor({
                 Сначала сохраните фотозону, затем добавьте элементы в повторном редактировании.
               </div>
             )}
+          </div>
+
+          {/* ===== Состав фотозоны (из калькулятора) ===== */}
+          <div className="space-y-3 rounded-lg border bg-card/40 p-4">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Calculator className="size-4 text-primary" />
+                  <Label className="text-base font-semibold">
+                    Состав фотозоны (из калькулятора)
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Выберите глобальные элементы калькулятора, которые входят в эту фотозону.
+                  Авто-расчёт: calc_price = сумма + доставка (2000 ₽) + монтаж (3000 ₽ фикс / 20% если ≥ 15 000 ₽).
+                  basePrice = calc_price × 0.85 − 10 («психологическая» цена карточки фотозоны).
+                </p>
+              </div>
+            </div>
+
+            {/* Фильтры */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                <Input
+                  placeholder="Поиск по названию…"
+                  className="pl-8"
+                  value={compQuery}
+                  onChange={(e) => setCompQuery(e.target.value)}
+                />
+              </div>
+              <div className="w-full sm:w-48">
+                <Select value={compCategory} onValueChange={setCompCategory}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Все категории" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все категории</SelectItem>
+                    {COMPOSITION_CATEGORY_OPTIONS.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Список элементов */}
+            <div className="rounded-md border max-h-72 overflow-y-auto divide-y">
+              {globalElementsLoading && (
+                <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="size-4 animate-spin" /> Загрузка элементов…
+                </div>
+              )}
+              {!globalElementsLoading && filteredGlobalElements.length === 0 && (
+                <div className="p-4 text-sm text-muted-foreground">
+                  Элементы не найдены. Добавьте их в разделе «Элементы калькулятора».
+                </div>
+              )}
+              {!globalElementsLoading &&
+                filteredGlobalElements.map((el) => {
+                  const qty = compositionMap[el.id] || 0;
+                  const selected = qty > 0;
+                  return (
+                    <label
+                      key={el.id}
+                      className={`flex items-center gap-2 p-2 text-sm cursor-pointer transition-colors ${
+                        selected ? 'bg-primary/5' : 'hover:bg-accent/40'
+                      }`}
+                    >
+                      <Checkbox
+                        checked={selected}
+                        onCheckedChange={() => toggleCompositionItem(el.id)}
+                      />
+                      {el.image ? (
+                        <img src={el.image} alt="" className="size-8 rounded object-cover border" />
+                      ) : (
+                        <div className="size-8 rounded bg-muted flex items-center justify-center text-muted-foreground">
+                          <ImageOff className="size-3.5" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{el.name}</div>
+                        {el.description && (
+                          <div className="text-xs text-muted-foreground truncate">
+                            {el.description}
+                          </div>
+                        )}
+                      </div>
+                      <Badge variant="outline" className="text-[10px] hidden sm:inline-flex">
+                        {compositionCategoryLabel(el.category)}
+                      </Badge>
+                      <span className="text-sm tabular-nums text-muted-foreground whitespace-nowrap">
+                        {formatPrice(el.price)}
+                      </span>
+                      {selected && (
+                        <Input
+                          type="number"
+                          min={1}
+                          value={qty}
+                          onChange={(e) => setCompositionQty(el.id, Number(e.target.value))}
+                          onClick={(e) => e.preventDefault()}
+                          className="w-16 h-8 text-center"
+                          aria-label={`Количество: ${el.name}`}
+                        />
+                      )}
+                    </label>
+                  );
+                })}
+            </div>
+
+            {/* Расчёт */}
+            <div className="rounded-md border bg-background p-3 space-y-1.5 text-sm">
+              <div className="flex justify-between text-muted-foreground">
+                <span>Сумма элементов ({selectedComposition.length} шт.)</span>
+                <span className="tabular-nums">{formatPrice(compositionBreakdown.sum)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>+ Доставка</span>
+                <span className="tabular-nums">{formatPrice(compositionBreakdown.delivery)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>
+                  + Монтаж{' '}
+                  {compositionBreakdown.sum + compositionBreakdown.delivery >= CALC_MONTAGE_THRESHOLD
+                    ? '(20% от суммы)'
+                    : '(фикс)'}
+                </span>
+                <span className="tabular-nums">{formatPrice(compositionBreakdown.montage)}</span>
+              </div>
+              <div className="h-px bg-border my-1" />
+              <div className="flex justify-between font-medium">
+                <span>calc_price</span>
+                <span className="tabular-nums">{formatPrice(compositionBreakdown.total)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">basePrice (−15%, «психологическая»)</span>
+                <span className="tabular-nums font-semibold text-primary">
+                  {formatPrice(compositionBreakdown.autoBasePrice)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 pt-2">
+                <div className="text-xs text-muted-foreground">
+                  Текущая basePrice: <span className="font-mono">{basePrice || '—'}</span>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={applyAutoBasePrice}
+                  disabled={compositionBreakdown.total <= 0}
+                  className="gap-1"
+                >
+                  Применить автоРасчёт
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Поле «Цена (от), ₽» в начале формы можно изменить вручную — авто-расчёт не перезаписывает его автоматически.
+              </div>
+            </div>
           </div>
 
           {/* Переключатели */}
