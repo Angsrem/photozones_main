@@ -1,0 +1,750 @@
+     1→'use client';
+     2→
+     3→import { useEffect, useMemo, useState } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import {
+     6→  Frame, Layers, Shirt, Flower2, Zap, Leaf, CalendarHeart, Building,
+     7→  Lightbulb, Sparkles, Clapperboard, Type, ConciergeBell, Tag,
+     8→  MapPin, Calendar, ArrowLeft, ArrowRight, Check, Info, ShieldCheck, Wand2,
+     9→} from 'lucide-react';
+    10→import { Button } from '@/components/ui/button';
+    11→import { Checkbox } from '@/components/ui/checkbox';
+    12→import { Input } from '@/components/ui/input';
+    13→import { Label } from '@/components/ui/label';
+    14→import { Badge } from '@/components/ui/badge';
+    15→import { Progress } from '@/components/ui/progress';
+    16→import { Skeleton } from '@/components/ui/skeleton';
+    17→import { openQuickOrder } from '@/components/site/quick-order-store';
+    18→import { SITE } from '@/lib/constants';
+    19→import { formatPrice, todayISO } from '@/lib/format';
+    20→
+    21→/* ============ Типы ============ */
+    22→
+    23→type BaseOpt = { value: string; label: string; desc: string; price: number; icon: React.ElementType };
+    24→type StyleOpt = { value: string; label: string; modifier: number; hint: string; icon: React.ElementType };
+    25→type ExtraOpt = {
+    26→  id: string;
+    27→  name: string;
+    28→  price: number;
+    29→  category: string;
+    30→  description?: string | null;
+    31→  image?: string | null;
+    32→};
+    33→
+    34→/* ============ Данные wizard'а ============ */
+    35→
+    36→// Шаг 1 — Основа
+    37→const BASE_OPTIONS: BaseOpt[] = [
+    38→  { value: 'frame-s', label: 'Каркасная S', desc: '2 × 2 м · компактно', price: 8900, icon: Frame },
+    39→  { value: 'frame-m', label: 'Каркасная M', desc: '3 × 2.5 м · оптимально', price: 12900, icon: Frame },
+    40→  { value: 'frame-l', label: 'Каркасная L', desc: '4 × 3 м · масштаб', price: 17900, icon: Frame },
+    41→  { value: 'presswall', label: 'Пресс-волл', desc: '4 × 2.4 м · бренд', price: 19900, icon: Layers },
+    42→  { value: 'textile', label: 'Текстильная', desc: '3 × 2.4 м · мягко', price: 10900, icon: Shirt },
+    43→];
+    44→
+    45→// Шаг 2 — Стиль (модификатор прибавляется к базе)
+    46→const STYLE_OPTIONS: StyleOpt[] = [
+    47→  { value: 'classic', label: 'Классика', modifier: 0, hint: 'Цветы, пастель, благородство', icon: Flower2 },
+    48→  { value: 'neon', label: 'Неон', modifier: 2000, hint: 'Светящиеся надписи, неоновые линии', icon: Zap },
+    49→  { value: 'rustic', label: 'Рустик', modifier: 1500, hint: 'Дерево, текстиль, макраме', icon: Leaf },
+    50→  { value: 'seasonal', label: 'Сезонная', modifier: 1000, hint: 'Зима, весна, тематика праздника', icon: CalendarHeart },
+    51→  { value: 'brand', label: 'Брендовая', modifier: 3000, hint: 'Фирменные цвета и логотип', icon: Building },
+    52→];
+    53→
+    54→// Категории доп. элементов (порядок + иконка/заголовок)
+    55→const CATEGORY_META: { value: string; label: string; icon: React.ElementType }[] = [
+    56→  { value: 'lighting', label: 'Освещение', icon: Lightbulb },
+    57→  { value: 'decor', label: 'Декор', icon: Sparkles },
+    58→  { value: 'prop', label: 'Реквизит', icon: Clapperboard },
+    59→  { value: 'letter', label: 'Буквы и цифры', icon: Type },
+    60→  { value: 'service', label: 'Услуги', icon: ConciergeBell },
+    61→];
+    62→
+    63→const STEPS = ['Основа', 'Стиль', 'Доп. элементы', 'Дата и адрес'] as const;
+    64→
+    65→/* ============ Компонент ============ */
+    66→
+    67→export function ConstructorBuilder() {
+    68→  const [step, setStep] = useState(0); // 0..3
+    69→
+    70→  const [base, setBase] = useState<string>('');
+    71→  const [style, setStyle] = useState<string>('');
+    72→  const [extras, setExtras] = useState<string[]>([]);
+    73→  const [date, setDate] = useState<string>('');
+    74→  const [address, setAddress] = useState<string>('');
+    75→  const [isSuburb, setIsSuburb] = useState(false);
+    76→
+    77→  const [elements, setElements] = useState<ExtraOpt[]>([]);
+    78→  const [loadingElements, setLoadingElements] = useState(true);
+    79→  const [elementsError, setElementsError] = useState(false);
+    80→
+    81→  // Загрузка глобальных активных элементов
+    82→  useEffect(() => {
+    83→    let cancelled = false;
+    84→    (async () => {
+    85→      try {
+    86→        setLoadingElements(true);
+    87→        setElementsError(false);
+    88→        const res = await fetch('/api/elements', { cache: 'no-store' });
+    89→        if (!res.ok) throw new Error('network');
+    90→        const data = (await res.json()) as { items: ExtraOpt[] };
+    91→        if (!cancelled) setElements(data.items ?? []);
+    92→      } catch {
+    93→        if (!cancelled) setElementsError(true);
+    94→      } finally {
+    95→        if (!cancelled) setLoadingElements(false);
+    96→      }
+    97→    })();
+    98→    return () => {
+    99→      cancelled = true;
+   100→    };
+   101→  }, []);
+   102→
+   103→  // min date — считаем в рендере; suppressHydrationWarning на input,
+   104→  // чтобы избежать SSR/CSR-мисматча на границе суток.
+   105→  const minDate = todayISO();
+   106→
+   107→  const baseOpt = BASE_OPTIONS.find((b) => b.value === base);
+   108→  const styleOpt = STYLE_OPTIONS.find((s) => s.value === style);
+   109→  const selectedExtras = useMemo(
+   110→    () => elements.filter((e) => extras.includes(e.id)),
+   111→    [elements, extras],
+   112→  );
+   113→
+   114→  const breakdown = useMemo(() => {
+   115→    const basePrice = baseOpt?.price ?? 0;
+   116→    const styleModifier = styleOpt?.modifier ?? 0;
+   117→    const extrasTotal = selectedExtras.reduce((s, e) => s + e.price, 0);
+   118→    const surcharge = isSuburb ? SITE.suburbSurcharge : 0;
+   119→    const total = basePrice + styleModifier + extrasTotal + surcharge;
+   120→    return { basePrice, styleModifier, extrasTotal, surcharge, total };
+   121→  }, [baseOpt, styleOpt, selectedExtras, isSuburb]);
+   122→
+   123→  const canNext = () => {
+   124→    if (step === 0) return !!base;
+   125→    if (step === 1) return !!style;
+   126→    if (step === 2) return true; // доп. элементы необязательны
+   127→    if (step === 3) return true; // дата/адрес можно оставить для модалки
+   128→    return false;
+   129→  };
+   130→
+   131→  const next = () => {
+   132→    if (step < 3) setStep(step + 1);
+   133→  };
+   134→  const back = () => {
+   135→    if (step > 0) setStep(step - 1);
+   136→  };
+   137→
+   138→  const toggleExtra = (id: string) => {
+   139→    setExtras((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+   140→  };
+   141→
+   142→  const handleOrder = () => {
+   143→    if (!baseOpt) return;
+   144→    openQuickOrder({
+   145→      source: 'constructor',
+   146→      sourcePage: '/konstruktor',
+   147→      priceEstimate: breakdown.total,
+   148→      config: {
+   149→        base: baseOpt
+   150→          ? { value: baseOpt.value, label: baseOpt.label, desc: baseOpt.desc, price: baseOpt.price }
+   151→          : null,
+   152→        style: styleOpt
+   153→          ? { value: styleOpt.value, label: styleOpt.label, modifier: styleOpt.modifier }
+   154→          : null,
+   155→        extras: selectedExtras.map((e) => ({
+   156→          id: e.id,
+   157→          name: e.name,
+   158→          price: e.price,
+   159→          category: e.category,
+   160→        })),
+   161→        date,
+   162→        address,
+   163→        surcharge: breakdown.surcharge,
+   164→        isSuburb,
+   165→        breakdown: {
+   166→          base: breakdown.basePrice,
+   167→          style: breakdown.styleModifier,
+   168→          extras: breakdown.extrasTotal,
+   169→          surcharge: breakdown.surcharge,
+   170→          total: breakdown.total,
+   171→        },
+   172→      },
+   173→    });
+   174→  };
+   175→
+   176→  const progressValue = ((step + 1) / 4) * 100;
+   177→
+   178→  // Группировка элементов по категории
+   179→  const groupedExtras = useMemo(() => {
+   180→    const groups: { value: string; label: string; icon: React.ElementType; items: ExtraOpt[] }[] = [];
+   181→    for (const meta of CATEGORY_META) {
+   182→      const items = elements.filter((e) => e.category === meta.value);
+   183→      if (items.length > 0) {
+   184→        groups.push({ value: meta.value, label: meta.label, icon: meta.icon, items });
+   185→      }
+   186→    }
+   187→    // Если есть элементы с категорией вне CATEGORY_META — покажем их в группе «Прочее»
+   188→    const known = new Set(CATEGORY_META.map((m) => m.value));
+   189→    const otherItems = elements.filter((e) => !known.has(e.category));
+   190→    if (otherItems.length > 0) {
+   191→      groups.push({ value: 'other', label: 'Прочее', icon: Tag, items: otherItems });
+   192→    }
+   193→    return groups;
+   194→  }, [elements]);
+   195→
+   196→  return (
+   197→    <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
+   198→      {/* ====== Wizard ====== */}
+   199→      <div className="rounded-3xl border border-border bg-card/60 backdrop-blur p-4 sm:p-6 lg:p-8 shadow-2xl">
+   200→        {/* Progress / Stepper */}
+   201→        <div className="mb-6">
+   202→          <div className="flex items-center justify-between gap-1 mb-3">
+   203→            {STEPS.map((label, i) => {
+   204→              const done = i < step;
+   205→              const active = i === step;
+   206→              return (
+   207→                <div key={label} className="flex-1 flex items-center gap-1 min-w-0">
+   208→                  <div
+   209→                    className={[
+   210→                      'flex items-center gap-2 rounded-full px-2 sm:px-3 h-9 sm:h-10 text-xs sm:text-sm transition-colors whitespace-nowrap',
+   211→                      active
+   212→                        ? 'bg-gold text-primary-foreground font-semibold'
+   213→                        : done
+   214→                        ? 'bg-gold/15 text-gold'
+   215→                        : 'bg-muted/50 text-muted-foreground',
+   216→                    ].join(' ')}
+   217→                  >
+   218→                    <span className="flex items-center justify-center w-5 h-5 rounded-full text-[11px]">
+   219→                      {done ? <Check className="w-3.5 h-3.5" /> : i + 1}
+   220→                    </span>
+   221→                    <span className="hidden sm:inline">{label}</span>
+   222→                  </div>
+   223→                  {i < STEPS.length - 1 && (
+   224→                    <div className="flex-1 h-px bg-border hidden sm:block" />
+   225→                  )}
+   226→                </div>
+   227→              );
+   228→            })}
+   229→          </div>
+   230→          <Progress value={progressValue} className="h-1.5 bg-muted/50 [&>div]:bg-gold" />
+   231→        </div>
+   232→
+   233→        {/* Body */}
+   234→        <div className="min-h-[340px]">
+   235→          <AnimatePresence mode="wait">
+   236→            <motion.div
+   237→              key={step}
+   238→              initial={{ opacity: 0, x: 24 }}
+   239→              animate={{ opacity: 1, x: 0 }}
+   240→              exit={{ opacity: 0, x: -24 }}
+   241→              transition={{ duration: 0.25 }}
+   242→            >
+   243→              {step === 0 && <StepBase value={base} onChange={setBase} />}
+   244→              {step === 1 && <StepStyle value={style} onChange={setStyle} />}
+   245→              {step === 2 && (
+   246→                <StepExtras
+   247→                  grouped={groupedExtras}
+   248→                  selected={extras}
+   249→                  onToggle={toggleExtra}
+   250→                  loading={loadingElements}
+   251→                  error={elementsError}
+   252→                />
+   253→              )}
+   254→              {step === 3 && (
+   255→                <StepDateAddress
+   256→                  date={date}
+   257→                  onDate={setDate}
+   258→                  address={address}
+   259→                  onAddress={setAddress}
+   260→                  isSuburb={isSuburb}
+   261→                  onSuburb={setIsSuburb}
+   262→                  minDate={minDate}
+   263→                />
+   264→              )}
+   265→            </motion.div>
+   266→          </AnimatePresence>
+   267→        </div>
+   268→
+   269→        {/* Nav buttons */}
+   270→        <div className="flex items-center justify-between gap-3 mt-6 pt-5 border-t border-border/60">
+   271→          <Button
+   272→            variant="ghost"
+   273→            onClick={back}
+   274→            disabled={step === 0}
+   275→            className="h-12 px-5"
+   276→          >
+   277→            <ArrowLeft className="w-4 h-4 mr-1" /> Назад
+   278→          </Button>
+   279→
+   280→          {step < 3 ? (
+   281→            <Button
+   282→              onClick={next}
+   283→              disabled={!canNext()}
+   284→              className="h-12 px-7 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold"
+   285→            >
+   286→              Далее <ArrowRight className="w-4 h-4 ml-1" />
+   287→            </Button>
+   288→          ) : (
+   289→            <Button
+   290→              onClick={handleOrder}
+   291→              disabled={!baseOpt}
+   292→              className="h-12 px-7 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold"
+   293→            >
+   294→              <Sparkles className="w-4 h-4 mr-1" /> Зафиксировать и заказать
+   295→            </Button>
+   296→          )}
+   297→        </div>
+   298→      </div>
+   299→
+   300→      {/* ====== Sticky sidebar (desktop) ====== */}
+   301→      <aside className="hidden lg:block sticky top-4">
+   302→        <PriceSummary
+   303→          baseOpt={baseOpt}
+   304→          styleOpt={styleOpt}
+   305→          selectedExtras={selectedExtras}
+   306→          isSuburb={isSuburb}
+   307→          breakdown={breakdown}
+   308→          onOrder={handleOrder}
+   309→        />
+   310→      </aside>
+   311→
+   312→      {/* ====== Sticky bottom bar (mobile) ====== */}
+   313→      <div
+   314→        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border glass px-3 py-2 flex items-center gap-3"
+   315→        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+   316→      >
+   317→        <div className="flex-1 min-w-0">
+   318→          <div className="text-xs text-muted-foreground leading-tight">Итого</div>
+   319→          <div className="font-display text-xl text-gold leading-tight truncate">
+   320→            {formatPrice(breakdown.total)}
+   321→          </div>
+   322→        </div>
+   323→        <Button
+   324→          onClick={handleOrder}
+   325→          disabled={!baseOpt}
+   326→          className="h-12 px-5 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold shrink-0"
+   327→        >
+   328→          <Wand2 className="w-4 h-4 mr-1.5" /> Заказать
+   329→        </Button>
+   330→      </div>
+   331→    </div>
+   332→  );
+   333→}
+   334→
+   335→/* ============ Шаг 1 — Основа ============ */
+   336→
+   337→function StepBase({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+   338→  return (
+   339→    <div>
+   340→      <StepHeader
+   341→        eyebrow="Шаг 1 из 4"
+   342→        title="Выберите основу фотозоны"
+   343→        subtitle="Размер и тип конструкции — отправная точка конфигурации"
+   344→      />
+   345→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+   346→        {BASE_OPTIONS.map((b) => {
+   347→          const active = value === b.value;
+   348→          return (
+   349→            <button
+   350→              key={b.value}
+   351→              type="button"
+   352→              onClick={() => onChange(b.value)}
+   353→              aria-pressed={active}
+   354→              className={[
+   355→                'group relative flex flex-col rounded-2xl border p-4 text-left transition-all min-h-[120px]',
+   356→                active ? 'border-gold bg-gold/10 ring-2 ring-gold/40' : 'border-border bg-background hover:border-gold/50',
+   357→              ].join(' ')}
+   358→            >
+   359→              <span className="flex items-center justify-between mb-2">
+   360→                <span
+   361→                  className={[
+   362→                    'flex items-center justify-center w-10 h-10 rounded-lg transition-colors',
+   363→                    active ? 'bg-gold text-primary-foreground' : 'bg-muted text-gold',
+   364→                  ].join(' ')}
+   365→                >
+   366→                  <b.icon className="w-5 h-5" />
+   367→                </span>
+   368→                <span
+   369→                  className={[
+   370→                    'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors',
+   371→                    active ? 'border-gold bg-gold' : 'border-muted-foreground/40',
+   372→                  ].join(' ')}
+   373→                >
+   374→                  {active && <Check className="w-3 h-3 text-primary-foreground" />}
+   375→                </span>
+   376→              </span>
+   377→              <span className="font-display text-base leading-tight">{b.label}</span>
+   378→              <span className="text-xs text-muted-foreground mt-0.5">{b.desc}</span>
+   379→              <span className="text-gold font-semibold mt-2">{formatPrice(b.price)}</span>
+   380→            </button>
+   381→          );
+   382→        })}
+   383→      </div>
+   384→    </div>
+   385→  );
+   386→}
+   387→
+   388→/* ============ Шаг 2 — Стиль ============ */
+   389→
+   390→function StepStyle({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+   391→  return (
+   392→    <div>
+   393→      <StepHeader
+   394→        eyebrow="Шаг 2 из 4"
+   395→        title="Тематика и стиль фотозоны"
+   396→        subtitle="Стиль влияет на стоимость — неон и бренд сложнее в производстве"
+   397→      />
+   398→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+   399→        {STYLE_OPTIONS.map((s) => {
+   400→          const active = value === s.value;
+   401→          return (
+   402→            <button
+   403→              key={s.value}
+   404→              type="button"
+   405→              onClick={() => onChange(s.value)}
+   406→              aria-pressed={active}
+   407→              className={[
+   408→                'group relative flex items-start gap-3 rounded-2xl border p-4 text-left transition-all min-h-[88px]',
+   409→                active ? 'border-gold bg-gold/10 ring-2 ring-gold/40' : 'border-border bg-background hover:border-gold/50',
+   410→              ].join(' ')}
+   411→            >
+   412→              <span
+   413→                className={[
+   414→                  'flex items-center justify-center w-11 h-11 rounded-xl shrink-0 transition-colors',
+   415→                  active ? 'bg-gold text-primary-foreground' : 'bg-muted text-gold',
+   416→                ].join(' ')}
+   417→              >
+   418→                <s.icon className="w-5 h-5" />
+   419→              </span>
+   420→              <span className="flex-1 min-w-0">
+   421→                <span className="flex items-center gap-2 flex-wrap">
+   422→                  <span className="font-display text-lg leading-tight">{s.label}</span>
+   423→                  {s.modifier > 0 ? (
+   424→                    <Badge variant="outline" className="text-gold border-gold/40">
+   425→                      +{formatPrice(s.modifier)}
+   426→                    </Badge>
+   427→                  ) : (
+   428→                    <Badge variant="outline" className="text-muted-foreground border-border">
+   429→                      включено
+   430→                    </Badge>
+   431→                  )}
+   432→                </span>
+   433→                <span className="block text-sm text-muted-foreground mt-1">{s.hint}</span>
+   434→              </span>
+   435→              <span
+   436→                className={[
+   437→                  'mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
+   438→                  active ? 'border-gold bg-gold' : 'border-muted-foreground/40',
+   439→                ].join(' ')}
+   440→              >
+   441→                {active && <Check className="w-3 h-3 text-primary-foreground" />}
+   442→              </span>
+   443→            </button>
+   444→          );
+   445→        })}
+   446→      </div>
+   447→    </div>
+   448→  );
+   449→}
+   450→
+   451→/* ============ Шаг 3 — Доп. элементы ============ */
+   452→
+   453→function StepExtras({
+   454→  grouped,
+   455→  selected,
+   456→  onToggle,
+   457→  loading,
+   458→  error,
+   459→}: {
+   460→  grouped: { value: string; label: string; icon: React.ElementType; items: ExtraOpt[] }[];
+   461→  selected: string[];
+   462→  onToggle: (id: string) => void;
+   463→  loading: boolean;
+   464→  error: boolean;
+   465→}) {
+   466→  return (
+   467→    <div>
+   468→      <StepHeader
+   469→        eyebrow="Шаг 3 из 4"
+   470→        title="Дополнительные элементы"
+   471→        subtitle="Добавьте свет, декор, буквы или реквизит — цена пересчитывается мгновенно. Элементы берутся из актуальной базы."
+   472→      />
+   473→
+   474→      {loading ? (
+   475→        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-5">
+   476→          {Array.from({ length: 6 }).map((_, i) => (
+   477→            <Skeleton key={i} className="h-[56px] rounded-xl" />
+   478→          ))}
+   479→        </div>
+   480→      ) : error ? (
+   481→        <div className="mt-5 rounded-2xl border border-coral/40 bg-coral/10 p-5 text-sm">
+   482→          <p className="flex items-start gap-2 text-coral">
+   483→            <Info className="w-4 h-4 mt-0.5 shrink-0" />
+   484→            <span>
+   485→              Не удалось загрузить доп. элементы. Проверьте соединение или продолжите без них —
+   486→              менеджер подберёт элементы под ваш запрос после заявки.
+   487→            </span>
+   488→          </p>
+   489→        </div>
+   490→      ) : grouped.length === 0 ? (
+   491→        <div className="mt-5 rounded-2xl border border-border bg-background p-5 text-sm text-muted-foreground">
+   492→          Сейчас нет глобальных доп. элементов в каталоге — менеджер подберёт их под ваш запрос.
+   493→        </div>
+   494→      ) : (
+   495→        <div className="mt-5 space-y-6">
+   496→          {grouped.map((g) => (
+   497→            <div key={g.value}>
+   498→              <h3 className="font-display text-base text-gold mb-3 flex items-center gap-2">
+   499→                <g.icon className="w-4 h-4" /> {g.label}
+   500→                <Badge variant="outline" className="text-muted-foreground border-border">
+   501→                  {g.items.length}
+   502→                </Badge>
+   503→              </h3>
+   504→              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+   505→                {g.items.map((e) => {
+   506→                  const checked = selected.includes(e.id);
+   507→                  return (
+   508→                    <label
+   509→                      key={e.id}
+   510→                      htmlFor={`extra-${e.id}`}
+   511→                      className={[
+   512→                        'flex items-center gap-3 rounded-xl border p-3.5 cursor-pointer transition-all min-h-[56px]',
+   513→                        checked ? 'border-gold bg-gold/10' : 'border-border bg-background hover:border-gold/50',
+   514→                      ].join(' ')}
+   515→                    >
+   516→                      <Checkbox
+   517→                        id={`extra-${e.id}`}
+   518→                        checked={checked}
+   519→                        onCheckedChange={() => onToggle(e.id)}
+   520→                      />
+   521→                      <span className="flex-1 min-w-0">
+   522→                        <span className="block text-sm font-medium leading-tight truncate">
+   523→                          {e.name}
+   524→                        </span>
+   525→                        {e.description && (
+   526→                          <span className="block text-xs text-muted-foreground mt-0.5 truncate">
+   527→                            {e.description}
+   528→                          </span>
+   529→                        )}
+   530→                      </span>
+   531→                      <span className="text-sm text-gold font-semibold whitespace-nowrap shrink-0">
+   532→                        +{formatPrice(e.price)}
+   533→                      </span>
+   534→                    </label>
+   535→                  );
+   536→                })}
+   537→              </div>
+   538→            </div>
+   539→          ))}
+   540→        </div>
+   541→      )}
+   542→    </div>
+   543→  );
+   544→}
+   545→
+   546→/* ============ Шаг 4 — Дата и адрес ============ */
+   547→
+   548→function StepDateAddress({
+   549→  date,
+   550→  onDate,
+   551→  address,
+   552→  onAddress,
+   553→  isSuburb,
+   554→  onSuburb,
+   555→  minDate,
+   556→}: {
+   557→  date: string;
+   558→  onDate: (v: string) => void;
+   559→  address: string;
+   560→  onAddress: (v: string) => void;
+   561→  isSuburb: boolean;
+   562→  onSuburb: (v: boolean) => void;
+   563→  minDate: string;
+   564→}) {
+   565→  return (
+   566→    <div>
+   567→      <StepHeader
+   568→        eyebrow="Шаг 4 из 4"
+   569→        title="Дата и адрес мероприятия"
+   570→        subtitle="Логистика влияет на расчёт. Точную цену и наличие подтверждает менеджер по телефону."
+   571→      />
+   572→
+   573→      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+   574→        <div className="space-y-1.5">
+   575→          <Label htmlFor="ctor-date" className="flex items-center gap-1.5">
+   576→            <Calendar className="w-4 h-4 text-gold" /> Дата мероприятия
+   577→          </Label>
+   578→          <Input
+   579→            id="ctor-date"
+   580→            type="date"
+   581→            min={minDate}
+   582→            value={date}
+   583→            onChange={(e) => onDate(e.target.value)}
+   584→            className="h-12"
+   585→            suppressHydrationWarning
+   586→          />
+   587→        </div>
+   588→        <div className="space-y-1.5">
+   589→          <Label htmlFor="ctor-address" className="flex items-center gap-1.5">
+   590→            <MapPin className="w-4 h-4 text-gold" /> Адрес (ресторан, лофт, улица)
+   591→          </Label>
+   592→          <Input
+   593→            id="ctor-address"
+   594→            value={address}
+   595→            onChange={(e) => onAddress(e.target.value)}
+   596→            placeholder="г. Красноярск, ул. ..."
+   597→            className="h-12"
+   598→            autoComplete="street-address"
+   599→          />
+   600→        </div>
+   601→      </div>
+   602→
+   603→      <div className="mt-5 rounded-2xl border border-border bg-background p-4">
+   604→        <label htmlFor="ctor-suburb" className="flex items-start gap-3 cursor-pointer">
+   605→          <Checkbox
+   606→            id="ctor-suburb"
+   607→            checked={isSuburb}
+   608→            onCheckedChange={(v) => onSuburb(v === true)}
+   609→            className="mt-0.5"
+   610→          />
+   611→          <div className="flex-1">
+   612→            <div className="flex items-center gap-2 flex-wrap">
+   613→              <span className="font-medium">Мероприятие в пригороде</span>
+   614→              <Badge variant="outline" className="text-gold border-gold/40">
+   615→                +{formatPrice(SITE.suburbSurcharge)}
+   616→              </Badge>
+   617→            </div>
+   618→            <div className="flex items-start gap-1.5 mt-1 text-sm text-muted-foreground">
+   619→              <Info className="w-3.5 h-3.5 mt-0.5 text-gold shrink-0" />
+   620→              <span>
+   621→                Надбавка за доставку за город: {SITE.suburbs.join(', ')}. По городу доставка бесплатна.
+   622→              </span>
+   623→            </div>
+   624→          </div>
+   625→        </label>
+   626→      </div>
+   627→
+   628→      <div className="mt-5 flex items-center gap-3 text-sm text-muted-foreground">
+   629→        <ShieldCheck className="w-4 h-4 text-gold shrink-0" />
+   630→        <span>Дата и адрес нужны для расчёта логистики. Точная цена и наличие подтверждаются менеджером.</span>
+   631→      </div>
+   632→    </div>
+   633→  );
+   634→}
+   635→
+   636→/* ============ Sticky price summary (desktop) ============ */
+   637→
+   638→function PriceSummary({
+   639→  baseOpt,
+   640→  styleOpt,
+   641→  selectedExtras,
+   642→  isSuburb,
+   643→  breakdown,
+   644→  onOrder,
+   645→}: {
+   646→  baseOpt: BaseOpt | undefined;
+   647→  styleOpt: StyleOpt | undefined;
+   648→  selectedExtras: ExtraOpt[];
+   649→  isSuburb: boolean;
+   650→  breakdown: { basePrice: number; styleModifier: number; extrasTotal: number; surcharge: number; total: number };
+   651→  onOrder: () => void;
+   652→}) {
+   653→  return (
+   654→    <div className="rounded-3xl border border-gold/30 bg-gradient-to-br from-card via-card to-gold/10 p-5 sm:p-6">
+   655→      <div className="flex items-center gap-2 mb-4">
+   656→        <Wand2 className="w-5 h-5 text-gold" />
+   657→        <h3 className="font-display text-lg">Ваша конфигурация</h3>
+   658→      </div>
+   659→
+   660→      <ul className="space-y-2.5 text-sm">
+   661→        <SummaryRow
+   662→          label="Основа"
+   663→          value={baseOpt ? `${baseOpt.label}` : '— не выбрана'}
+   664→          price={baseOpt ? breakdown.basePrice : undefined}
+   665→          muted={!baseOpt}
+   666→        />
+   667→        <SummaryRow
+   668→          label="Стиль"
+   669→          value={styleOpt ? styleOpt.label : '— не выбран'}
+   670→          price={styleOpt ? (styleOpt.modifier > 0 ? styleOpt.modifier : undefined) : undefined}
+   671→          muted={!styleOpt}
+   672→        />
+   673→        {selectedExtras.length > 0 ? (
+   674→          selectedExtras.map((e) => (
+   675→            <SummaryRow key={e.id} label={`Доп.: ${e.name}`} price={e.price} />
+   676→          ))
+   677→        ) : (
+   678→          <SummaryRow label="Доп. элементы" value="— не выбраны" muted />
+   679→        )}
+   680→        {isSuburb && <SummaryRow label="Доставка в пригород" price={breakdown.surcharge} />}
+   681→      </ul>
+   682→
+   683→      <div className="border-t border-border mt-4 pt-4 flex items-center justify-between">
+   684→        <span className="font-medium">Итого</span>
+   685→        <span className="font-display text-2xl text-gold">{formatPrice(breakdown.total)}</span>
+   686→      </div>
+   687→
+   688→      <div className="text-xs text-muted-foreground mt-1.5">
+   689→        Доставка по городу, монтаж и демонтаж включены
+   690→      </div>
+   691→
+   692→      <Button
+   693→        onClick={onOrder}
+   694→        disabled={!baseOpt}
+   695→        className="w-full h-12 mt-4 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold"
+   696→      >
+   697→        <Sparkles className="w-4 h-4 mr-1.5" /> Зафиксировать и заказать
+   698→      </Button>
+   699→
+   700→      <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
+   701→        Расчёт ориентировочный. Точную цену менеджер назовёт по телефону за {SITE.workTimeMin} минут.
+   702→      </p>
+   703→    </div>
+   704→  );
+   705→}
+   706→
+   707→function SummaryRow({
+   708→  label,
+   709→  value,
+   710→  price,
+   711→  muted,
+   712→}: {
+   713→  label: string;
+   714→  value?: string;
+   715→  price?: number;
+   716→  muted?: boolean;
+   717→}) {
+   718→  return (
+   719→    <li className="flex items-start justify-between gap-3">
+   720→      <span className={['min-w-0', muted ? 'text-muted-foreground/70' : 'text-muted-foreground'].join(' ')}>
+   721→        <span className="block leading-tight">{label}</span>
+   722→        {value && (
+   723→          <span className={['block text-xs mt-0.5 truncate', muted ? 'text-muted-foreground/60' : 'text-foreground/80'].join(' ')}>
+   724→            {value}
+   725→          </span>
+   726→        )}
+   727→      </span>
+   728→      {price != null && (
+   729→        <span className="text-foreground font-medium whitespace-nowrap shrink-0">
+   730→          +{formatPrice(price)}
+   731→        </span>
+   732→      )}
+   733→    </li>
+   734→  );
+   735→}
+   736→
+   737→/* ============ Shared header для шагов ============ */
+   738→
+   739→function StepHeader({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle?: string }) {
+   740→  return (
+   741→    <div>
+   742→      <span className="inline-block text-xs font-semibold uppercase tracking-widest text-gold mb-1.5">
+   743→        {eyebrow}
+   744→      </span>
+   745→      <h2 className="font-display text-2xl sm:text-3xl leading-tight">{title}</h2>
+   746→      {subtitle && <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{subtitle}</p>}
+   747→    </div>
+   748→  );
+   749→}
+   750→
