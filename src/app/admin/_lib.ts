@@ -45,6 +45,8 @@ export type PhotoZone = {
   sortOrder: number;
   _count?: { elements: number };
   elements?: { id: string; name: string; price: number; description?: string | null; image?: string | null; category?: string }[];
+  // состав фотозоны из глобальных элементов калькулятора: [{ elementId, qty }]
+  composition?: { elementId: string; qty: number }[] | null;
 };
 
 export type Booking = {

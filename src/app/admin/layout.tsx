@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Loader2,
   Settings,
+  Calculator,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from '@/components/ui/sheet';
@@ -27,6 +28,7 @@ const NAV = [
   { href: '/admin/leads', label: 'Заявки', icon: Inbox },
   { href: '/admin/calendar', label: 'Календарь', icon: CalendarDays },
   { href: '/admin/photozones', label: 'Фотозоны', icon: Images },
+  { href: '/admin/elements', label: 'Элементы калькулятора', icon: Calculator },
   { href: '/admin/promo', label: 'Акции', icon: Tag },
   { href: '/admin/reviews', label: 'Отзывы', icon: Star },
   { href: '/admin/pages', label: 'Страницы', icon: FileText },

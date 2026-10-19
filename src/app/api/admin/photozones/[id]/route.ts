@@ -26,6 +26,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if ('basePrice' in body) data.basePrice = Number(body.basePrice);
   if ('sortOrder' in body) data.sortOrder = Number(body.sortOrder);
 
+  // composition — массив { elementId, qty }[] (если пришёл — заменяем целиком)
+  if ('composition' in body) {
+    if (body.composition == null) {
+      data.composition = null;
+    } else if (Array.isArray(body.composition)) {
+      data.composition = body.composition
+        .filter((c: any) => c && typeof c.elementId === 'string')
+        .map((c: any) => ({ elementId: String(c.elementId), qty: Number.isFinite(Number(c.qty)) && Number(c.qty) > 0 ? Math.floor(Number(c.qty)) : 1 }));
+    } else {
+      return NextResponse.json({ error: 'composition должен быть массивом или null' }, { status: 422 });
+    }
+  }
+
   // синхронизация элементов: если пришёл массив elements [{id?, name, price, category?, image?, description?, isActive?}]
   if (Array.isArray(body.elements)) {
     const incoming = body.elements as Array<{ id?: string; name: string; price: number; category?: string; image?: string | null; description?: string | null; isActive?: boolean }>;

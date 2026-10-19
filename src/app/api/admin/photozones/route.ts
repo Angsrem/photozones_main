@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
   const body = await req.json().catch(() => ({}));
-  const { title, slug, description, category, occasions, basePrice, sizeW, sizeH, images, videos, includes, badge, hit, sortOrder, isActive } = body;
+  const { title, slug, description, category, occasions, basePrice, sizeW, sizeH, images, videos, includes, badge, hit, sortOrder, isActive, composition } = body;
   if (!title || !slug || !category || basePrice == null) return NextResponse.json({ error: 'Заполните обязательные поля' }, { status: 422 });
 
   // Валидация enum-полей и цены
@@ -24,6 +24,17 @@ export async function POST(req: NextRequest) {
   if (!ALLOWED_CATEGORIES.includes(category)) return NextResponse.json({ error: 'Недопустимая категория' }, { status: 422 });
   const occArr = Array.isArray(occasions) ? occasions.filter((o: any) => typeof o === 'string' && ALLOWED_OCCASIONS.includes(o)) : [];
   if (!Number.isFinite(Number(basePrice)) || Number(basePrice) < 0 || Number(basePrice) > 10_000_000) return NextResponse.json({ error: 'Недопустимая цена' }, { status: 422 });
+
+  // composition — массив { elementId, qty }[] (опционально)
+  let compositionJson: any = null;
+  if (composition != null) {
+    if (!Array.isArray(composition)) {
+      return NextResponse.json({ error: 'composition должен быть массивом' }, { status: 422 });
+    }
+    compositionJson = composition
+      .filter((c: any) => c && typeof c.elementId === 'string')
+      .map((c: any) => ({ elementId: String(c.elementId), qty: Number.isFinite(Number(c.qty)) && Number(c.qty) > 0 ? Math.floor(Number(c.qty)) : 1 }));
+  }
 
   const existing = await db.photoZone.findUnique({ where: { slug } });
   if (existing) return NextResponse.json({ error: 'Slug занят' }, { status: 409 });
@@ -34,6 +45,7 @@ export async function POST(req: NextRequest) {
       sizeW: sizeW ? Number(sizeW) : null, sizeH: sizeH ? Number(sizeH) : null,
       images: images || [], videos: videos || [], includes: includes || [],
       badge: badge || null, hit: !!hit, sortOrder: Number(sortOrder ?? 100), isActive: isActive !== false,
+      ...(compositionJson !== null ? { composition: compositionJson } : {}),
     },
   });
   return NextResponse.json({ ok: true, photozone: pz });

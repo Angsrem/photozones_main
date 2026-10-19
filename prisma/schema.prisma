@@ -51,6 +51,8 @@ model PhotoZone {
   styles      Json?    // string[]: romantic, minimal, neon, party, rustic, retro, brand, kids-fairytale, classic, disco
   sizeClass   String?  // S | M | L | XL (по размеру → числу гостей)
   childAge    Json?    // string[] для детских: 1-3, 4-7, 8-12, 13-17
+  // состав фотозоны из глобальных элементов калькулятора: [{ elementId, qty }]
+  composition Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
