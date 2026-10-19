@@ -1,13 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart, Cake, GraduationCap, Building2, Snowflake,
   Flower2, Zap, Leaf, CalendarHeart, Building,
-  Frame, Layers, Shirt, Lightbulb, Type, CircleDot, Printer, Clock,
+  Frame, Lightbulb, Type,
   MapPin, Calendar, ArrowLeft, ArrowRight, Check, Sparkles, RotateCcw, Info,
-  ShieldCheck,
+  ShieldCheck, Tag, Clapperboard, ConciergeBell, AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,7 +15,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { openQuickOrder } from '@/components/site/quick-order-store';
+import { SimilarInStock } from '@/components/site/similar-in-stock';
 import { SITE } from '@/lib/constants';
 import { formatPrice, todayISO } from '@/lib/format';
 
@@ -23,8 +25,19 @@ import { formatPrice, todayISO } from '@/lib/format';
 
 type OccasionOpt = { value: string; label: string; icon: React.ElementType; hint: string };
 type StyleOpt = { value: string; label: string; icon: React.ElementType; modifier: number; hint: string };
-type BaseOpt = { value: string; label: string; desc: string; price: number; icon: React.ElementType };
-type AddonOpt = { value: string; label: string; price: number; icon: React.ElementType };
+
+// Динамические опции (тянутся из БД через /api/elements)
+type ElementItem = {
+  id: string;
+  name: string;
+  description?: string | null;
+  price: number;
+  category: string;
+  image?: string | null;
+  isBase: boolean;
+};
+type DynamicBase = { id: string; label: string; desc: string; price: number };
+type DynamicAddon = ElementItem; // alias
 
 // Шаг 1 — Повод (значения тянутся из OCCASIONS где возможно + «Сезонный праздник»)
 const OCCASION_OPTIONS: OccasionOpt[] = [
@@ -35,7 +48,8 @@ const OCCASION_OPTIONS: OccasionOpt[] = [
   { value: 'SEASONAL', label: 'Сезонный праздник', icon: Snowflake, hint: 'Новый год, 8 марта, 23 февраля' },
 ];
 
-// Шаг 2 — Тематика/стиль (влияет на базу цены)
+// Шаг 2 — Тематика/стиль (модификатор прибавляется к базе — влияет на сложность производства)
+// Это не DB-элементы, а обобщённые модификаторы (как в конструкторе).
 const STYLE_OPTIONS: StyleOpt[] = [
   { value: 'classic-flora', label: 'Классика / Флора', icon: Flower2, modifier: 0, hint: 'Цветы, пастель, благородство' },
   { value: 'neon', label: 'Неон', icon: Zap, modifier: 2000, hint: 'Светящиеся надписи, неоновые линии' },
@@ -44,26 +58,60 @@ const STYLE_OPTIONS: StyleOpt[] = [
   { value: 'brand', label: 'Брендовая', icon: Building, modifier: 3000, hint: 'Фирменные цвета и логотип' },
 ];
 
-// Шаг 3 — Тип основы
-const BASE_OPTIONS: BaseOpt[] = [
-  { value: 'frame-s', label: 'Каркасная S', desc: '2 × 2 м · компактно', price: 8900, icon: Frame },
-  { value: 'frame-m', label: 'Каркасная M', desc: '3 × 2.5 м · оптимально', price: 12900, icon: Frame },
-  { value: 'frame-l', label: 'Каркасная L', desc: '4 × 3 м · масштаб', price: 17900, icon: Frame },
-  { value: 'presswall', label: 'Пресс-волл', desc: '3 × 2.5 м · бренд', price: 15900, icon: Layers },
-  { value: 'textile', label: 'Текстильная', desc: '3 × 2.5 м · мягко', price: 10900, icon: Shirt },
-];
-
-// Шаг 3 — Доп. элементы
-const ADDON_OPTIONS: AddonOpt[] = [
-  { value: 'light-letters', label: 'Световые буквы', price: 3900, icon: Lightbulb },
-  { value: 'neon-sign', label: 'Неоновая надпись', price: 3500, icon: Type },
-  { value: 'balloons-50', label: 'Шары 50 шт', price: 2500, icon: CircleDot },
-  { value: 'garland', label: 'Гирлянда', price: 1500, icon: Sparkles },
-  { value: 'logo-print', label: 'Печать логотипа', price: 4500, icon: Printer },
-  { value: 'extra-hour', label: 'Доп. час работы', price: 800, icon: Clock },
+// Категории доп. элементов (порядок + иконка/заголовок)
+const CATEGORY_META: { value: string; label: string; icon: React.ElementType }[] = [
+  { value: 'letter', label: 'Буквы и цифры', icon: Type },
+  { value: 'decor', label: 'Декор и шары', icon: Sparkles },
+  { value: 'lighting', label: 'Освещение', icon: Lightbulb },
+  { value: 'prop', label: 'Реквизит', icon: Clapperboard },
+  { value: 'service', label: 'Услуги', icon: ConciergeBell },
 ];
 
 const STEPS = ['Повод', 'Стиль', 'Основа', 'Дата и адрес'] as const;
+
+// Извлекаем размеры из названия, например "Мольберт-классика (1.6×1.2 м)" → "1.6×1.2 м"
+function extractDimensions(name: string): string | null {
+  const m = name.match(/\(([^)]+)\)/);
+  if (!m) return null;
+  // Берём только если внутри есть цифры (размеры), иначе null
+  return /\d/.test(m[1]) ? m[1].replace(/\s+/g, ' ').trim() : null;
+}
+
+// Чистим имя от размеров в скобках для label
+function cleanName(name: string): string {
+  return name.replace(/\s*\([^)]*\)\s*/g, '').trim();
+}
+
+/* ============ Хук: загрузка элементов ============ */
+
+function useElements() {
+  const [items, setItems] = useState<ElementItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        setError(false);
+        const res = await fetch('/api/elements', { cache: 'no-store' });
+        if (!res.ok) throw new Error('network');
+        const data = (await res.json()) as { items: ElementItem[] };
+        if (!cancelled) setItems(data.items ?? []);
+      } catch {
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { items, loading, error };
+}
 
 /* ============ Компонент ============ */
 
@@ -73,20 +121,58 @@ export function CalculatorWizard() {
 
   const [occasion, setOccasion] = useState<string>('');
   const [style, setStyle] = useState<string>('');
-  const [base, setBase] = useState<string>('');
+  const [baseId, setBaseId] = useState<string>('');
   const [addons, setAddons] = useState<string[]>([]);
   const [date, setDate] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   const [isSuburb, setIsSuburb] = useState(false);
 
+  const { items: elements, loading: elementsLoading, error: elementsError } = useElements();
+
   // min date — считаем в рендере; добавляем suppressHydrationWarning на input,
   // чтобы избежать предупреждения о разнице SSR/CSR на границе суток.
   const minDate = todayISO();
 
+  // Группировка: bases и addons
+  const baseOptions: DynamicBase[] = useMemo(() => {
+    return elements
+      .filter((e) => e.isBase)
+      .map((e) => {
+        const dim = extractDimensions(e.name);
+        return {
+          id: e.id,
+          label: cleanName(e.name),
+          desc: dim || (e.description ? e.description.slice(0, 60) : 'Базовая конструкция'),
+          price: e.price,
+        };
+      });
+  }, [elements]);
+
+  const addonOptions: DynamicAddon[] = useMemo(
+    () => elements.filter((e) => !e.isBase),
+    [elements],
+  );
+
+  // Группировка аддонов по категории
+  const groupedAddons = useMemo(() => {
+    const groups: { value: string; label: string; icon: React.ElementType; items: DynamicAddon[] }[] = [];
+    for (const meta of CATEGORY_META) {
+      const items = addonOptions.filter((e) => e.category === meta.value);
+      if (items.length > 0) groups.push({ value: meta.value, label: meta.label, icon: meta.icon, items });
+    }
+    // Элементы с неизвестной категорией — в «Прочее»
+    const known = new Set(CATEGORY_META.map((m) => m.value));
+    const otherItems = addonOptions.filter((e) => !known.has(e.category));
+    if (otherItems.length > 0) {
+      groups.push({ value: 'other', label: 'Прочее', icon: Tag, items: otherItems });
+    }
+    return groups;
+  }, [addonOptions]);
+
   const occasionOpt = OCCASION_OPTIONS.find((o) => o.value === occasion);
   const styleOpt = STYLE_OPTIONS.find((s) => s.value === style);
-  const baseOpt = BASE_OPTIONS.find((b) => b.value === base);
-  const selectedAddons = ADDON_OPTIONS.filter((a) => addons.includes(a.value));
+  const baseOpt = baseOptions.find((b) => b.id === baseId);
+  const selectedAddons = addonOptions.filter((a) => addons.includes(a.id));
 
   const breakdown = useMemo(() => {
     const basePrice = baseOpt?.price ?? 0;
@@ -100,7 +186,7 @@ export function CalculatorWizard() {
   const canNext = () => {
     if (step === 0) return !!occasion;
     if (step === 1) return !!style;
-    if (step === 2) return !!base;
+    if (step === 2) return !!baseId;
     if (step === 3) return !!date;
     return false;
   };
@@ -114,8 +200,8 @@ export function CalculatorWizard() {
     if (step > 0) setStep(step - 1);
   };
 
-  const toggleAddon = (v: string) => {
-    setAddons((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]));
+  const toggleAddon = (id: string) => {
+    setAddons((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
   const handleOrder = () => {
@@ -125,9 +211,9 @@ export function CalculatorWizard() {
       style: styleOpt?.value ?? style,
       styleLabel: styleOpt?.label ?? style,
       base: baseOpt
-        ? { value: baseOpt.value, label: baseOpt.label, desc: baseOpt.desc, price: baseOpt.price }
+        ? { id: baseOpt.id, label: baseOpt.label, desc: baseOpt.desc, price: baseOpt.price }
         : null,
-      addons: selectedAddons.map((a) => ({ value: a.value, label: a.label, price: a.price })),
+      addons: selectedAddons.map((a) => ({ id: a.id, name: a.name, price: a.price, category: a.category })),
       date,
       address,
       isSuburb,
@@ -224,8 +310,12 @@ export function CalculatorWizard() {
               )}
               {step === 2 && (
                 <StepBaseAndAddons
-                  base={base} onBase={setBase}
+                  baseId={baseId} onBase={setBaseId}
                   addons={addons} onToggleAddon={toggleAddon}
+                  baseOptions={baseOptions}
+                  groupedAddons={groupedAddons}
+                  loading={elementsLoading}
+                  error={elementsError}
                 />
               )}
               {step === 3 && (
@@ -377,81 +467,142 @@ function StepStyle({ value, onChange }: { value: string; onChange: (v: string) =
 /* ============ Шаг 3 — Основа + доп. элементы ============ */
 
 function StepBaseAndAddons({
-  base, onBase, addons, onToggleAddon,
+  baseId, onBase, addons, onToggleAddon,
+  baseOptions, groupedAddons, loading, error,
 }: {
-  base: string; onBase: (v: string) => void;
+  baseId: string; onBase: (v: string) => void;
   addons: string[]; onToggleAddon: (v: string) => void;
+  baseOptions: DynamicBase[];
+  groupedAddons: { value: string; label: string; icon: React.ElementType; items: DynamicAddon[] }[];
+  loading: boolean;
+  error: boolean;
 }) {
   return (
     <div>
       <StepHeader
         eyebrow="Шаг 3 из 4"
         title="Размер, тип основы и доп. элементы"
-        subtitle="Выберите основу — и добавьте детали, которые сделают фотозону ярче"
+        subtitle="Выберите основу — и добавьте детали, которые сделают фотозону ярче. Цены берутся из актуальной базы."
       />
 
       <h3 className="font-display text-base text-gold mt-5 mb-3 flex items-center gap-2">
         <Frame className="w-4 h-4" /> Тип основы
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {BASE_OPTIONS.map((b) => {
-          const active = base === b.value;
-          return (
-            <button
-              key={b.value}
-              type="button"
-              onClick={() => onBase(b.value)}
-              aria-pressed={active}
-              className={[
-                'group relative flex flex-col rounded-2xl border p-4 text-left transition-all min-h-[112px]',
-                active ? 'border-gold bg-gold/10 ring-2 ring-gold/40' : 'border-border bg-background hover:border-gold/50',
-              ].join(' ')}
-            >
-              <span className="flex items-center justify-between mb-2">
-                <span className={[
-                  'flex items-center justify-center w-10 h-10 rounded-lg transition-colors',
-                  active ? 'bg-gold text-primary-foreground' : 'bg-muted text-gold',
-                ].join(' ')}>
-                  <b.icon className="w-5 h-5" />
+
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-[112px] rounded-2xl" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="rounded-2xl border border-coral/40 bg-coral/10 p-4 text-sm">
+          <p className="flex items-start gap-2 text-coral">
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>
+              Не удалось загрузить базовые конструкции. Проверьте соединение или продолжите — менеджер подберёт основу под ваш запрос.
+            </span>
+          </p>
+        </div>
+      ) : baseOptions.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-background p-4 text-sm text-muted-foreground">
+          Сейчас в каталоге нет базовых конструкций — менеджер подберёт основу под ваш запрос после заявки.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {baseOptions.map((b) => {
+            const active = baseId === b.id;
+            return (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => onBase(b.id)}
+                aria-pressed={active}
+                className={[
+                  'group relative flex flex-col rounded-2xl border p-4 text-left transition-all min-h-[112px]',
+                  active ? 'border-gold bg-gold/10 ring-2 ring-gold/40' : 'border-border bg-background hover:border-gold/50',
+                ].join(' ')}
+              >
+                <span className="flex items-center justify-between mb-2">
+                  <span className={[
+                    'flex items-center justify-center w-10 h-10 rounded-lg transition-colors',
+                    active ? 'bg-gold text-primary-foreground' : 'bg-muted text-gold',
+                  ].join(' ')}>
+                    <Frame className="w-5 h-5" />
+                  </span>
+                  <span className={[
+                    'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors',
+                    active ? 'border-gold bg-gold' : 'border-muted-foreground/40',
+                  ].join(' ')}>
+                    {active && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </span>
                 </span>
-                <span className={[
-                  'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors',
-                  active ? 'border-gold bg-gold' : 'border-muted-foreground/40',
-                ].join(' ')}>
-                  {active && <Check className="w-3 h-3 text-primary-foreground" />}
-                </span>
-              </span>
-              <span className="font-display text-base leading-tight">{b.label}</span>
-              <span className="text-xs text-muted-foreground mt-0.5">{b.desc}</span>
-              <span className="text-gold font-semibold mt-2">{formatPrice(b.price)}</span>
-            </button>
-          );
-        })}
-      </div>
+                <span className="font-display text-base leading-tight">{b.label}</span>
+                <span className="text-xs text-muted-foreground mt-0.5">{b.desc}</span>
+                <span className="text-gold font-semibold mt-2">{formatPrice(b.price)}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <h3 className="font-display text-base text-gold mt-7 mb-3 flex items-center gap-2">
         <Sparkles className="w-4 h-4" /> Дополнительные элементы
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        {ADDON_OPTIONS.map((a) => {
-          const checked = addons.includes(a.value);
-          return (
-            <label
-              key={a.value}
-              htmlFor={`addon-${a.value}`}
-              className={[
-                'flex items-center gap-3 rounded-xl border p-3.5 cursor-pointer transition-all min-h-[56px]',
-                checked ? 'border-gold bg-gold/10' : 'border-border bg-background hover:border-gold/50',
-              ].join(' ')}
-            >
-              <Checkbox id={`addon-${a.value}`} checked={checked} onCheckedChange={() => onToggleAddon(a.value)} />
-              <a.icon className="w-5 h-5 text-gold shrink-0" />
-              <span className="flex-1 text-sm font-medium">{a.label}</span>
-              <span className="text-sm text-gold font-semibold whitespace-nowrap">+{formatPrice(a.price)}</span>
-            </label>
-          );
-        })}
-      </div>
+
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-[56px] rounded-xl" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="rounded-2xl border border-coral/40 bg-coral/10 p-4 text-sm">
+          <p className="flex items-start gap-2 text-coral">
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>Не удалось загрузить доп. элементы. Менеджер подберёт их под ваш запрос.</span>
+          </p>
+        </div>
+      ) : groupedAddons.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-background p-4 text-sm text-muted-foreground">
+          Сейчас нет глобальных доп. элементов в каталоге — менеджер подберёт их под ваш запрос.
+        </div>
+      ) : (
+        <div className="space-y-5">
+          {groupedAddons.map((g) => (
+            <div key={g.value}>
+              <h4 className="font-medium text-sm text-gold mb-2.5 flex items-center gap-2">
+                <g.icon className="w-4 h-4" /> {g.label}
+                <Badge variant="outline" className="text-muted-foreground border-border">{g.items.length}</Badge>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {g.items.map((a) => {
+                  const checked = addons.includes(a.id);
+                  return (
+                    <label
+                      key={a.id}
+                      htmlFor={`addon-${a.id}`}
+                      className={[
+                        'flex items-center gap-3 rounded-xl border p-3.5 cursor-pointer transition-all min-h-[56px]',
+                        checked ? 'border-gold bg-gold/10' : 'border-border bg-background hover:border-gold/50',
+                      ].join(' ')}
+                    >
+                      <Checkbox id={`addon-${a.id}`} checked={checked} onCheckedChange={() => onToggleAddon(a.id)} />
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-sm font-medium leading-tight truncate">{a.name}</span>
+                        {a.description && (
+                          <span className="block text-xs text-muted-foreground mt-0.5 truncate">{a.description}</span>
+                        )}
+                      </span>
+                      <span className="text-sm text-gold font-semibold whitespace-nowrap shrink-0">+{formatPrice(a.price)}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -543,8 +694,8 @@ function ResultView({
   breakdown, onOrder, onEdit,
 }: {
   occasionLabel: string; styleLabel: string;
-  baseOpt: BaseOpt | undefined;
-  selectedAddons: AddonOpt[];
+  baseOpt: DynamicBase | undefined;
+  selectedAddons: DynamicAddon[];
   date: string; address: string; isSuburb: boolean;
   breakdown: { basePrice: number; styleModifier: number; addonsTotal: number; suburb: number; total: number };
   onOrder: () => void; onEdit: () => void;
@@ -559,7 +710,7 @@ function ResultView({
 
       {/* Total */}
       <div className="rounded-3xl border border-gold/30 bg-gradient-to-br from-card via-card to-gold/10 p-6 sm:p-8 text-center mt-5">
-        <div className="text-sm text-muted-foreground mb-1">Примерная стоимость аренды</div>
+        <div className="text-sm text-muted-foreground mb-1">Примерная стоимость аренды (calc_price)</div>
         <div className="font-display text-4xl sm:text-5xl text-gradient-gold leading-none">
           {formatPrice(breakdown.total)}
         </div>
@@ -580,7 +731,7 @@ function ResultView({
             <BreakdownRow label={`Основа: ${baseOpt.label} (${baseOpt.desc})`} value={breakdown.basePrice} />
           )}
           {selectedAddons.map((a) => (
-            <BreakdownRow key={a.value} label={`Доп.: ${a.label}`} value={a.price} />
+            <BreakdownRow key={a.id} label={`Доп.: ${a.name}`} value={a.price} />
           ))}
           {isSuburb && (
             <BreakdownRow label="Доставка в пригород" value={breakdown.suburb} />
@@ -594,8 +745,15 @@ function ResultView({
         </div>
       </div>
 
+      {/* === Похожие из наличия ±15% === */}
+      {breakdown.total > 0 && (
+        <div className="mt-8 pt-6 border-t border-border/60">
+          <SimilarInStock calcPrice={breakdown.total} limit={5} variant="grid" />
+        </div>
+      )}
+
       {/* Disclaimer */}
-      <p className="text-xs text-muted-foreground text-center mt-4 leading-relaxed">
+      <p className="text-xs text-muted-foreground text-center mt-5 leading-relaxed">
         Расчёт ориентировочный. Точную цену менеджер назовёт по телефону за 15 минут —
         с учётом занятости на вашу дату и нюансов площадки.
       </p>

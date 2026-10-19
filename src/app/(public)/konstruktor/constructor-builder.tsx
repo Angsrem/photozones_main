@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Frame, Layers, Shirt, Flower2, Zap, Leaf, CalendarHeart, Building,
+  Frame, Flower2, Zap, Leaf, CalendarHeart, Building,
   Lightbulb, Sparkles, Clapperboard, Type, ConciergeBell, Tag,
   MapPin, Calendar, ArrowLeft, ArrowRight, Check, Info, ShieldCheck, Wand2,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,12 +16,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { openQuickOrder } from '@/components/site/quick-order-store';
+import { SimilarInStock } from '@/components/site/similar-in-stock';
 import { SITE } from '@/lib/constants';
 import { formatPrice, todayISO } from '@/lib/format';
 
 /* ============ Типы ============ */
 
-type BaseOpt = { value: string; label: string; desc: string; price: number; icon: React.ElementType };
 type StyleOpt = { value: string; label: string; modifier: number; hint: string; icon: React.ElementType };
 type ExtraOpt = {
   id: string;
@@ -29,20 +30,14 @@ type ExtraOpt = {
   category: string;
   description?: string | null;
   image?: string | null;
+  isBase?: boolean;
 };
+
+type DynamicBase = { id: string; label: string; desc: string; price: number };
 
 /* ============ Данные wizard'а ============ */
 
-// Шаг 1 — Основа
-const BASE_OPTIONS: BaseOpt[] = [
-  { value: 'frame-s', label: 'Каркасная S', desc: '2 × 2 м · компактно', price: 8900, icon: Frame },
-  { value: 'frame-m', label: 'Каркасная M', desc: '3 × 2.5 м · оптимально', price: 12900, icon: Frame },
-  { value: 'frame-l', label: 'Каркасная L', desc: '4 × 3 м · масштаб', price: 17900, icon: Frame },
-  { value: 'presswall', label: 'Пресс-волл', desc: '4 × 2.4 м · бренд', price: 19900, icon: Layers },
-  { value: 'textile', label: 'Текстильная', desc: '3 × 2.4 м · мягко', price: 10900, icon: Shirt },
-];
-
-// Шаг 2 — Стиль (модификатор прибавляется к базе)
+// Шаг 2 — Стиль (модификатор прибавляется к базе). Это обобщённые стили — не DB-элементы.
 const STYLE_OPTIONS: StyleOpt[] = [
   { value: 'classic', label: 'Классика', modifier: 0, hint: 'Цветы, пастель, благородство', icon: Flower2 },
   { value: 'neon', label: 'Неон', modifier: 2000, hint: 'Светящиеся надписи, неоновые линии', icon: Zap },
@@ -62,12 +57,23 @@ const CATEGORY_META: { value: string; label: string; icon: React.ElementType }[]
 
 const STEPS = ['Основа', 'Стиль', 'Доп. элементы', 'Дата и адрес'] as const;
 
+// Извлекаем размеры из названия, например "Мольберт-классика (1.6×1.2 м)" → "1.6×1.2 м"
+function extractDimensions(name: string): string | null {
+  const m = name.match(/\(([^)]+)\)/);
+  if (!m) return null;
+  return /\d/.test(m[1]) ? m[1].replace(/\s+/g, ' ').trim() : null;
+}
+
+function cleanName(name: string): string {
+  return name.replace(/\s*\([^)]*\)\s*/g, '').trim();
+}
+
 /* ============ Компонент ============ */
 
 export function ConstructorBuilder() {
   const [step, setStep] = useState(0); // 0..3
 
-  const [base, setBase] = useState<string>('');
+  const [baseId, setBaseId] = useState<string>('');
   const [style, setStyle] = useState<string>('');
   const [extras, setExtras] = useState<string[]>([]);
   const [date, setDate] = useState<string>('');
@@ -104,11 +110,32 @@ export function ConstructorBuilder() {
   // чтобы избежать SSR/CSR-мисматча на границе суток.
   const minDate = todayISO();
 
-  const baseOpt = BASE_OPTIONS.find((b) => b.value === base);
+  // Динамические базовые конструкции (отфильтрованные по isBase)
+  const baseOptions: DynamicBase[] = useMemo(() => {
+    return elements
+      .filter((e) => e.isBase)
+      .map((e) => {
+        const dim = extractDimensions(e.name);
+        return {
+          id: e.id,
+          label: cleanName(e.name),
+          desc: dim || (e.description ? e.description.slice(0, 60) : 'Базовая конструкция'),
+          price: e.price,
+        };
+      });
+  }, [elements]);
+
+  // Доп. элементы = все, кроме базовых
+  const addonOptions: ExtraOpt[] = useMemo(
+    () => elements.filter((e) => !e.isBase),
+    [elements],
+  );
+
+  const baseOpt = baseOptions.find((b) => b.id === baseId);
   const styleOpt = STYLE_OPTIONS.find((s) => s.value === style);
   const selectedExtras = useMemo(
-    () => elements.filter((e) => extras.includes(e.id)),
-    [elements, extras],
+    () => addonOptions.filter((e) => extras.includes(e.id)),
+    [addonOptions, extras],
   );
 
   const breakdown = useMemo(() => {
@@ -121,7 +148,7 @@ export function ConstructorBuilder() {
   }, [baseOpt, styleOpt, selectedExtras, isSuburb]);
 
   const canNext = () => {
-    if (step === 0) return !!base;
+    if (step === 0) return !!baseId;
     if (step === 1) return !!style;
     if (step === 2) return true; // доп. элементы необязательны
     if (step === 3) return true; // дата/адрес можно оставить для модалки
@@ -147,7 +174,7 @@ export function ConstructorBuilder() {
       priceEstimate: breakdown.total,
       config: {
         base: baseOpt
-          ? { value: baseOpt.value, label: baseOpt.label, desc: baseOpt.desc, price: baseOpt.price }
+          ? { id: baseOpt.id, label: baseOpt.label, desc: baseOpt.desc, price: baseOpt.price }
           : null,
         style: styleOpt
           ? { value: styleOpt.value, label: styleOpt.label, modifier: styleOpt.modifier }
@@ -175,26 +202,26 @@ export function ConstructorBuilder() {
 
   const progressValue = ((step + 1) / 4) * 100;
 
-  // Группировка элементов по категории
+  // Группировка элементов по категории (только для аддонов — базовые исключены)
   const groupedExtras = useMemo(() => {
     const groups: { value: string; label: string; icon: React.ElementType; items: ExtraOpt[] }[] = [];
     for (const meta of CATEGORY_META) {
-      const items = elements.filter((e) => e.category === meta.value);
+      const items = addonOptions.filter((e) => e.category === meta.value);
       if (items.length > 0) {
         groups.push({ value: meta.value, label: meta.label, icon: meta.icon, items });
       }
     }
     // Если есть элементы с категорией вне CATEGORY_META — покажем их в группе «Прочее»
     const known = new Set(CATEGORY_META.map((m) => m.value));
-    const otherItems = elements.filter((e) => !known.has(e.category));
+    const otherItems = addonOptions.filter((e) => !known.has(e.category));
     if (otherItems.length > 0) {
       groups.push({ value: 'other', label: 'Прочее', icon: Tag, items: otherItems });
     }
     return groups;
-  }, [elements]);
+  }, [addonOptions]);
 
   return (
-    <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
+    <div className="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
       {/* ====== Wizard ====== */}
       <div className="rounded-3xl border border-border bg-card/60 backdrop-blur p-4 sm:p-6 lg:p-8 shadow-2xl">
         {/* Progress / Stepper */}
@@ -240,7 +267,15 @@ export function ConstructorBuilder() {
               exit={{ opacity: 0, x: -24 }}
               transition={{ duration: 0.25 }}
             >
-              {step === 0 && <StepBase value={base} onChange={setBase} />}
+              {step === 0 && (
+                <StepBase
+                  value={baseId}
+                  onChange={setBaseId}
+                  baseOptions={baseOptions}
+                  loading={loadingElements}
+                  error={elementsError}
+                />
+              )}
               {step === 1 && <StepStyle value={style} onChange={setStyle} />}
               {step === 2 && (
                 <StepExtras
@@ -298,7 +333,7 @@ export function ConstructorBuilder() {
       </div>
 
       {/* ====== Sticky sidebar (desktop) ====== */}
-      <aside className="hidden lg:block sticky top-4">
+      <aside className="hidden lg:block sticky top-4 space-y-4">
         <PriceSummary
           baseOpt={baseOpt}
           styleOpt={styleOpt}
@@ -306,7 +341,18 @@ export function ConstructorBuilder() {
           isSuburb={isSuburb}
           breakdown={breakdown}
           onOrder={handleOrder}
+          loadingElements={loadingElements}
         />
+        {/* === Похожие из наличия ±15% === */}
+        {breakdown.total > 0 && (
+          <div className="rounded-3xl border border-border bg-card/60 backdrop-blur p-4 sm:p-5">
+            <SimilarInStock
+              calcPrice={breakdown.total}
+              limit={5}
+              variant="compact"
+            />
+          </div>
+        )}
       </aside>
 
       {/* ====== Sticky bottom bar (mobile) ====== */}
@@ -328,59 +374,100 @@ export function ConstructorBuilder() {
           <Wand2 className="w-4 h-4 mr-1.5" /> Заказать
         </Button>
       </div>
+
+      {/* ====== Mobile: Similar in stock (под wizard'ом) ====== */}
+      {breakdown.total > 0 && (
+        <div className="lg:hidden mt-6">
+          <SimilarInStock calcPrice={breakdown.total} limit={3} variant="compact" />
+        </div>
+      )}
     </div>
   );
 }
 
 /* ============ Шаг 1 — Основа ============ */
 
-function StepBase({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function StepBase({
+  value,
+  onChange,
+  baseOptions,
+  loading,
+  error,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  baseOptions: DynamicBase[];
+  loading: boolean;
+  error: boolean;
+}) {
   return (
     <div>
       <StepHeader
         eyebrow="Шаг 1 из 4"
         title="Выберите основу фотозоны"
-        subtitle="Размер и тип конструкции — отправная точка конфигурации"
+        subtitle="Размер и тип конструкции — отправная точка конфигурации. Цены берутся из актуальной базы."
       />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
-        {BASE_OPTIONS.map((b) => {
-          const active = value === b.value;
-          return (
-            <button
-              key={b.value}
-              type="button"
-              onClick={() => onChange(b.value)}
-              aria-pressed={active}
-              className={[
-                'group relative flex flex-col rounded-2xl border p-4 text-left transition-all min-h-[120px]',
-                active ? 'border-gold bg-gold/10 ring-2 ring-gold/40' : 'border-border bg-background hover:border-gold/50',
-              ].join(' ')}
-            >
-              <span className="flex items-center justify-between mb-2">
-                <span
-                  className={[
-                    'flex items-center justify-center w-10 h-10 rounded-lg transition-colors',
-                    active ? 'bg-gold text-primary-foreground' : 'bg-muted text-gold',
-                  ].join(' ')}
-                >
-                  <b.icon className="w-5 h-5" />
+
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-[120px] rounded-2xl" />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="mt-5 rounded-2xl border border-coral/40 bg-coral/10 p-5 text-sm">
+          <p className="flex items-start gap-2 text-coral">
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>
+              Не удалось загрузить базовые конструкции. Проверьте соединение или продолжите — менеджер подберёт основу под ваш запрос.
+            </span>
+          </p>
+        </div>
+      ) : baseOptions.length === 0 ? (
+        <div className="mt-5 rounded-2xl border border-dashed border-border bg-background p-5 text-sm text-muted-foreground">
+          Сейчас в каталоге нет базовых конструкций — менеджер подберёт основу под ваш запрос после заявки.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5">
+          {baseOptions.map((b) => {
+            const active = value === b.id;
+            return (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => onChange(b.id)}
+                aria-pressed={active}
+                className={[
+                  'group relative flex flex-col rounded-2xl border p-4 text-left transition-all min-h-[120px]',
+                  active ? 'border-gold bg-gold/10 ring-2 ring-gold/40' : 'border-border bg-background hover:border-gold/50',
+                ].join(' ')}
+              >
+                <span className="flex items-center justify-between mb-2">
+                  <span
+                    className={[
+                      'flex items-center justify-center w-10 h-10 rounded-lg transition-colors',
+                      active ? 'bg-gold text-primary-foreground' : 'bg-muted text-gold',
+                    ].join(' ')}
+                  >
+                    <Frame className="w-5 h-5" />
+                  </span>
+                  <span
+                    className={[
+                      'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors',
+                      active ? 'border-gold bg-gold' : 'border-muted-foreground/40',
+                    ].join(' ')}
+                  >
+                    {active && <Check className="w-3 h-3 text-primary-foreground" />}
+                  </span>
                 </span>
-                <span
-                  className={[
-                    'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors',
-                    active ? 'border-gold bg-gold' : 'border-muted-foreground/40',
-                  ].join(' ')}
-                >
-                  {active && <Check className="w-3 h-3 text-primary-foreground" />}
-                </span>
-              </span>
-              <span className="font-display text-base leading-tight">{b.label}</span>
-              <span className="text-xs text-muted-foreground mt-0.5">{b.desc}</span>
-              <span className="text-gold font-semibold mt-2">{formatPrice(b.price)}</span>
-            </button>
-          );
-        })}
-      </div>
+                <span className="font-display text-base leading-tight">{b.label}</span>
+                <span className="text-xs text-muted-foreground mt-0.5">{b.desc}</span>
+                <span className="text-gold font-semibold mt-2">{formatPrice(b.price)}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -642,13 +729,15 @@ function PriceSummary({
   isSuburb,
   breakdown,
   onOrder,
+  loadingElements,
 }: {
-  baseOpt: BaseOpt | undefined;
+  baseOpt: DynamicBase | undefined;
   styleOpt: StyleOpt | undefined;
   selectedExtras: ExtraOpt[];
   isSuburb: boolean;
   breakdown: { basePrice: number; styleModifier: number; extrasTotal: number; surcharge: number; total: number };
   onOrder: () => void;
+  loadingElements: boolean;
 }) {
   return (
     <div className="rounded-3xl border border-gold/30 bg-gradient-to-br from-card via-card to-gold/10 p-5 sm:p-6">
@@ -660,7 +749,7 @@ function PriceSummary({
       <ul className="space-y-2.5 text-sm">
         <SummaryRow
           label="Основа"
-          value={baseOpt ? `${baseOpt.label}` : '— не выбрана'}
+          value={baseOpt ? `${baseOpt.label}` : loadingElements ? 'Загрузка…' : '— не выбрана'}
           price={baseOpt ? breakdown.basePrice : undefined}
           muted={!baseOpt}
         />
@@ -681,7 +770,7 @@ function PriceSummary({
       </ul>
 
       <div className="border-t border-border mt-4 pt-4 flex items-center justify-between">
-        <span className="font-medium">Итого</span>
+        <span className="font-medium">Итого (calc_price)</span>
         <span className="font-display text-2xl text-gold">{formatPrice(breakdown.total)}</span>
       </div>
 

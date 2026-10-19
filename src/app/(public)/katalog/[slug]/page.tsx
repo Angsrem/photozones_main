@@ -25,7 +25,7 @@ import { db } from '@/lib/db';
 import { getPhotozoneBySlug, getPhotozoneWithOptions, getPhotozones, getReviewsByPhotozone, asStringArray } from '@/lib/data';
 import { localBusinessLd, productLd, breadcrumbsLd } from '@/lib/seo';
 import { CATEGORIES, OCCASIONS, SITE } from '@/lib/constants';
-import { formatPrice, formatPriceFrom } from '@/lib/format';
+import { formatPrice } from '@/lib/format';
 import {
   Sparkles,
   Ruler,
@@ -183,16 +183,43 @@ export default async function PhotozonePage({ params }: { params: Params }) {
               <h1 className="font-display text-3xl sm:text-4xl leading-tight mb-3">
                 {pz.title}
               </h1>
-              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <span className="font-display text-2xl sm:text-3xl text-gold">
-                  {formatPriceFrom(pz.basePrice)}
-                </span>
-                {pz.sizeW && pz.sizeH && (
-                  <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <Ruler className="w-4 h-4" /> {pz.sizeW} × {pz.sizeH} м
-                  </span>
-                )}
-              </div>
+              {(() => {
+                // calc_price — обратный пересчёт из basePrice по формуле base = calc × 0.85.
+                // Округляем до десятков, чтобы получить «цену при самостоятельной сборке».
+                const calcPrice = Math.round((pz.basePrice / 0.85) / 10) * 10;
+                const showStrikethrough = calcPrice > pz.basePrice;
+                return (
+                  <div className="space-y-2.5">
+                    {/* Текущая цена (со скидкой 15%) — крупно + зачёркнутая calc_price */}
+                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="font-display text-3xl sm:text-4xl text-gold leading-none">
+                        {formatPrice(pz.basePrice)}
+                      </span>
+                      {showStrikethrough && (
+                        <s className="font-medium text-base sm:text-lg text-muted-foreground/70 leading-none">
+                          {formatPrice(calcPrice)}
+                        </s>
+                      )}
+                      <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 whitespace-nowrap">
+                        −15% при заказе готовой фотозоны
+                      </Badge>
+                    </div>
+                    {/* Размер + пояснение «зачёркнутая цена = самостоятельная сборка» */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                      {pz.sizeW && pz.sizeH && (
+                        <span className="flex items-center gap-1.5">
+                          <Ruler className="w-4 h-4 text-gold" /> {pz.sizeW} × {pz.sizeH} м
+                        </span>
+                      )}
+                      {showStrikethrough && (
+                        <span className="text-xs text-muted-foreground/80">
+                          Зачёркнутая цена — сборка в калькуляторе · готовая фотозона на 15% дешевле
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <Separator />
