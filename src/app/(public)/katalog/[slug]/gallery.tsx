@@ -4,11 +4,24 @@ import * as React from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { ChevronLeft, ChevronRight, ZoomIn, X, Play, Volume2, VolumeX } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, ZoomIn, Play, Volume2, VolumeX } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 
 type MediaItem = { type: 'image' | 'video'; src: string; alt?: string };
 
+/**
+ * Галерея карточки фотозоны.
+ *
+ * Layout:
+ *  - Основной кадр сверху — горизонтальный scroll-snap контейнер
+ *    (пользователь свайпит мышью/пальцем между медиа)
+ *  - Миниатюры снизу — кликабельная лента
+ *  - Lightbox при клике на основной кадр (через Dialog)
+ *
+ * Lazy loading: первое изображение — priority, остальные — loading="lazy".
+ *
+ * Уважает prefers-reduced-motion: без fade-in transitions.
+ */
 export function PhotozoneGallery({
   images,
   videos,
@@ -18,10 +31,10 @@ export function PhotozoneGallery({
   videos?: string[];
   title: string;
 }) {
+  const reduce = useReducedMotion();
   const safeImages = images.length ? images : ['/images/photozones/love.jpg'];
   const safeVideos = (videos || []).filter(Boolean);
 
-  // Собираем медиа-ленту: изображения + видео (видео в конце)
   const media: MediaItem[] = [
     ...safeImages.map((src, i) => ({ type: 'image' as const, src, alt: `${title} — фото ${i + 1}` })),
     ...safeVideos.map((src) => ({ type: 'video' as const, src, alt: `${title} — видео` })),
@@ -29,20 +42,73 @@ export function PhotozoneGallery({
 
   const [active, setActive] = React.useState(0);
   const [lightbox, setLightbox] = React.useState<number | null>(null);
-  const current = media[active] ?? media[0];
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const itemRefs = React.useRef<(HTMLDivElement | null)[]>([]);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = React.useState(true);
 
-  const goNext = () => setActive((i) => (i + 1) % media.length);
-  const goPrev = () => setActive((i) => (i - 1 + media.length) % media.length);
+  // Прокрутка к нужному элементу (клик по миниатюре или стрелке)
+  const scrollToIndex = React.useCallback((i: number) => {
+    const el = itemRefs.current[i];
+    if (!el || !scrollRef.current) return;
+    const container = scrollRef.current;
+    container.scrollTo({ left: el.offsetLeft - container.offsetLeft, behavior: reduce ? 'auto' : 'smooth' });
+  }, [reduce]);
+
+  const goNext = React.useCallback(() => {
+    setActive((i) => {
+      const next = (i + 1) % media.length;
+      scrollToIndex(next);
+      return next;
+    });
+  }, [media.length, scrollToIndex]);
+
+  const goPrev = React.useCallback(() => {
+    setActive((i) => {
+      const prev = (i - 1 + media.length) % media.length;
+      scrollToIndex(prev);
+      return prev;
+    });
+  }, [media.length, scrollToIndex]);
+
+  // Отслеживаем активный элемент при скролле (rAF-throttled)
+  React.useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const items = itemRefs.current.filter(Boolean) as HTMLDivElement[];
+        if (!items.length) return;
+        // Находим ближайший к левому краю контейнера
+        const scrollLeft = container.scrollLeft;
+        let closest = 0;
+        let minDelta = Infinity;
+        items.forEach((el, i) => {
+          const delta = Math.abs(el.offsetLeft - container.offsetLeft - scrollLeft);
+          if (delta < minDelta) {
+            minDelta = delta;
+            closest = i;
+          }
+        });
+        setActive(closest);
+      });
+    };
+    container.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      container.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [media.length]);
 
   // Управление видео при смене активного медиа
   React.useEffect(() => {
-    if (current?.type === 'video' && videoRef.current) {
+    if (media[active]?.type === 'video' && videoRef.current) {
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {});
     }
-  }, [active, current?.type]);
+  }, [active, media]);
 
   // Lightbox навигация клавиатурой
   React.useEffect(() => {
@@ -58,43 +124,50 @@ export function PhotozoneGallery({
 
   return (
     <div className="flex flex-col gap-3 w-full min-w-0">
-      {/* Основное медиа */}
-      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border bg-card group w-full max-w-full">
-        <AnimatePresence mode="wait">
-          {current.type === 'image' ? (
-            <motion.div
-              key={`img-${active}`}
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="absolute inset-0"
+      {/* ===== Основной кадр: горизонтальный scroll-snap ===== */}
+      <div className="relative rounded-2xl overflow-hidden border border-border bg-card group w-full max-w-full">
+        <div
+          ref={scrollRef}
+          className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar aspect-[4/3] w-full scroll-smooth"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {media.map((m, i) => (
+            <div
+              key={i}
+              ref={(el) => { itemRefs.current[i] = el; }}
+              className="relative shrink-0 w-full h-full snap-start"
             >
-              <Image
-                src={current.src}
-                alt={current.alt || title}
-                fill
-                priority
-                sizes="(max-width: 768px) 100vw, 60vw"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </motion.div>
-          ) : (
-            <motion.video
-              key={`vid-${active}`}
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              ref={videoRef}
-              src={current.src}
-              className="absolute inset-0 w-full h-full object-cover"
-              muted={muted}
-              loop
-              playsInline
-              autoPlay
-              preload="metadata"
-            />
-          )}
-        </AnimatePresence>
+              {m.type === 'image' ? (
+                <Image
+                  src={m.src}
+                  alt={m.alt || title}
+                  fill
+                  priority={i === 0}
+                  loading={i === 0 ? undefined : 'lazy'}
+                  sizes="(max-width: 768px) 100vw, 60vw"
+                  className="object-cover"
+                />
+              ) : (
+                <video
+                  ref={i === active ? videoRef : undefined}
+                  src={m.src}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  muted={muted}
+                  loop
+                  playsInline
+                  autoPlay
+                  preload="metadata"
+                />
+              )}
+            </div>
+          ))}
+        </div>
 
-        {/* Zoom-иконка (только для изображений) */}
-        {current.type === 'image' && (
+        {/* Градиент сверху для читаемости контролов */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-50" />
+
+        {/* Zoom-иконка (для текущего изображения) */}
+        {media[active]?.type === 'image' && (
           <button
             type="button"
             onClick={() => setLightbox(active)}
@@ -106,14 +179,14 @@ export function PhotozoneGallery({
         )}
 
         {/* Индикатор видео */}
-        {current.type === 'video' && (
+        {media[active]?.type === 'video' && (
           <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-background/80 backdrop-blur text-xs font-medium">
             <Play className="w-3 h-3" /> Видео
           </div>
         )}
 
         {/* Кнопка mute для видео */}
-        {current.type === 'video' && (
+        {media[active]?.type === 'video' && (
           <button
             type="button"
             onClick={() => {
@@ -157,22 +230,29 @@ export function PhotozoneGallery({
         )}
       </div>
 
-      {/* Превью-лента */}
+      {/* ===== Превью-лента (миниатюры снизу) ===== */}
       {media.length > 1 && (
         <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
           {media.map((m, i) => (
             <button
               key={i}
               type="button"
-              onClick={() => setActive(i)}
+              onClick={() => scrollToIndex(i)}
               aria-label={`Показать ${m.type === 'image' ? 'фото' : 'видео'} ${i + 1}`}
               className={cn(
                 'relative aspect-square rounded-lg overflow-hidden border-2 transition-all',
-                i === active ? 'border-gold ring-2 ring-gold/30' : 'border-border hover:border-gold/50'
+                i === active ? 'border-gold ring-2 ring-gold/30' : 'border-border hover:border-gold/50',
               )}
             >
               {m.type === 'image' ? (
-                <Image src={m.src} alt="" fill sizes="120px" className="object-cover" />
+                <Image
+                  src={m.src}
+                  alt=""
+                  fill
+                  loading={i < 5 ? undefined : 'lazy'}
+                  sizes="120px"
+                  className="object-cover"
+                />
               ) : (
                 <>
                   <video src={m.src} muted className="w-full h-full object-cover" preload="metadata" />
@@ -186,7 +266,7 @@ export function PhotozoneGallery({
         </div>
       )}
 
-      {/* Lightbox */}
+      {/* ===== Lightbox ===== */}
       <Dialog open={lightbox !== null} onOpenChange={(o) => !o && setLightbox(null)}>
         <DialogContent className="max-w-5xl p-0 overflow-hidden bg-black/95 border-border">
           <DialogTitle className="sr-only">{title} — просмотр</DialogTitle>

@@ -1,39 +1,23 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { PhotozoneCard } from '@/components/site/photozone-card';
 import { TransparentPricing } from '@/components/site/transparent-pricing';
-import { OrderButton } from '@/components/site/quick-order-modal';
 import { CtaBand } from '@/components/site/cta-band';
 import { JsonLd } from '@/components/seo/json-ld';
 import { PhotozoneGallery } from './gallery';
 import { OptionsWithStickyBar } from './options-with-sticky';
+import { IncludesBlock } from './includes-block';
+import { CardHeroParallax } from './card-hero-parallax';
 import type { Option } from './options-selector';
 import { PhotozoneReviewsCarousel } from '@/components/site/photozone-reviews-carousel';
 import { db } from '@/lib/db';
 import { getPhotozoneBySlug, getPhotozoneWithOptions, getPhotozones, getReviewsByPhotozone, asStringArray } from '@/lib/data';
 import { localBusinessLd, productLd, breadcrumbsLd } from '@/lib/seo';
 import { CATEGORIES, OCCASIONS, SITE } from '@/lib/constants';
-import { formatPrice } from '@/lib/format';
-import {
-  Sparkles,
-  Ruler,
-  Phone,
-  ShieldCheck,
-  Clock,
-  ArrowRight,
-} from 'lucide-react';
+import { Reveal, StaggerGroup, StaggerItem } from '../../_components/home-reveal';
+import { ArrowRight } from 'lucide-react';
 
 type Params = Promise<{ slug: string }>;
 
@@ -97,7 +81,11 @@ export default async function PhotozonePage({ params }: { params: Params }) {
     id: e.id, name: e.name, description: e.description, price: e.price,
     image: e.image, category: e.category || 'decor',
   }));
-  const badge = pz.badge === 'HIT' ? 'Хит' : pz.badge === 'NEW' ? 'Новинка' : null;
+  const badge = pz.badge === 'HIT' ? 'HIT' : pz.badge === 'NEW' ? 'NEW' : null;
+
+  // calc_price — обратный пересчёт из basePrice по формуле base = calc × 0.85.
+  // Округляем до десятков, чтобы получить «цену при самостоятельной сборке».
+  const calcPrice = Math.round((pz.basePrice / 0.85) / 10) * 10;
 
   // Похожие фотозоны той же категории
   const similarRaw = await getPhotozones({ category: pz.category, sort: 'hit', limit: 4 });
@@ -114,6 +102,9 @@ export default async function PhotozonePage({ params }: { params: Params }) {
     source: 'photozone-card',
     sourcePage: `/katalog/${pz.slug}`,
   };
+
+  // Данные для parallax hero
+  const heroImage = images[0] ?? '/images/photozones/love.jpg';
 
   return (
     <>
@@ -135,107 +126,65 @@ export default async function PhotozonePage({ params }: { params: Params }) {
         ]}
       />
 
-      <div className="container mx-auto max-w-7xl px-4 pt-6 pb-10 overflow-x-hidden">
-        {/* ХЛЕБНЫЕ КРОШКИ */}
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/">Главная</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/katalog">Каталог</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{pz.title}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+      {/* ===== PARALLAX HERO ===== */}
+      <CardHeroParallax
+        title={pz.title}
+        image={heroImage}
+        basePrice={pz.basePrice}
+        calcPrice={calcPrice}
+        badge={badge}
+        categoryLabel={catLabel(pz.category)}
+        occasionLabels={occasions.map(occLabel)}
+        sizeW={pz.sizeW}
+        sizeH={pz.sizeH}
+        slug={pz.slug}
+      />
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6 lg:gap-10">
-          {/* ГАЛЕРЕЯ + ОТЗЫВЫ */}
-          <div className="min-w-0">
-            <PhotozoneGallery images={images} videos={videos} title={pz.title} />
-            <PhotozoneReviewsCarousel reviews={reviews.map((r) => ({ ...r, publishedAt: r.publishedAt.toISOString(), photos: (r.photos as string[]) || null, videos: (r.videos as string[]) || null }))} photozoneTitle={pz.title} />
-          </div>
+      {/* ===== ГАЛЕРЕЯ + ОПЦИИ (sticky sidebar) ===== */}
+      <div className="container mx-auto max-w-7xl px-4 pt-10 pb-10 overflow-x-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 lg:gap-10 items-start">
+          {/* Левая колонка: галерея + описание + состав + прозрачная цена */}
+          <div className="min-w-0 space-y-10">
+            <Reveal>
+              <PhotozoneGallery images={images} videos={videos} title={pz.title} />
+            </Reveal>
 
-          {/* ИНФО + ОРДЕР */}
-          <div className="lg:sticky lg:top-6 lg:self-start space-y-5 min-w-0">
-            <div>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {badge && (
-                  <Badge className="bg-gold text-primary-foreground border-0">{badge}</Badge>
-                )}
-                <Badge variant="outline" className="border-gold/30 text-gold">
-                  {catLabel(pz.category)}
-                </Badge>
-                {occasions.slice(0, 3).map((o) => (
-                  <Badge key={o} variant="outline">
-                    {occLabel(o)}
-                  </Badge>
-                ))}
-              </div>
-              <h1 className="font-display text-3xl sm:text-4xl leading-tight mb-3">
-                {pz.title}
-              </h1>
-              {(() => {
-                // calc_price — обратный пересчёт из basePrice по формуле base = calc × 0.85.
-                // Округляем до десятков, чтобы получить «цену при самостоятельной сборке».
-                const calcPrice = Math.round((pz.basePrice / 0.85) / 10) * 10;
-                const showStrikethrough = calcPrice > pz.basePrice;
-                return (
-                  <div className="space-y-2.5">
-                    {/* Текущая цена (со скидкой 15%) — крупно + зачёркнутая calc_price */}
-                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <span className="font-display text-3xl sm:text-4xl text-gold leading-none">
-                        {formatPrice(pz.basePrice)}
-                      </span>
-                      {showStrikethrough && (
-                        <s className="font-medium text-base sm:text-lg text-muted-foreground/70 leading-none">
-                          {formatPrice(calcPrice)}
-                        </s>
-                      )}
-                      <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 whitespace-nowrap">
-                        −15% при заказе готовой фотозоны
-                      </Badge>
-                    </div>
-                    {/* Размер + пояснение «зачёркнутая цена = самостоятельная сборка» */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                      {pz.sizeW && pz.sizeH && (
-                        <span className="flex items-center gap-1.5">
-                          <Ruler className="w-4 h-4 text-gold" /> {pz.sizeW} × {pz.sizeH} м
-                        </span>
-                      )}
-                      {showStrikethrough && (
-                        <span className="text-xs text-muted-foreground/80">
-                          Зачёркнутая цена — сборка в калькуляторе · готовая фотозона на 15% дешевле
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
+            {/* Описание */}
+            <Reveal delay={0.05}>
+              <section>
+                <h2 className="font-display text-2xl mb-3">Описание</h2>
+                <p className="text-muted-foreground leading-relaxed">{pz.description}</p>
+              </section>
+            </Reveal>
 
-            <Separator />
-
-            {/* ОПИСАНИЕ */}
-            <div>
-              <h2 className="font-display text-lg mb-2">Описание</h2>
-              <p className="text-muted-foreground leading-relaxed">{pz.description}</p>
-            </div>
-
-            {/* ПРОЗРАЧНАЯ ЦЕНА */}
+            {/* Состав фотозоны — что входит */}
             {includes.length > 0 && (
-              <TransparentPricing includes={includes} basePrice={pz.basePrice} />
+              <Reveal delay={0.05}>
+                <IncludesBlock includes={includes} />
+              </Reveal>
             )}
 
-            {/* ОПЦИИ + STICKY-БАР */}
+            {/* Прозрачная цена — детали (без монтажа/доставки, надбавки) */}
+            <Reveal delay={0.05}>
+              <TransparentPricing includes={includes} basePrice={pz.basePrice} />
+            </Reveal>
+
+            {/* Отзывы — оставляем carousel, добавлен Reveal-обёртка */}
+            <Reveal delay={0.05}>
+              <PhotozoneReviewsCarousel
+                reviews={reviews.map((r) => ({
+                  ...r,
+                  publishedAt: r.publishedAt.toISOString(),
+                  photos: (r.photos as string[]) || null,
+                  videos: (r.videos as string[]) || null,
+                }))}
+                photozoneTitle={pz.title}
+              />
+            </Reveal>
+          </div>
+
+          {/* Правая колонка: опции (sticky sidebar на десктопе) */}
+          <div className="min-w-0">
             <OptionsWithStickyBar
               options={options}
               basePrice={pz.basePrice}
@@ -244,10 +193,12 @@ export default async function PhotozonePage({ params }: { params: Params }) {
             />
           </div>
         </div>
+      </div>
 
-        {/* ПОХОЖИЕ ФОТОЗОНЫ */}
-        {similar.length > 0 && (
-          <section className="mt-16">
+      {/* ===== ПОХОЖИЕ ФОТОЗОНЫ ===== */}
+      {similar.length > 0 && (
+        <section className="container mx-auto max-w-7xl px-4 mt-8 mb-10">
+          <Reveal>
             <div className="flex items-end justify-between mb-6 gap-4">
               <div>
                 <span className="inline-block text-xs font-semibold uppercase tracking-widest text-gold mb-2">
@@ -261,23 +212,27 @@ export default async function PhotozonePage({ params }: { params: Params }) {
                 </Link>
               </Button>
             </div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {similar.map((s, i) => (
-                <PhotozoneCard key={s.id} pz={s} index={i} />
-              ))}
-            </div>
-          </section>
-        )}
+          </Reveal>
+          <StaggerGroup className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" stagger={0.07}>
+            {similar.map((s, i) => (
+              <StaggerItem key={s.id}>
+                <PhotozoneCard pz={s} index={i} />
+              </StaggerItem>
+            ))}
+          </StaggerGroup>
+        </section>
+      )}
 
-        {/* CTA */}
-        <section className="mt-14">
+      {/* ===== ФИНАЛЬНЫЙ CTA ===== */}
+      <section className="container mx-auto max-w-7xl px-4 pb-24 lg:pb-16">
+        <Reveal>
           <CtaBand
             title="Хотите эту фотозону на свою дату?"
             subtitle="Оставьте заявку — менеджер перезвонит за 15 минут, подтвердим наличие или подберём аналог."
             prefill={{ ...orderPrefill, source: 'photozone-cta' }}
           />
-        </section>
-      </div>
+        </Reveal>
+      </section>
     </>
   );
 }

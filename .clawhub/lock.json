@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "skills": {
+    "frontend-design-ultimate": {
+      "version": "0.1.0",
+      "installedAt": 1792492529000,
+      "ownerHandle": "aiepco"
+    },
+    "cinematic-scroll": {
+      "version": "2.7.6",
+      "installedAt": 1792492533684,
+      "ownerHandle": "mustbesimo"
+    },
+    "color-palette-advisor": {
+      "version": "1.0.0",
+      "installedAt": 1792492539628,
+      "ownerHandle": "elise-ctrl"
+    },
+    "match-brand": {
+      "version": "1.0.0",
+      "installedAt": 1792492545611,
+      "ownerHandle": "soraiabarroso"
+    },
+    "premium-web-ui-designer": {
+      "version": "1.0.0",
+      "installedAt": 1792492551696,
+      "ownerHandle": "nano20926"
+    },
+    "landing-page-design": {
+      "version": "0.1.5",
+      "installedAt": 1792492566892,
+      "ownerHandle": "okaris"
+    },
+    "extract-assets": {
+      "version": "1.0.0",
+      "installedAt": 1792492572290,
+      "ownerHandle": "soraiabarroso"
+    },
+    "clone-section": {
+      "version": "1.0.0",
+      "installedAt": 1792492577770,
+      "ownerHandle": "soraiabarroso"
+    },
+    "responsive-design": {
+      "version": "1.0.0",
+      "installedAt": 1792492619292,
+      "ownerHandle": "wpank"
+    },
+    "@anderskev/shadcn-ui": {
+      "version": "1.0.1",
+      "installedAt": 1792492636392,
+      "ownerHandle": "anderskev"
+    }
+  }
+}
