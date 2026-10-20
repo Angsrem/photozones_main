@@ -169,7 +169,7 @@ export default async function Fevralya23Page() {
         </div>
       </section>
 
-      <WhyUs title="Почему в Красноярске выбирают ФотоЗона24 на 23 февраля" />
+      <WhyUs title="Почему в Красноярске выбирают Fotoarka на 23 февраля" />
 
       {/* Идеи для 23 февраля */}
       <section className="container mx-auto max-w-7xl px-4 py-12">

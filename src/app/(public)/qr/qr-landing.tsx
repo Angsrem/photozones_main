@@ -110,7 +110,7 @@ export function QrLanding() {
 
         <p className="text-xs text-muted-foreground text-center mt-6">
           Промокод {PROMO_CODE} действует 30 дней. Назовите его менеджеру при заказе.
-          ФотоЗона24 — аренда фотозон в Красноярске.
+          Fotoarka — аренда фотозон в Красноярске.
         </p>
       </motion.div>
     </div>

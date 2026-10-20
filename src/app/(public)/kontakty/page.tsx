@@ -9,9 +9,9 @@ import { OrderButton } from '@/components/site/quick-order-modal';
 import { PageBreadcrumbs, PageHero } from '../_components/landing-sections';
 
 export const metadata: Metadata = {
-  title: 'Контакты ФотоЗона24 — телефон, адрес, доставка в Красноярске',
+  title: 'Контакты Fotoarka — телефон, адрес, доставка в Красноярске',
   description:
-    'Контакты ФотоЗона24 в Красноярске: телефон +7 (391) 219-00-24, WhatsApp, Telegram, email. Адрес: ул. Парижской Коммуны, 33. Районы и пригороды доставки. Работаем ежедневно 9:00–21:00.',
+    'Контакты Fotoarka в Красноярске: телефон +7 (391) 219-00-24, WhatsApp, Telegram, email. Адрес: ул. Парижской Коммуны, 33. Районы и пригороды доставки. Работаем ежедневно 9:00–21:00.',
   alternates: { canonical: '/kontakty' },
 };
 
@@ -65,7 +65,7 @@ export default function KontaktyPage() {
         eyebrow="Контакты"
         title={
           <>
-            Контакты <span className="text-gradient-gold">ФотоЗона24</span>
+            Контакты <span className="text-gradient-gold">Fotoarka</span>
           </>
         }
         intro={
@@ -178,7 +178,7 @@ export default function KontaktyPage() {
           {/* Яндекс.Карта */}
           <div className="rounded-2xl overflow-hidden border border-border bg-card/30 min-h-[420px]">
             <iframe
-              title="Карта — ФотоЗона24 на карте Красноярска"
+              title="Карта — Fotoarka на карте Красноярска"
               src="https://yandex.ru/map-widget/v1/?ll=92.8704%2C56.0087&z=12"
               className="w-full h-full min-h-[420px]"
               loading="lazy"

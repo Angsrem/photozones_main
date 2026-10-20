@@ -66,7 +66,7 @@ export function PODBORKA_SHEET({
   };
 
   const waDeepLink = zones[0]
-    ? `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(`Здравствуйте! Хочу фотозону «${zones[0].title}» (подборка с сайта ФотоЗона24)`)}` : `https://wa.me/${SITE.whatsapp}`;
+    ? `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(`Здравствуйте! Хочу фотозону «${zones[0].title}» (подборка с сайта Fotoarka)`)}` : `https://wa.me/${SITE.whatsapp}`;
 
   const expiresRu = new Date(session.expiresAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 

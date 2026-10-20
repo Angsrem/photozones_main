@@ -31,8 +31,8 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Фотозоны на свадьбу в Красноярске — аренда от 14 900 ₽',
     description: 'Свадебные фотозоны с доставкой и монтажом по Красноярску. LOVE-инсталляции, флора, текстиль. Районы: Центральный, Советский, Свердловский.',
-    url: 'https://fotozona24.ru/svadby',
-    siteName: 'ФотоЗона24',
+    url: 'https://fotoarka.ru/svadby',
+    siteName: 'Fotoarka',
     locale: 'ru_RU',
     type: 'website',
   },
@@ -157,7 +157,7 @@ export default async function SvadbyPage() {
         </div>
       </section>
 
-      <WhyUs title="Почему невесты в Красноярске выбирают ФотоЗона24" />
+      <WhyUs title="Почему невесты в Красноярске выбирают Fotoarka" />
 
       {/* Доп. SEO + перелинковка */}
       <section className="container mx-auto max-w-7xl px-4 py-12">

@@ -11,7 +11,7 @@ async function main() {
   // ===== Менеджер =====
   // В production пароль обязательно задаётся через ADMIN_PASSWORD.
   // Для sandbox/dev используем 'admin123' как fallback (явно из env).
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@fotozona24.ru';
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@fotoarka.ru';
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
 
   await db.manager.upsert({

@@ -18,10 +18,10 @@ const unbounded = Unbounded({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://fotozona24.ru"),
+  metadataBase: new URL("https://fotoarka.ru"),
   title: {
-    default: "Аренда фотозон в Красноярске — ФотоЗона24 | Доставка и монтаж",
-    template: "%s — ФотоЗона24 Красноярск",
+    default: "Аренда фотозон в Красноярске — Fotoarka | Доставка и монтаж",
+    template: "%s — Fotoarka Красноярск",
   },
   description:
     "Аренда фотозон в Красноярске и пригороде: свадебные, детские, корпоративные, новогодние. Доставка, монтаж и демонтаж включены. Заявка — перезвоним за 15 минут.",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     "новогодняя фотозона", "фотозона на выпускной", "корпоративная фотозона",
     "пресс-волл Красноярск", "фотозона в аренду",
   ],
-  authors: [{ name: "ФотоЗона24" }],
+  authors: [{ name: "Fotoarka" }],
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -42,17 +42,17 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "Аренда фотозон в Красноярске — ФотоЗона24",
+    title: "Аренда фотозон в Красноярске — Fotoarka",
     description: "Свадебные, детские, корпоративные и сезонные фотозоны. Доставка и монтаж включены.",
-    url: "https://fotozona24.ru",
-    siteName: "ФотоЗона24",
+    url: "https://fotoarka.ru",
+    siteName: "Fotoarka",
     locale: "ru_RU",
     type: "website",
     images: [{ url: "/images/hero.jpg", width: 1344, height: 768 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Аренда фотозон в Красноярске — ФотоЗона24",
+    title: "Аренда фотозон в Красноярске — Fotoarka",
     description: "Свадебные, детские, корпоративные фотозоны. Доставка и монтаж включены.",
   },
   alternates: { canonical: "/" },

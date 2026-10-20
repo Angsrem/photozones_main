@@ -17,7 +17,7 @@ import { QuizButton } from '@/components/site/quiz-button';
 import { WhyCheaperBlock, ComparisonTable } from '@/components/site/transparent-pricing';
 
 export const metadata = {
-  title: 'Аренда фотозон в Красноярске — свадебные, детские, корпоративные | ФотоЗона24',
+  title: 'Аренда фотозон в Красноярске — свадебные, детские, корпоративные | Fotoarka',
   description: 'Аренда фотозон в Красноярске и пригороде: свадебные, детские, корпоративные, новогодние. Доставка, монтаж и демонтаж включены. 100+ мероприятий в месяц. Районы: Центральный, Советский, Свердловский, Октябрьский. Перезвоним за 15 минут.',
   keywords: [
     'аренда фотозоны Красноярск',
@@ -35,10 +35,10 @@ export const metadata = {
   ],
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'Аренда фотозон в Красноярске — ФотоЗона24',
+    title: 'Аренда фотозон в Красноярске — Fotoarka',
     description: 'Свадебные, детские, корпоративные и сезонные фотозоны. Доставка и монтаж включены. 100+ мероприятий в месяц.',
-    url: 'https://fotozona24.ru',
-    siteName: 'ФотоЗона24',
+    url: 'https://fotoarka.ru',
+    siteName: 'Fotoarka',
     locale: 'ru_RU',
     type: 'website',
     images: [{ url: '/images/hero.jpg', width: 1344, height: 768, alt: 'Аренда фотозон в Красноярске' }],

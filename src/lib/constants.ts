@@ -1,17 +1,17 @@
 // Конфигурация компании — единый источник правды для контактов и SEO
 export const SITE = {
-  name: 'ФотоЗона24',
-  legalName: 'ФотоЗона24 — аренда фотозон в Красноярске',
+  name: 'Fotoarka',
+  legalName: 'Fotoarka — аренда фотозон в Красноярске',
   phone: '+7 (391) 219-00-24',
   phoneRaw: '+73912190024',
   whatsapp: '79999990024',
-  telegram: 'fotozona24_krsk',
-  email: 'order@fotozona24.ru',
+  telegram: 'fotoarka_krsk',
+  email: 'order@fotoarka.ru',
   city: 'Красноярск',
   address: 'г. Красноярск, ул. Парижской Коммуны, 33',
   geo: { lat: 56.0087, lng: 92.8704 },
   hours: 'Ежедневно 9:00–21:00',
-  url: 'https://fotozona24.ru',
+  url: 'https://fotoarka.ru',
   districts: [
     'Центральный', 'Советский', 'Свердловский', 'Октябрьский',
     'Железнодорожный', 'Ленинский', 'Кировский', 'Свердловский',

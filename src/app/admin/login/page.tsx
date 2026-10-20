@@ -53,7 +53,7 @@ export default function AdminLoginPage() {
           </div>
           <h1 className="mt-4 font-display text-2xl font-semibold">Вход в админ-панель</h1>
           <p className="text-sm text-muted-foreground mt-1 text-center">
-            ФотоЗона24 · управление заявками, календарём и фотозонами
+            Fotoarka · управление заявками, календарём и фотозонами
           </p>
         </div>
 
@@ -70,7 +70,7 @@ export default function AdminLoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@fotozona24.ru"
+              placeholder="admin@fotoarka.ru"
               disabled={loading || needsTotp}
             />
           </div>

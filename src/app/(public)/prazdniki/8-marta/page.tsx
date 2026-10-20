@@ -169,7 +169,7 @@ export default async function Marta8Page() {
         </div>
       </section>
 
-      <WhyUs title="Почему женщины в Красноярске выбирают ФотоЗона24" />
+      <WhyUs title="Почему женщины в Красноярске выбирают Fotoarka" />
 
       {/* Идеи для 8 марта */}
       <section className="container mx-auto max-w-7xl px-4 py-12">

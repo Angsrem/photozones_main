@@ -1,5 +1,5 @@
 #!/bin/bash
-# ===== Деплой ФотоЗона24 на VPS =====
+# ===== Деплой Fotoarka на VPS =====
 # Запускать ЛОКАЛЬНО (на вашем компьютере), не на сервере
 # 
 # Использование:
@@ -14,7 +14,7 @@
 set -e
 
 SERVER=${1:-"root@YOUR_SERVER_IP"}
-REMOTE_DIR="/var/www/fotozona24"
+REMOTE_DIR="/var/www/fotoarka"
 PROJECT_DIR="/home/z/my-project"
 
 echo "=== 1. Сборка проекта (локально) ==="
@@ -23,7 +23,7 @@ bun run build
 echo "✓ Сборка завершена"
 
 echo "=== 2. Создание архива для передачи ==="
-tar czf /tmp/fotozona24-deploy.tar.gz \
+tar czf /tmp/fotoarka-deploy.tar.gz \
   --exclude='node_modules' \
   --exclude='.git' \
   --exclude='upload' \
@@ -44,12 +44,12 @@ tar czf /tmp/fotozona24-deploy.tar.gz \
   eslint.config.mjs \
   .env \
   README.md
-echo "✓ Архив создан: $(du -h /tmp/fotozona24-deploy.tar.gz | cut -f1)"
+echo "✓ Архив создан: $(du -h /tmp/fotoarka-deploy.tar.gz | cut -f1)"
 
 echo "=== 3. Загрузка на сервер ==="
 ssh "$SERVER" "mkdir -p $REMOTE_DIR"
-scp /tmp/fotozona24-deploy.tar.gz "$SERVER:/tmp/"
-ssh "$SERVER" "cd $REMOTE_DIR && tar xzf /tmp/fotozona24-deploy.tar.gz"
+scp /tmp/fotoarka-deploy.tar.gz "$SERVER:/tmp/"
+ssh "$SERVER" "cd $REMOTE_DIR && tar xzf /tmp/fotoarka-deploy.tar.gz"
 echo "✓ Файлы загружены"
 
 echo "=== 4. Установка Node.js и Bun на сервере ==="
@@ -80,7 +80,7 @@ if ! swapon --show | grep -q swapfile; then
 fi
 
 # Зависимости (только production)
-cd /var/www/fotozona24
+cd /var/www/fotoarka
 bun install --production
 echo "✓ Зависимости установлены"
 
@@ -104,12 +104,12 @@ if ! command -v pm2 &> /dev/null; then
 fi
 
 # Останавливаем старый процесс
-pm2 delete fotozona24 2>/dev/null || true
+pm2 delete fotoarka 2>/dev/null || true
 
 # Запускаем
-cd /var/www/fotozona24
+cd /var/www/fotoarka
 NODE_OPTIONS="--max-old-space-size=384" pm2 start "next start -p 3000" \
-  --name fotozona24 \
+  --name fotoarka \
   --max-memory-restart 450M \
   --env production
 echo "✓ Сайт запущен через PM2"
@@ -124,18 +124,18 @@ echo "✅ САЙТ ЗАПУЩЕН!"
 echo "========================================="
 echo "URL: http://$(hostname -I | awk '{print $1}'):3000"
 echo "Админка: http://$(hostname -I | awk '{print $1}'):3000/admin/login"
-echo "Логин: admin@fotozona24.ru"
+echo "Логин: admin@fotoarka.ru"
 echo "========================================="
 echo ""
 echo "Команды PM2:"
 echo "  pm2 status          — статус"
-echo "  pm2 logs fotozona24  — логи"
-echo "  pm2 restart fotozona24 — перезапуск"
-echo "  pm2 stop fotozona24  — остановка"
+echo "  pm2 logs fotoarka  — логи"
+echo "  pm2 restart fotoarka — перезапуск"
+echo "  pm2 stop fotoarka  — остановка"
 echo ""
 
 REMOTE_SETUP
 
 echo "=== 5. Очистка ==="
-rm /tmp/fotozona24-deploy.tar.gz
+rm /tmp/fotoarka-deploy.tar.gz
 echo "✓ Деплой завершён!"

@@ -147,7 +147,7 @@ export function ComparisonTable({ className = '' }: { className?: string }) {
       <div className="grid grid-cols-3 bg-card/50 border-b border-border">
         <div className="p-4 text-sm font-semibold text-muted-foreground">Что сравниваем</div>
         <div className="p-4 text-sm font-semibold text-gold flex items-center gap-1.5">
-          <ShieldCheck className="w-4 h-4" /> ФотоЗона24
+          <ShieldCheck className="w-4 h-4" /> Fotoarka
         </div>
         <div className="p-4 text-sm font-semibold text-muted-foreground">Типичные конкуренты</div>
       </div>

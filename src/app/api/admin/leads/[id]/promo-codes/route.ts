@@ -20,7 +20,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   // Генерируем WhatsApp-ссылки для каждого сценария
   const waBase = `https://wa.me/${(lead.phone || '').replace(/\D/g, '').replace(/^8/, '7').replace(/^/, '7').slice(0, 11)}`;
-  const reviewLink = 'https://yandex.ru/maps/org/fotozona24';
+  const reviewLink = 'https://yandex.ru/maps/org/fotoarka';
   const templates = {
     day_after: waTemplate('day_after', { name: lead.name, photozoneTitle: lead.photozone?.title, reviewLink }),
     reminder: waTemplate('reminder', { name: lead.name, reviewLink }),

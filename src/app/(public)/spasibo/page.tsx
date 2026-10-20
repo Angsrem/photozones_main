@@ -6,7 +6,7 @@ import { CheckCircle2, Phone, MessageCircle, ArrowRight, Clock, ShieldCheck, Cam
 
 export const metadata: Metadata = {
   title: 'Заявка принята — спасибо!',
-  description: 'Ваша заявка принята. Менеджер ФотоЗона24 перезвонит вам в течение 15 минут.',
+  description: 'Ваша заявка принята. Менеджер Fotoarka перезвонит вам в течение 15 минут.',
   robots: { index: false, follow: false },
   alternates: { canonical: '/spasibo' },
 };

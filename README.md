@@ -1,4 +1,4 @@
-# ФотоЗона24 — аренда фотозон в Красноярске
+# Fotoarka — аренда фотозон в Красноярске
 
 Продающий сайт аренды фотозон: публичная часть + админ-панель.
 
@@ -53,13 +53,13 @@ bun install
 # .env уже создан, но для продакшена нужно заполнить:
 DATABASE_URL=file:./db/custom.db          # SQLite для dev
 ADMIN_JWT_SECRET=<32+ символа>            # openssl rand -base64 48
-ADMIN_EMAIL=admin@fotozona24.ru
+ADMIN_EMAIL=admin@fotoarka.ru
 ADMIN_PASSWORD=<сильный пароль>
 TELEGRAM_BOT_TOKEN=<от @BotFather>
 TELEGRAM_MANAGER_CHAT_ID=<от @userinfobot>
-MANAGER_EMAIL=order@fotozona24.ru
+MANAGER_EMAIL=order@fotoarka.ru
 RESEND_API_KEY=<от resend.com>
-RESEND_FROM=ФотоЗона24 <noreply@fotozona24.ru>
+RESEND_FROM=Fotoarka <noreply@fotoarka.ru>
 # NEXT_PUBLIC_YM_ID=<Яндекс.Метрика ID>
 ```
 
@@ -85,7 +85,7 @@ bash start-dev.sh
 
 ```
 URL: http://localhost:3000/admin/login
-Email: admin@fotozona24.ru
+Email: admin@fotoarka.ru
 Пароль: admin123
 ```
 
@@ -97,12 +97,12 @@ Email: admin@fotozona24.ru
 
 ```bash
 # 1. Клонировать репозиторий
-git clone <repo-url> fotozona24
-cd fotozona24
+git clone <repo-url> fotoarka
+cd fotoarka
 
 # 2. Создать .env с продакшен-настройками (см. выше)
 # Для PostgreSQL:
-DATABASE_URL=postgresql://user:password@localhost:5432/fotozona24?schema=public
+DATABASE_URL=postgresql://user:password@localhost:5432/fotoarka?schema=public
 
 # 3. Установить зависимости
 bun install
@@ -124,7 +124,7 @@ bun run start
 ```bash
 npm install -g pm2
 bun run build
-pm2 start "bun run start" --name fotozona24
+pm2 start "bun run start" --name fotoarka
 pm2 save
 pm2 startup
 ```
@@ -135,12 +135,12 @@ pm2 startup
 # nginx.conf
 server {
     listen 80;
-    server_name fotozona24.ru www.fotozona24.ru;
+    server_name fotoarka.ru www.fotoarka.ru;
     return 301 https://$host$request_uri;
 }
 server {
     listen 443 ssl http2;
-    server_name fotozona24.ru www.fotozona24.ru;
+    server_name fotoarka.ru www.fotoarka.ru;
 
     ssl_certificate /path/to/cert.pem;
     ssl_certificate_key /path/to/key.pem;
@@ -167,7 +167,7 @@ datasource db {
 
 2. В `.env` указать PostgreSQL URL:
 ```
-DATABASE_URL=postgresql://user:password@localhost:5432/fotozona24?schema=public
+DATABASE_URL=postgresql://user:password@localhost:5432/fotoarka?schema=public
 ```
 
 3. Заменить даты в schema: `String` → `DateTime @db.Date` для `eventDate`, `date` в Booking и DateBlock

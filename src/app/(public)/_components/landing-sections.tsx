@@ -56,7 +56,7 @@ const whyItems = [
 ];
 
 /** Блок «Почему мы» — единый для всех посадочных. */
-export function WhyUs({ title = 'Почему выбирают ФотоЗона24' }: { title?: string }) {
+export function WhyUs({ title = 'Почему выбирают Fotoarka' }: { title?: string }) {
   return (
     <section className="bg-card/30 border-y border-border/60 py-14 mt-4">
       <div className="container mx-auto max-w-7xl px-4">

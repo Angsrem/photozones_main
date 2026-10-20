@@ -29,8 +29,8 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Детские фотозоны на день рождения в Красноярске — от 9 900 ₽',
     description: 'Единорог, стиляги, неон, арки из шаров. Для детей 1-16 лет. Доставка и монтаж по Красноярску.',
-    url: 'https://fotozona24.ru/detskie-prazdniki',
-    siteName: 'ФотоЗона24',
+    url: 'https://fotoarka.ru/detskie-prazdniki',
+    siteName: 'Fotoarka',
     locale: 'ru_RU',
     type: 'website',
   },
@@ -147,7 +147,7 @@ export default async function DetskiePrazdnikiPage() {
         </div>
       </section>
 
-      <WhyUs title="Почему родители в Красноярске выбирают ФотоЗона24" />
+      <WhyUs title="Почему родители в Красноярске выбирают Fotoarka" />
 
       {/* Тематические направления */}
       <section className="container mx-auto max-w-7xl px-4 py-12">

@@ -130,7 +130,7 @@ export default async function KorporativyPage() {
         </div>
       </section>
 
-      <WhyUs title="Почему компании в Красноярске выбирают ФотоЗона24" />
+      <WhyUs title="Почему компании в Красноярске выбирают Fotoarka" />
 
       {/* Типы корпоративных задач */}
       <section className="container mx-auto max-w-7xl px-4 py-12">

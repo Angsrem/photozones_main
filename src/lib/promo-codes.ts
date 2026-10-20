@@ -71,22 +71,22 @@ export async function redeemPromoCode(code: string, usedByLeadId: string): Promi
 export function waTemplate(scenario: 'day_after' | 'reminder' | 'code_issued' | 'photo_no_review' | 'negative' | 'seasonal_birthday', data: { name: string; photozoneTitle?: string; code?: string; expiresAt?: string; reviewLink?: string; catalogLink?: string; childName?: string; childAge?: string }): string {
   switch (scenario) {
     case 'day_after':
-      return `Привет, ${data.name}! Как всё прошло? 🎉\n\nКак фотозона${data.photozoneTitle ? ` «${data.photozoneTitle}»` : ''}, гости оценили?\n\nС маленьким бонусом: оставите отзыв на Яндекс Картах и скинете пару живых фото с праздника — подарим промокод на 5% для следующего заказа. Можно оставить себе или передать другу, действует год.\n\nСсылка на отзыв: ${data.reviewLink || 'https://yandex.ru/maps/org/fotozona24'}\n\nЕсли что-то не понравилось — напишите прямо сюда, разберёмся без отзыва.`;
+      return `Привет, ${data.name}! Как всё прошло? 🎉\n\nКак фотозона${data.photozoneTitle ? ` «${data.photozoneTitle}»` : ''}, гости оценили?\n\nС маленьким бонусом: оставите отзыв на Яндекс Картах и скинете пару живых фото с праздника — подарим промокод на 5% для следующего заказа. Можно оставить себе или передать другу, действует год.\n\nСсылка на отзыв: ${data.reviewLink || 'https://yandex.ru/maps/org/fotoarka'}\n\nЕсли что-то не понравилось — напишите прямо сюда, разберёмся без отзыва.`;
 
     case 'reminder':
-      return `${data.name}, добрый день! Не хочу доставать, просто напомню про бонус за отзыв — промокод 5% уже ждёт 😊 Одна минута: ${data.reviewLink || 'https://yandex.ru/maps/org/fotozona24'}\n\nИ фото с праздника, если есть — с удовольствием добавим в портфолио (можно без лиц).`;
+      return `${data.name}, добрый день! Не хочу доставать, просто напомню про бонус за отзыв — промокод 5% уже ждёт 😊 Одна минута: ${data.reviewLink || 'https://yandex.ru/maps/org/fotoarka'}\n\nИ фото с праздника, если есть — с удовольствием добавим в портфолио (можно без лиц).`;
 
     case 'code_issued':
       return `${data.name}, спасибо за отзыв — очень приятно! 🙏\n\nВаш промокод: ${data.code}\nСкидка 5% на любой следующий заказ до ${data.expiresAt}.\nЗаказать можно у нас на сайте или просто написав мне сюда — код я приму сам.\n\nP.S. Если друзьям понравилась фотозона — можете подарить им этот код. Скажут спасибо 😊`;
 
     case 'photo_no_review':
-      return `${data.name}, фото супер, спасибо! Уже смотрю, как попасть в портфолио 📸\n\nДля промокода остался отзыв: ${data.reviewLink || 'https://yandex.ru/maps/org/fotozona24'} — минута, и код ваш.`;
+      return `${data.name}, фото супер, спасибо! Уже смотрю, как попасть в портфолио 📸\n\nДля промокода остался отзыв: ${data.reviewLink || 'https://yandex.ru/maps/org/fotoarka'} — минута, и код ваш.`;
 
     case 'negative':
       return `${data.name}, спасибо, что написали честно — это важно.\n\nРасскажите, что именно не так? Мы вернём деньги за фотозону или переделаем концепцию к вашей следующей съёмке — как вам удобнее.`;
 
     case 'seasonal_birthday':
-      return `Привет, ${data.name}! ${data.childName || 'Вашему ребёнку'} скоро ${data.childAge || 'день рождения'}, да? 🎂 Время летит.\n\nУ вас ещё действует промокод ${data.code} на 5% — если планируете фотозону на день рождения, лучше забронировать заранее: перед летом близнецы-юбилеи разбирают популярные темы.\n\nВот здесь можно посмотреть, что есть: ${data.catalogLink || 'https://fotozona24.ru/katalog'}`;
+      return `Привет, ${data.name}! ${data.childName || 'Вашему ребёнку'} скоро ${data.childAge || 'день рождения'}, да? 🎂 Время летит.\n\nУ вас ещё действует промокод ${data.code} на 5% — если планируете фотозону на день рождения, лучше забронировать заранее: перед летом близнецы-юбилеи разбирают популярные темы.\n\nВот здесь можно посмотреть, что есть: ${data.catalogLink || 'https://fotoarka.ru/katalog'}`;
 
     default:
       return '';

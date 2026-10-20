@@ -6,7 +6,7 @@ import { db } from './db';
 // Для боевого режима задайте в .env:
 //   TELEGRAM_BOT_TOKEN=123456:ABC...        (создать бота через @BotFather)
 //   TELEGRAM_MANAGER_CHAT_ID=123456789      (свой chat_id — узнать у @userinfobot)
-//   MANAGER_EMAIL=order@fotozona24.ru       (куда дублировать письмом)
+//   MANAGER_EMAIL=order@fotoarka.ru       (куда дублировать письмом)
 //   RESEND_API_KEY=re_...                    (https://resend.com — бесплатно 3000/мес)
 
 function escapeHtml(s: string): string {
@@ -53,7 +53,7 @@ async function sendTelegram(text: string, replyMarkup?: object) {
 
 async function sendEmail(to: string, subject: string, html: string) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM || `ФотоЗона24 <noreply@${SITE.url.replace('https://', '')}>`;
+  const from = process.env.RESEND_FROM || `Fotoarka <noreply@${SITE.url.replace('https://', '')}>`;
   if (!apiKey) {
     // В prod не печатаем тему/получателя — это PII.
     if (process.env.NODE_ENV !== 'production') {
@@ -114,7 +114,7 @@ export async function notifyNewLead(data: {
   const adminUrl = `${SITE.url}/admin/leads`;
 
   const lines = [
-    '🔔 <b>Новая заявка — ФотоЗона24</b>',
+    '🔔 <b>Новая заявка — Fotoarka</b>',
     '',
     `👤 Имя: <b>${escapeHtml(data.name)}</b>`,
     `📞 Телефон: <code>${escapeHtml(data.phone)}</code>`,
@@ -148,7 +148,7 @@ export async function notifyNewLead(data: {
     `🔔 Новая заявка: ${data.name} — ${data.eventDate}`,
     `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;background:#faf7f2;padding:24px;border-radius:12px">
       <div style="background:#1a1428;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;text-align:center">
-        <h2 style="margin:0;color:#e8c878">🔔 Новая заявка — ФотоЗона24</h2>
+        <h2 style="margin:0;color:#e8c878">🔔 Новая заявка — Fotoarka</h2>
       </div>
       <div style="background:#fff;padding:20px;border:1px solid #e5dcc9;border-top:none;border-radius:0 0 8px 8px">
         <table style="width:100%;font-size:15px;line-height:1.6">
@@ -198,7 +198,7 @@ const DRIP_TEMPLATES: Record<
         </div>
         <div style="background:#fff;padding:20px;border:1px solid #e5dcc9;border-top:none;border-radius:0 0 8px 8px">
           <p style="margin:0 0 12px;font-size:15px;line-height:1.6">
-            Спасибо за интерес к ФотоЗона24! Вы запросили гайд
+            Спасибо за интерес к Fotoarka! Вы запросили гайд
             <b>«${escapeHtml(magnetTitle)}»</b>.
             Скачать PDF можно по кнопке ниже.
           </p>

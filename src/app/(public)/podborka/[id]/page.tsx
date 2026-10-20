@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const session = await db.quizSession.findUnique({ where: { id } });
   if (!session) return { title: 'Подборка не найдена' };
   return {
-    title: 'Ваша подборка фотозон — ФотоЗона24 Красноярск',
+    title: 'Ваша подборка фотозон — Fotoarka Красноярск',
     description: 'Подборка фотозон под ваш повод и бюджет. Промокод на скидку внутри.',
     robots: { index: false, follow: true },
   };

@@ -173,7 +173,7 @@ export default async function NovyjGodPage() {
         </div>
       </section>
 
-      <WhyUs title="Почему в Красноярске выбирают ФотоЗона24 на Новый год" />
+      <WhyUs title="Почему в Красноярске выбирают Fotoarka на Новый год" />
 
       {/* Идеи для новогодних корпоративов */}
       <section className="container mx-auto max-w-7xl px-4 py-12">

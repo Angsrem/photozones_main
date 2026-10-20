@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const COOKIE_NAME = 'fz_admin_token';
 const LOGIN_PATH = '/admin/login';
-const DEV_FALLBACK_SECRET = 'dev-secret-fotozona24-krsk-sandbox-fallback-32-chars-min';
+const DEV_FALLBACK_SECRET = 'dev-secret-fotoarka-krsk-sandbox-fallback-32-chars-min';
 
 function resolveSecret(): string | null {
   const raw =

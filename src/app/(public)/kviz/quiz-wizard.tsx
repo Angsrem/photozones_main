@@ -324,7 +324,7 @@ export function QuizWizard() {
   };
 
   const waDeepLink = result?.recommended?.[0]
-    ? `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(`Здравствуйте! Хочу фотозону «${result.recommended[0].title}» (подборка с сайта ФотоЗона24)`)}` : `https://wa.me/${SITE.whatsapp}`;
+    ? `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(`Здравствуйте! Хочу фотозону «${result.recommended[0].title}» (подборка с сайта Fotoarka)`)}` : `https://wa.me/${SITE.whatsapp}`;
 
   return (
     <div className="min-h-[calc(100vh-4rem)]] flex flex-col">

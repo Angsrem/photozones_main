@@ -1,4 +1,4 @@
-# ФотоЗона24 — проект для AI-агентов
+# Fotoarka — проект для AI-агентов
 
 ## Что это
 
@@ -156,7 +156,7 @@
 
 ```
 URL: /admin/login
-Email: admin@fotozona24.ru
+Email: admin@fotoarka.ru
 Пароль: admin123
 ```
 
@@ -175,13 +175,13 @@ VPS (RUVDS 149₽, 512МБ RAM, SQLite):
 ```env
 DATABASE_URL=file:./db/custom.db
 ADMIN_JWT_SECRET=<32+ символа>
-ADMIN_EMAIL=admin@fotozona24.ru
+ADMIN_EMAIL=admin@fotoarka.ru
 ADMIN_PASSWORD=<сильный пароль>
 TELEGRAM_BOT_TOKEN=<от @BotFather>
 TELEGRAM_MANAGER_CHAT_ID=<от @userinfobot>
-MANAGER_EMAIL=order@fotozona24.ru
+MANAGER_EMAIL=order@fotoarka.ru
 RESEND_API_KEY=<от resend.com>
-RESEND_FROM=ФотоЗона24 <noreply@fotozona24.ru>
+RESEND_FROM=Fotoarka <noreply@fotoarka.ru>
 ```
 
 ## Что НЕ делать

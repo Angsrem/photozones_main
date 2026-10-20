@@ -45,7 +45,7 @@ export function photozoneMetadata(opts: {
     ],
     alternates: { canonical: `/katalog/${opts.slug}` },
     openGraph: {
-      title: `${opts.title} — аренда от ${opts.price.toLocaleString('ru-RU')} ₽ | ФотоЗона24`,
+      title: `${opts.title} — аренда от ${opts.price.toLocaleString('ru-RU')} ₽ | Fotoarka`,
       description: opts.description.slice(0, 160),
       url: `${SITE.url}/katalog/${opts.slug}`,
       siteName: SITE.name,

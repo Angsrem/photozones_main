@@ -1,4 +1,4 @@
-# ФотоЗона24 — выжимка для AI
+# Fotoarka — выжимка для AI
 
 **Сайт аренды фотозон в Красноярске.** Next.js 16 + TypeScript + Prisma + SQLite.
 
@@ -20,7 +20,7 @@ Next.js 16 App Router | TypeScript | Tailwind 4 + shadcn/ui | Prisma + SQLite | 
 ```bash
 bun install && bun run db:push && bun run prisma/seed.ts && bun run dev
 ```
-Админка: /admin/login → admin@fotozona24.ru / admin123
+Админка: /admin/login → admin@fotoarka.ru / admin123
 
 ## Деплой
 ```bash

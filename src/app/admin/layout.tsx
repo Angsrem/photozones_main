@@ -163,7 +163,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <ShieldCheck className="size-5" />
             </div>
             <div className="leading-tight">
-              <div className="font-display text-base font-semibold">ФотоЗона24</div>
+              <div className="font-display text-base font-semibold">Fotoarka</div>
               <div className="text-xs text-muted-foreground">Админ-панель</div>
             </div>
           </div>
@@ -187,7 +187,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <div className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
                     <ShieldCheck className="size-5" />
                   </div>
-                  <span className="font-display font-semibold">ФотоЗона24</span>
+                  <span className="font-display font-semibold">Fotoarka</span>
                 </div>
                 <div className="hidden lg:block text-sm text-muted-foreground">
                   {NAV.find((n) =>
@@ -206,7 +206,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <ShieldCheck className="size-5" />
               </div>
               <div className="leading-tight">
-                <div className="font-display text-base font-semibold">ФотоЗона24</div>
+                <div className="font-display text-base font-semibold">Fotoarka</div>
                 <div className="text-xs text-muted-foreground">Админ-панель</div>
               </div>
             </div>

@@ -26,7 +26,7 @@ const palettes: Record<string, [string, string]> = {
 };
 
 const titles: Record<string, string> = {
-  hero: 'ФотоЗона24 — Красноярск',
+  hero: 'Fotoarka — Красноярск',
   love: 'LOVE',
   'novyj-god': 'Новый год',
   stilyagi: 'Стиляги',
@@ -63,7 +63,7 @@ function makeSvg(title: string, w: number, h: number, c1: string, c2: string) {
     <rect width="${w}" height="${h}" fill="url(#g)"/>
     <rect width="${w}" height="${h}" fill="url(#r)"/>
     <text x="50%" y="50%" font-family="Georgia, serif" font-size="${Math.round(w / 12)}" fill="#fff" fill-opacity="0.95" text-anchor="middle" dominant-baseline="middle" font-weight="600">${escapeXml(title)}</text>
-    <text x="50%" y="${Math.round(h * 0.62)}" font-family="Arial, sans-serif" font-size="${Math.round(w / 36)}" fill="#fff" fill-opacity="0.6" text-anchor="middle">ФотоЗона24 · Красноярск</text>
+    <text x="50%" y="${Math.round(h * 0.62)}" font-family="Arial, sans-serif" font-size="${Math.round(w / 36)}" fill="#fff" fill-opacity="0.6" text-anchor="middle">Fotoarka · Красноярск</text>
   </svg>`;
 }
 

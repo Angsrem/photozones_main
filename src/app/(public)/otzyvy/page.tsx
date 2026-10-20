@@ -13,7 +13,7 @@ import { ReviewForm } from '@/components/site/review-form';
 import { ReviewForPromoBlock } from '@/components/site/review-for-promo';
 
 export const metadata: Metadata = {
-  title: 'Отзывы об аренде фотозон в Красноярске — ФотоЗона24',
+  title: 'Отзывы об аренде фотозон в Красноярске — Fotoarka',
   description:
     'Реальные отзывы клиентов об аренде фотозон в Красноярске: свадьбы, дни рождения, корпоративы, выпускные. Средняя оценка 4.9 из 5. Оставьте заявку — присоединяйтесь к довольным клиентам.',
   alternates: { canonical: '/otzyvy' },
@@ -56,7 +56,7 @@ export default async function OtzyvyPage() {
         }
         intro={
           <>
-            Реальные отзывы клиентов ФотоЗона24. Свадьбы, дни рождения, корпоративы, выпускные,
+            Реальные отзывы клиентов Fotoarka. Свадьбы, дни рождения, корпоративы, выпускные,
             сезонные праздники. Средняя оценка — {avgFmt} из 5 на основе {reviews.length} отзывов.
           </>
         }

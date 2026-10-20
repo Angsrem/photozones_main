@@ -8,7 +8,7 @@ function resolveSecret(): string {
     process.env.ADMIN_JWT_SECRET ||
     (process.env.NODE_ENV === 'production'
       ? null
-      : 'dev-secret-fotozona24-krsk-sandbox-fallback-32-chars-min');
+      : 'dev-secret-fotoarka-krsk-sandbox-fallback-32-chars-min');
   if (!raw || raw.length < 32) {
     throw new Error('ADMIN_JWT_SECRET must be set and be at least 32 chars long');
   }
