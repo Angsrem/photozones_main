@@ -188,4 +188,38 @@
   .calendar-cell {
     min-height: 96px;
   }
+
+  /* ===== Hero parallax: лёгкие частицы и индикатор скролла ===== */
+  .animate-float-hero {
+    animation: float-hero 11s ease-in-out infinite;
+    will-change: transform, opacity;
+  }
+  .animate-scroll-line {
+    animation: scroll-line 2.6s ease-in-out infinite;
+  }
+  /* Маска для плавного fade текста под hero-параллаксом (тёплая виньетка) */
+  .hero-vignette {
+    background:
+      radial-gradient(ellipse at 30% 40%, oklch(0.82 0.13 84 / 0.10), transparent 55%),
+      radial-gradient(ellipse at 80% 70%, oklch(0.7 0.18 25 / 0.08), transparent 60%);
+  }
+}
+
+@keyframes float-hero {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.45; }
+  50% { transform: translate3d(0, -22px, 0) scale(1.4); opacity: 0.9; }
+}
+
+@keyframes scroll-line {
+  0% { transform: scaleY(0); transform-origin: top; }
+  40% { transform: scaleY(1); transform-origin: top; }
+  60% { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-hero,
+  .animate-scroll-line {
+    animation: none;
+  }
 }

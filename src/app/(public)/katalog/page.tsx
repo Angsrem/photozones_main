@@ -1,9 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { PhotozoneCard } from '@/components/site/photozone-card';
 import { CatalogFilters } from './catalog-filters';
-import { OrderButton } from '@/components/site/quick-order-modal';
-import { CtaBand } from '@/components/site/cta-band';
 import { PromoStrip } from '@/components/site/promo-strip';
 import { QuizStrip } from '@/components/site/quiz-button';
 import { JsonLd } from '@/components/seo/json-ld';
@@ -11,16 +8,12 @@ import { localBusinessLd, breadcrumbsLd, collectionPageLd } from '@/lib/seo';
 import { getPhotozones } from '@/lib/data';
 import { CATEGORIES, OCCASIONS } from '@/lib/constants';
 import { pluralize } from '@/lib/format';
-import { Button } from '@/components/ui/button';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
-import { Sparkles, SearchX, ArrowRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { CatalogHero } from './_components/catalog-hero';
+import { CatalogGrid } from './_components/catalog-grid';
+import { CatalogEmpty } from './_components/catalog-empty';
+import { CatalogParallaxCta } from './_components/catalog-parallax-cta';
+import { ArrowRight } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Каталог фотозон в Красноярске — аренда с доставкой',
@@ -36,9 +29,23 @@ function asString(v: string | string[] | undefined): string | undefined {
   return v;
 }
 
+function asNumber(v: string | string[] | undefined): number | undefined {
+  const s = asString(v);
+  if (!s) return undefined;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function asBool(v: string | string[] | undefined): boolean | undefined {
+  const s = asString(v);
+  if (!s) return undefined;
+  return s === '1' || s === 'true' || s === 'yes';
+}
+
 const VALID_CATEGORIES = CATEGORIES.map((c) => c.value) as string[];
 const VALID_OCCASIONS = OCCASIONS.map((o) => o.value) as string[];
 const VALID_SORTS = ['hit', 'new', 'price-asc', 'price-desc', 'rating-desc', 'reviews-desc'];
+const VALID_BADGES = ['HIT', 'NEW'];
 
 export default async function CatalogPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
@@ -47,23 +54,52 @@ export default async function CatalogPage({ searchParams }: { searchParams: Sear
   const occasion = asString(sp.occasion);
   const sort = asString(sp.sort);
   const search = asString(sp.search);
+  const priceMin = asNumber(sp.priceMin);
+  const priceMax = asNumber(sp.priceMax);
+  const hitOnly = asBool(sp.hitOnly);
+  const badge = asString(sp.badge);
 
   const safeCategory = category && VALID_CATEGORIES.includes(category) ? category : undefined;
   const safeOccasion = occasion && VALID_OCCASIONS.includes(occasion) ? occasion : undefined;
-  const safeSort = sort && VALID_SORTS.includes(sort) ? (sort as 'hit' | 'new' | 'price-asc' | 'price-desc' | 'rating-desc' | 'reviews-desc') : 'hit';
+  const safeSort = sort && VALID_SORTS.includes(sort)
+    ? (sort as 'hit' | 'new' | 'price-asc' | 'price-desc' | 'rating-desc' | 'reviews-desc')
+    : 'hit';
   const safeSearch = search?.trim() || undefined;
+  const safeBadge = badge && VALID_BADGES.includes(badge) ? badge : undefined;
 
-  const zones = await getPhotozones({
+  // Основной запрос — category/occasion/sort/search обрабатываются в lib
+  let zones = await getPhotozones({
     category: safeCategory,
     occasion: safeOccasion,
     sort: safeSort,
     search: safeSearch,
   });
 
+  // Дополнительные JS-фильтры (price/hit/badge) — не трогая lib/data.ts
+  if (priceMin !== undefined) {
+    zones = zones.filter((z) => z.basePrice >= priceMin);
+  }
+  if (priceMax !== undefined) {
+    zones = zones.filter((z) => z.basePrice <= priceMax);
+  }
+  if (hitOnly) {
+    zones = zones.filter((z) => z.hit);
+  }
+  if (safeBadge) {
+    zones = zones.filter((z) => z.badge === safeBadge);
+  }
+
   const activeFilters: string[] = [];
   if (safeCategory) activeFilters.push(CATEGORIES.find((c) => c.value === safeCategory)?.label ?? safeCategory);
   if (safeOccasion) activeFilters.push(OCCASIONS.find((o) => o.value === safeOccasion)?.label ?? safeOccasion);
   if (safeSearch) activeFilters.push(`«${safeSearch}»`);
+  if (safeBadge) activeFilters.push(safeBadge === 'HIT' ? 'Хиты' : 'Новинки');
+  if (hitOnly) activeFilters.push('Только хиты');
+  if (priceMin !== undefined || priceMax !== undefined) {
+    const min = priceMin ?? 0;
+    const max = priceMax ?? 50_000;
+    activeFilters.push(`${min.toLocaleString('ru-RU')}–${max.toLocaleString('ru-RU')} ₽`);
+  }
 
   return (
     <>
@@ -87,101 +123,63 @@ export default async function CatalogPage({ searchParams }: { searchParams: Sear
 
       <QuizStrip />
 
-      {/* HERO + ХЛЕБНЫЕ КРОШКИ */}
-      <section className="container mx-auto max-w-7xl px-4 pt-6 pb-4">
-        <Breadcrumb className="mb-6">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href="/">Главная</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Каталог фотозон</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+      {/* ===== COMPACT HERO ===== */}
+      <CatalogHero count={zones.length} />
 
-        <div className="max-w-3xl">
-          <span className="inline-block text-xs font-semibold uppercase tracking-widest text-gold mb-3">
-            Каталог · {zones.length} {pluralize(zones.length, ['фотозона', 'фотозоны', 'фотозон'])}
-          </span>
-          <h1 className="font-display text-4xl sm:text-5xl leading-tight mb-4">
-            Каталог фотозон <span className="text-gradient-gold">в Красноярске</span>
-          </h1>
-          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
-            Аренда фотозон в Красноярске и пригороде для свадеб, дней рождения, корпоративов
-            и сезонных праздников. Доставка по Центральному, Советскому, Свердловскому,
-            Октябрьскому и другим районам города, монтаж за 1 час и демонтаж включены в стоимость.
-            Подберите фотозону по категории, поводу и бюджету — оставьте заявку, перезвоним за 15 минут.
-          </p>
+      {/* ===== FILTERS + GRID ===== */}
+      <section className="container mx-auto max-w-7xl px-4 py-8">
+        <div className="grid lg:grid-cols-[260px_1fr] gap-6 lg:gap-8 items-start">
+          {/* Filters: desktop sticky sidebar + mobile sheet */}
+          <CatalogFilters
+            initialCategory={safeCategory}
+            initialOccasion={safeOccasion}
+            initialSort={safeSort}
+            initialSearch={safeSearch}
+            initialPriceMin={priceMin}
+            initialPriceMax={priceMax}
+            initialHitOnly={hitOnly}
+            initialBadge={safeBadge}
+          />
+
+          {/* Results */}
+          <div className="min-w-0">
+            {activeFilters.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mb-5">
+                <span className="text-muted-foreground/70">Показываем:</span>
+                {activeFilters.map((f) => (
+                  <Badge key={f} variant="outline" className="border-gold/30 text-gold/90">
+                    {f}
+                  </Badge>
+                ))}
+                <Link
+                  href="/katalog"
+                  className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Сбросить <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            )}
+
+            {zones.length === 0 ? (
+              <CatalogEmpty safeOccasion={safeOccasion} />
+            ) : (
+              <>
+                <div className="mb-4 text-sm text-muted-foreground">
+                  {zones.length} {pluralize(zones.length, ['фотозона', 'фотозоны', 'фотозон'])} найдено
+                </div>
+                <CatalogGrid zones={zones} />
+              </>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* ФИЛЬТРЫ */}
-      <section className="container mx-auto max-w-7xl px-4 pb-6">
-        <CatalogFilters
-          initialCategory={safeCategory}
-          initialOccasion={safeOccasion}
-          initialSort={safeSort}
-          initialSearch={safeSearch}
-        />
-      </section>
-
-      {/* РЕЗУЛЬТАТЫ */}
-      <section className="container mx-auto max-w-7xl px-4 pb-16">
-        {activeFilters.length > 0 && (
-          <div className="text-sm text-muted-foreground mb-5">
-            Показываем: <span className="text-foreground font-medium">{activeFilters.join(' · ')}</span>
-          </div>
-        )}
-
-        {zones.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card/40 p-10 sm:p-16 text-center">
-            <div className="mx-auto w-14 h-14 rounded-full bg-gold/10 flex items-center justify-center mb-4">
-              <SearchX className="w-7 h-7 text-gold" />
-            </div>
-            <h2 className="font-display text-2xl mb-2">Ничего не нашли</h2>
-            <p className="text-muted-foreground max-w-md mx-auto mb-6">
-              По вашим фильтрам нет подходящих фотозон. Оставьте заявку — менеджер
-              подберёт вариант под ваш повод и бюджет за 15 минут.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <OrderButton
-                prefill={{
-                  source: 'catalog-empty',
-                  sourcePage: '/katalog',
-                  occasion: safeOccasion,
-                }}
-                className="h-12 px-8 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold"
-              >
-                <Sparkles className="w-4 h-4 mr-2" /> Подобрать фотозону
-              </OrderButton>
-              <Button asChild variant="outline" className="h-12 px-8">
-                <Link href="/katalog">
-                  <ArrowRight className="w-4 h-4 mr-2 rotate-180" /> Сбросить фильтры
-                </Link>
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {zones.map((pz, i) => (
-              <PhotozoneCard key={pz.id} pz={pz} index={i} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* CTA */}
-      <section className="container mx-auto max-w-7xl px-4 pb-16">
-        <CtaBand
-          title="Не нашли подходящую фотозону?"
-          subtitle="Опишите повод и бюджет — менеджер подберёт вариант из наличия или предложим сборную композицию под ваш сценарий."
-          prefill={{ source: 'catalog-cta', sourcePage: '/katalog' }}
-        />
-      </section>
+      {/* ===== PARALLAX CTA ===== */}
+      <CatalogParallaxCta
+        title="Не нашли подходящую фотозону?"
+        subtitle="Опишите повод и бюджет — менеджер подберёт вариант из наличия или предложим сборную композицию под ваш сценарий."
+        prefill={{ source: 'catalog-cta', sourcePage: '/katalog' }}
+      />
     </>
   );
 }
