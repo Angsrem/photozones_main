@@ -62,3 +62,5 @@ worklog.md
 start-dev.sh
 tool-results/
 db/custom.db
+skills/
+.clawhub/
