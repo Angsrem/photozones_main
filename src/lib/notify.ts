@@ -13,10 +13,36 @@ function escapeHtml(s: string): string {
   return String(s || '').replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]!));
 }
 
+// Получаем список chat_id для отправки уведомлений.
+// Поддержка нескольких менеджеров: можно указать один или несколько через запятую или 2 отдельных env.
+// Приоритет: TELEMER_CHAT_ID (новый формат, поддержка нескольких через запятую)
+//            TELEGRAM_MANAGER_CHAT_ID (старый формат, для обратной совместимости)
+//            TELEMER_CHAT_ID_2 (опционально — второй менеджер)
+function getChatIds(): string[] {
+  const ids: string[] = [];
+  // Новый формат: один или несколько через запятую
+  const main = process.env.TELEMER_CHAT_ID || process.env.TELEGRAM_MANAGER_CHAT_ID;
+  if (main) {
+    for (const id of main.split(',')) {
+      const trimmed = id.trim();
+      if (trimmed) ids.push(trimmed);
+    }
+  }
+  // Второй менеджер (опционально)
+  const second = process.env.TELEMER_CHAT_ID_2;
+  if (second) {
+    for (const id of second.split(',')) {
+      const trimmed = id.trim();
+      if (trimmed && !ids.includes(trimmed)) ids.push(trimmed);
+    }
+  }
+  return ids;
+}
+
 async function sendTelegram(text: string, replyMarkup?: object) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_MANAGER_CHAT_ID;
-  if (!token || !chatId) {
+  const chatIds = getChatIds();
+  if (!token || chatIds.length === 0) {
     // Полный текст уведомления печатаем только в dev — в prod это утечка PII.
     if (process.env.NODE_ENV !== 'production') {
       console.log('[notify:telegram] (нет TELEGRAM_BOT_TOKEN/CHAT_ID — fallback в лог) ->\n', text);
@@ -25,30 +51,34 @@ async function sendTelegram(text: string, replyMarkup?: object) {
     }
     return { ok: false, reason: 'no-credentials' };
   }
-  try {
-    const body: any = {
-      chat_id: chatId,
-      text,
-      parse_mode: 'HTML',
-      disable_web_page_preview: true,
-    };
-    if (replyMarkup) body.reply_markup = replyMarkup;
-    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    if (!res.ok || !data.ok) {
-      // В prod не логируем body ответа целиком — там может быть содержимое сообщения.
-      console.error('[notify:telegram] API error:', JSON.stringify(data).slice(0, 200));
-      return { ok: false, reason: 'api-error', data };
+  // Отправляем каждому менеджеру. Если хотя бы один получит — ок.
+  const results = await Promise.all(chatIds.map(async (chatId) => {
+    try {
+      const body: any = {
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      };
+      if (replyMarkup) body.reply_markup = replyMarkup;
+      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        console.error(`[notify:telegram] API error (chat_id=${chatId}):`, JSON.stringify(data).slice(0, 200));
+        return { ok: false, chatId };
+      }
+      return { ok: true, chatId };
+    } catch (e: any) {
+      console.error(`[notify:telegram] network error (chat_id=${chatId})`, e?.message);
+      return { ok: false, chatId };
     }
-    return { ok: true };
-  } catch (e: any) {
-    console.error('[notify:telegram] network error', e?.message);
-    return { ok: false, reason: 'network', error: e?.message };
-  }
+  }));
+  const anyOk = results.some(r => r.ok);
+  return { ok: anyOk, results };
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
