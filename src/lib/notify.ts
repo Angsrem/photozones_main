@@ -40,7 +40,7 @@ function getChatIds(): string[] {
 }
 
 async function sendTelegram(text: string, replyMarkup?: object) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = process.env.TELEMER_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
   const chatIds = getChatIds();
   if (!token || chatIds.length === 0) {
     // Полный текст уведомления печатаем только в dev — в prod это утечка PII.
@@ -337,10 +337,14 @@ export async function sendDripEmail(
 
 // Статус конфигурации уведомлений (для админки — чтобы видеть, настроено ли)
 export function getNotifyConfigStatus() {
+  // Поддержка обоих форматов: TELEMER_* (новый) и TELEGRAM_* (старый)
+  const botToken = process.env.TELEMER_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+  const chatIds = getChatIds();
+  const chatIdForDisplay = chatIds[0] || null;
   return {
     telegram: {
-      configured: !!(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_MANAGER_CHAT_ID),
-      chatId: process.env.TELEGRAM_MANAGER_CHAT_ID ? `…${process.env.TELEGRAM_MANAGER_CHAT_ID.slice(-4)}` : null,
+      configured: !!(botToken && chatIds.length > 0),
+      chatId: chatIdForDisplay ? `…${chatIdForDisplay.slice(-4)}` : null,
     },
     email: {
       configured: !!process.env.RESEND_API_KEY,

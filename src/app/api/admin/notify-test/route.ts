@@ -27,6 +27,6 @@ export async function POST() {
     emailSent: result.emailSent,
     message: result.telegram?.ok
       ? '✅ Тестовое уведомление отправлено в Telegram'
-      : '⚠️ Telegram не настроен. Проверьте TELEGRAM_BOT_TOKEN и TELEGRAM_MANAGER_CHAT_ID в .env',
+      : '⚠️ Telegram не настроен. Проверьте TELEMER_BOT_TOKEN и TELEMER_CHAT_ID в .env',
   });
 }

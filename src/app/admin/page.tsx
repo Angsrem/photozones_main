@@ -124,7 +124,7 @@ export default function AdminDashboardPage() {
       if (res.telegram?.ok) {
         toast.success('Тест отправлен в Telegram — проверьте чат с ботом');
       } else {
-        toast.error('Telegram не настроен. Добавьте TELEGRAM_BOT_TOKEN и TELEGRAM_MANAGER_CHAT_ID в .env');
+        toast.error('Telegram не настроен. Добавьте TELEMER_BOT_TOKEN и TELEMER_CHAT_ID в .env');
       }
     } catch (e: any) {
       toast.error(e?.message || 'Ошибка');
@@ -218,7 +218,7 @@ export default function AdminDashboardPage() {
               <p className="text-xs text-muted-foreground">
                 {notifyStatus?.telegram.configured
                   ? `Уведомления идут в чат …${notifyStatus?.telegram.chatId}`
-                  : 'Добавьте TELEGRAM_BOT_TOKEN и TELEGRAM_MANAGER_CHAT_ID в .env'}
+                  : 'Добавьте TELEMER_BOT_TOKEN и TELEMER_CHAT_ID в .env'}
               </p>
             </div>
             {/* Email */}
