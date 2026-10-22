@@ -11,7 +11,7 @@ import { PageBreadcrumbs, PageHero } from '../_components/landing-sections';
 export const metadata: Metadata = {
   title: 'Контакты Fotoarka — телефон, адрес, доставка в Красноярске',
   description:
-    'Контакты Fotoarka в Красноярске: телефон +7 (391) 219-00-24, WhatsApp, Telegram, email. Адрес: ул. Парижской Коммуны, 33. Районы и пригороды доставки. Работаем ежедневно 9:00–21:00.',
+    'Контакты Fotoarka в Красноярске: телефон +7 (960) 752-17-77, WhatsApp, Telegram, email. Адрес: ул. Парижской Коммуны, 33. Районы и пригороды доставки. Работаем ежедневно 9:00–21:00.',
   alternates: { canonical: '/kontakty' },
 };
 

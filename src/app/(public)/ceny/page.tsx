@@ -426,7 +426,7 @@ export default function CenyPage() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="h-12 px-8">
-                <a href="tel:+73912190024">
+                <a href="tel:+79607521777">
                   <Phone className="w-4 h-4 mr-2" /> Позвонить
                 </a>
               </Button>
@@ -479,7 +479,7 @@ export default function CenyPage() {
               </Link>
             </Button>
             <Button asChild className="h-12 bg-gold text-primary-foreground hover:bg-gold/90">
-              <a href="tel:+73912190024">
+              <a href="tel:+79607521777">
                 <Phone className="w-4 h-4 mr-2" /> Позвонить
               </a>
             </Button>

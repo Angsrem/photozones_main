@@ -2,9 +2,9 @@
 export const SITE = {
   name: 'Fotoarka',
   legalName: 'Fotoarka — аренда фотозон в Красноярске',
-  phone: '+7 (391) 219-00-24',
-  phoneRaw: '+73912190024',
-  whatsapp: '79999990024',
+  phone: '+7 (960) 752-17-77',
+  phoneRaw: '+79607521777',
+  whatsapp: '79607521777',
   telegram: 'fotoarka_krsk',
   email: 'order@fotoarka.ru',
   city: 'Красноярск',

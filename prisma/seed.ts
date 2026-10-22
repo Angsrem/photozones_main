@@ -20,7 +20,7 @@ async function main() {
     create: {
       email: adminEmail,
       name: 'Анна Менеджер',
-      phone: '+7 (391) 219-00-24',
+      phone: '+7 (960) 752-17-77',
       passwordHash: hashPassword(adminPassword),
       role: 'ADMIN',
     },
