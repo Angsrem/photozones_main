@@ -93,7 +93,8 @@ model Lead {
 
   name        String
   phone       String
-  eventDate   String   // желаемая дата (ISO yyyy-mm-dd)
+  eventDate   String?  // желаемая дата (ISO yyyy-mm-dd) либо текст/empty
+  email       String?  // email (необязательно)
   occasion    String?  // повод
   comment     String?
 

@@ -91,6 +91,7 @@ export async function GET(req: NextRequest) {
       (byDay[b.date] ??= { bookings: [], blocks: [], leads: [] }).blocks.push(b);
     }
     for (const l of leads) {
+      if (!l.eventDate) continue;
       (byDay[l.eventDate] ??= { bookings: [], blocks: [], leads: [] }).leads.push(l);
     }
     return NextResponse.json({ month, byDay });

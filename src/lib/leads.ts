@@ -5,7 +5,8 @@ import { SITE } from './constants';
 export type CreateLeadInput = {
   name: string;
   phone: string;
-  eventDate: string;
+  eventDate?: string | null;
+  email?: string | null;
   occasion?: string | null;
   comment?: string | null;
   photozoneId?: string | null;
@@ -29,7 +30,8 @@ export async function createLead(input: CreateLeadInput) {
     data: {
       name: input.name,
       phone: input.phone,
-      eventDate: input.eventDate,
+      eventDate: input.eventDate ?? null,
+      email: input.email ?? null,
       occasion: input.occasion ?? null,
       comment: input.comment ?? null,
       photozoneId: input.photozoneId ?? null,
@@ -51,7 +53,8 @@ export async function createLead(input: CreateLeadInput) {
     id: lead.id,
     name: input.name,
     phone: input.phone,
-    eventDate: input.eventDate,
+    // notify.ts ожидает строку — null преобразуем в «—», чтобы не трогать notify.ts
+    eventDate: input.eventDate ?? '—',
     occasion: input.occasion,
     photozoneTitle: pz?.title ?? null,
     comment: input.comment,
@@ -89,7 +92,9 @@ export async function findAlternives(date: string, photozoneId: string) {
 }
 
 // Проверка конфликта бронирования (для админа при CONFIRMED)
-export async function hasBookingConflict(date: string, photozoneId: string, excludeBookingId?: string) {
+// date — допускаем null (заявка без даты), в этом случае конфликта не будет
+export async function hasBookingConflict(date: string | null, photozoneId: string, excludeBookingId?: string) {
+  if (!date) return { conflict: false, booking: null, block: null };
   const where: any = { date, photozoneId, status: 'RESERVED' };
   if (excludeBookingId) where.id = { not: excludeBookingId };
   const booking = await db.booking.findFirst({ where });

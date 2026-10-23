@@ -2,17 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useQuickOrder, type QuickOrderPrefill } from './quick-order-store';
-import { PhoneInput, isPhoneValid } from './phone-input';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CheckCircle2, Phone, Calendar, Sparkles, ShieldCheck, Clock } from 'lucide-react';
-import { formatPriceFrom, todayISO, addDaysISO } from '@/lib/format';
+import { Loader2, CheckCircle2, Sparkles, ShieldCheck, Clock } from 'lucide-react';
+import { formatPriceFrom } from '@/lib/format';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
@@ -30,7 +30,7 @@ function captureUtm(): Record<string, string> {
 export function QuickOrderModal() {
   const { open, prefill, close } = useQuickOrder();
   const [status, setStatus] = useState<Status>('idle');
-  const [form, setForm] = useState({ name: '', phone: '', date: '', comment: '', promoCode: '' });
+  const [form, setForm] = useState({ name: '', phone: '', email: '', date: '', comment: '', promoCode: '' });
   const [promoStatus, setPromoStatus] = useState<{ checked: boolean; valid: boolean; discountPct?: number; reason?: string } | null>(null);
   const [checkingPromo, setCheckingPromo] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -39,12 +39,10 @@ export function QuickOrderModal() {
     if (open) {
       setStatus('idle');
       setErrorMsg('');
-      setForm({ name: '', phone: '', date: '', comment: '', promoCode: '' });
+      setForm({ name: '', phone: '', email: '', date: '', comment: '', promoCode: '' });
       setPromoStatus(null);
     }
   }, [open, prefill]);
-
-  const minDate = todayISO();
 
   async function checkPromo() {
     if (!form.promoCode.trim()) return;
@@ -67,9 +65,9 @@ export function QuickOrderModal() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name.trim()) return setErrorMsg('Укажите имя');
-    if (!isPhoneValid(form.phone)) return setErrorMsg('Введите корректный номер телефона');
-    if (!form.date) return setErrorMsg('Выберите желаемую дату');
+    // Телефон — единственное обязательное поле. Минимум 10 цифр.
+    const phoneDigits = form.phone.replace(/\D/g, '');
+    if (phoneDigits.length < 10) return setErrorMsg('Введите корректный номер телефона — минимум 10 цифр');
 
     setStatus('loading');
     setErrorMsg('');
@@ -78,9 +76,10 @@ export function QuickOrderModal() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: form.name.trim(),
+          name: form.name.trim() || null,
+          email: form.email.trim() || null,
           phone: form.phone,
-          eventDate: form.date,
+          eventDate: form.date.trim() || null,
           comment: form.comment.trim() || null,
           photozoneId: prefill.photozoneId ?? null,
           occasion: prefill.occasion ?? null,
@@ -94,7 +93,10 @@ export function QuickOrderModal() {
           promoDiscount: promoStatus?.valid ? promoStatus.discountPct : null,
         }),
       });
-      if (!res.ok) throw new Error('Ошибка отправки');
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || 'Ошибка отправки');
+      }
       setStatus('success');
     } catch (err: any) {
       setStatus('error');
@@ -167,18 +169,27 @@ export function QuickOrderModal() {
 
                 <div className="space-y-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="qo-name">Имя <span className="text-coral">*</span></Label>
+                    <Label htmlFor="qo-name">Имя</Label>
                     <Input id="qo-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
                       placeholder="Как к вам обращаться" className="h-12" autoComplete="name" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="qo-phone">Телефон <span className="text-coral">*</span></Label>
-                    <PhoneInput id="qo-phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
+                    <Input id="qo-phone" type="tel" inputMode="tel" value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      placeholder="+7 960 752 17 77" className="h-12" autoComplete="tel" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="qo-date">Желаемая дата <span className="text-coral">*</span></Label>
-                    <Input id="qo-date" type="date" min={minDate} value={form.date}
-                      onChange={(e) => setForm({ ...form, date: e.target.value })} className="h-12" />
+                    <Label htmlFor="qo-email">Email</Label>
+                    <Input id="qo-email" type="email" inputMode="email" value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="you@example.com" className="h-12" autoComplete="email" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="qo-date">Желаемая дата</Label>
+                    <Input id="qo-date" type="text" inputMode="text" value={form.date}
+                      onChange={(e) => setForm({ ...form, date: e.target.value })}
+                      placeholder="дд.мм.гггг — или «ближе к выходным»" className="h-12" />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="qo-comment">Комментарий</Label>
@@ -215,8 +226,9 @@ export function QuickOrderModal() {
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center mt-3 leading-relaxed">
-                  Нажимая кнопку, вы соглашаетесь на обработку персональных данных.
-                  Мы не передаём контакты третьим лицам.
+                  Нажимая кнопку, вы соглашаетесь с{' '}
+                  <Link href="/privacy" target="_blank" className="underline hover:text-foreground">политикой конфиденциальности</Link>
+                  {' '}и обработкой персональных данных.
                 </p>
 
                 <div className="flex items-center justify-center gap-4 mt-3 text-xs text-muted-foreground">

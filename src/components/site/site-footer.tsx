@@ -60,6 +60,7 @@ export function SiteFooter() {
               <li><Link href="/o-kompanii" className="hover:text-gold transition-colors">О компании</Link></li>
               <li><Link href="/blog" className="hover:text-gold transition-colors">Блог</Link></li>
               <li><Link href="/kontakty" className="hover:text-gold transition-colors">Контакты</Link></li>
+              <li><Link href="/privacy" className="hover:text-gold transition-colors">Политика конфиденциальности</Link></li>
             </ul>
           </div>
 

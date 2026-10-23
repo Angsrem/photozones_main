@@ -12,7 +12,8 @@ export type Lead = {
   updatedAt: string;
   name: string;
   phone: string;
-  eventDate: string;
+  eventDate: string | null;
+  email?: string | null;
   occasion?: string | null;
   comment?: string | null;
   source?: string | null;
