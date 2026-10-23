@@ -2,6 +2,7 @@ import { SiteHeader } from '@/components/site/site-header';
 import { SiteFooter } from '@/components/site/site-footer';
 import { QuickOrderModal } from '@/components/site/quick-order-modal';
 import { StickyCta } from '@/components/site/sticky-cta';
+import { CookieConsent } from '@/components/site/cookie-consent';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <SiteFooter />
       <QuickOrderModal />
       <StickyCta />
+      <CookieConsent />
     </div>
   );
 }
