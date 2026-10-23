@@ -24,7 +24,7 @@ export function SiteHeader() {
               <Camera className="w-5 h-5" />
             </span>
             <span className="font-display text-xl leading-none">
-              ФотоЗона<span className="text-gold">24</span>
+              Foto<span className="text-gold">arka</span>
             </span>
           </Link>
 
