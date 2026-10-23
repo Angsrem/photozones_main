@@ -20,7 +20,7 @@ export const SITE = {
   // надбавка за пригород, руб
   suburbSurcharge: 1500,
   workTimeMin: 15, // перезвоним за N минут
-  monthlyEvents: 100,
+  monthlyEvents: 30,
   mountTimeMin: 60, // монтаж за N минут
 };
 

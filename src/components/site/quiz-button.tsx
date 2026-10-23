@@ -17,7 +17,7 @@ const PAGE_TO_OCCASION: Record<string, string> = {
 };
 
 export function QuizButton({
-  label = 'Подобрать фотозону за 30 секунд',
+  label = 'Подобрать фотозону за 60 секунд',
   className,
   variant = 'default',
   size,
@@ -56,7 +56,7 @@ export function QuizStrip() {
           <Sparkles className="w-5 h-5 text-gold" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium">Не знаете, что выбрать? Пройдите квиз за 30 секунд</div>
+          <div className="text-sm font-medium">Не знаете, что выбрать? Пройдите квиз за 60 секунд</div>
           <div className="text-xs text-muted-foreground">Покажем 3 варианта под ваш повод и бюджет · бонус: промокод 5%</div>
         </div>
         <ArrowRight className="w-5 h-5 text-gold shrink-0 group-hover:translate-x-1 transition-transform" />

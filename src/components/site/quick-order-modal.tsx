@@ -232,7 +232,7 @@ export function QuickOrderModal() {
                 </p>
 
                 <div className="flex items-center justify-center gap-4 mt-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-gold" /> 100+ меропр./мес</span>
+                  <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-gold" /> 30+ меропр./мес</span>
                   <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-gold" /> Монтаж 1 час</span>
                 </div>
               </div>

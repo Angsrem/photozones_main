@@ -198,7 +198,7 @@ export function HeroParallax({ heading, paragraph, avgRating, reviewsCount }: He
             className="mb-5"
           >
             <Badge className="bg-gold/15 text-gold border-gold/30 backdrop-blur-sm">
-              <Sparkles className="w-3.5 h-3.5 mr-1" /> 100+ мероприятий в месяц в Красноярске
+              <Sparkles className="w-3.5 h-3.5 mr-1" /> 30+ мероприятий в месяц в Красноярске
             </Badge>
           </motion.div>
 
@@ -222,7 +222,7 @@ export function HeroParallax({ heading, paragraph, avgRating, reviewsCount }: He
             className="text-lg text-muted-foreground mb-7 max-w-xl"
           >
             {paragraph ??
-              'Свадьбы, дни рождения, корпоративы и сезонные праздники. Доставка, монтаж и демонтаж включены. Оставьте заявку — перезвоним за 15 минут и подтвердим дату.'}
+              'Свадебные, детские и корпоративные фотозоны с доставкой и монтажом. Перезвоним за 15 минут.'}
           </motion.p>
 
           <motion.div

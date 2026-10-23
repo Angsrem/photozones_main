@@ -11,8 +11,8 @@ import { useQuickOrder } from '@/components/site/quick-order-store';
  * На мобильном не показывается — там уже есть sticky-бар из StickyCta.
  * Уважает prefers-reduced-motion — без анимации входа/выхода.
  *
- * Расположение: bottom-24 (96px от низа) right-5 — выше плавающих
- * мессенджер-иконок (right-4 bottom-6) из StickyCta, не перекрывает их.
+ * Расположение: bottom-52 (208px от низа) right-5 — выше плавающих
+ * мессенджер-иконок (right-4 bottom-24) из StickyCta, не перекрывает их.
  */
 export function HomeScrollCta() {
   const reduce = useReducedMotion();
@@ -41,7 +41,7 @@ export function HomeScrollCta() {
   };
 
   const baseClass =
-    'fixed bottom-24 right-5 z-40 hidden sm:inline-flex items-center gap-2 h-12 px-6 rounded-full bg-gold text-primary-foreground font-semibold shadow-2xl shadow-gold/20 hover:bg-gold/90 hover:shadow-gold/30 transition-colors';
+    'fixed bottom-52 right-5 z-40 hidden sm:inline-flex items-center gap-2 h-12 px-6 rounded-full bg-gold text-primary-foreground font-semibold shadow-2xl shadow-gold/20 hover:bg-gold/90 hover:shadow-gold/30 transition-colors';
 
   if (reduce) {
     return visible ? (

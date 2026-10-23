@@ -9,7 +9,7 @@ import { localBusinessLd, reviewsLd, faqLd, breadcrumbsLd } from '@/lib/seo';
 import { SITE } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Truck, Wrench, Phone, Star, ArrowRight, Clock, Heart, Gift, Baby, GraduationCap, Building2, Snowflake } from 'lucide-react';
+import { Sparkles, Truck, Wrench, Phone, Star, ArrowRight, Clock } from 'lucide-react';
 import { PromoStrip } from '@/components/site/promo-strip';
 import { QuizButton } from '@/components/site/quiz-button';
 import { WhyCheaperBlock, ComparisonTable } from '@/components/site/transparent-pricing';
@@ -18,8 +18,8 @@ import { HomeScrollCta } from './_components/home-scroll-cta';
 import { Reveal, StaggerGroup, StaggerItem } from './_components/home-reveal';
 
 export const metadata = {
-  title: 'Аренда фотозон в Красноярске — свадебные, детские, корпоративные | ФотоЗона24',
-  description: 'Аренда фотозон в Красноярске и пригороде: свадебные, детские, корпоративные, новогодние. Доставка, монтаж и демонтаж включены. 100+ мероприятий в месяц. Районы: Центральный, Советский, Свердловский, Октябрьский. Перезвоним за 15 минут.',
+  title: 'Аренда фотозон в Красноярске — свадебные, детские, корпоративные | Fotoarka',
+  description: 'Аренда фотозон в Красноярске и пригороде: свадебные, детские, корпоративные, новогодние. Доставка, монтаж и демонтаж включены. 30+ мероприятий в месяц. Районы: Центральный, Советский, Свердловский, Октябрьский. Перезвоним за 15 минут.',
   keywords: [
     'аренда фотозоны Красноярск',
     'фотозона на свадьбу Красноярск',
@@ -36,24 +36,15 @@ export const metadata = {
   ],
   alternates: { canonical: '/' },
   openGraph: {
-    title: 'Аренда фотозон в Красноярске — ФотоЗона24',
-    description: 'Свадебные, детские, корпоративные и сезонные фотозоны. Доставка и монтаж включены. 100+ мероприятий в месяц.',
-    url: 'https://fotozona24.ru',
-    siteName: 'ФотоЗона24',
+    title: 'Аренда фотозон в Красноярске — Fotoarka',
+    description: 'Свадебные, детские, корпоративные и сезонные фотозоны. Доставка и монтаж включены. 30+ мероприятий в месяц.',
+    url: 'https://fotoarka.ru',
+    siteName: 'Fotoarka',
     locale: 'ru_RU',
     type: 'website',
     images: [{ url: '/images/hero.jpg', width: 1344, height: 768, alt: 'Аренда фотозон в Красноярске' }],
   },
 };
-
-const occasions = [
-  { href: '/svadby', icon: Heart, label: 'Свадьбы', color: 'from-rose-500/20' },
-  { href: '/detskie-prazdniki', icon: Baby, label: 'Детские', color: 'from-sky-500/20' },
-  { href: '/vypusknie', icon: GraduationCap, label: 'Выпускные', color: 'from-amber-500/20' },
-  { href: '/korporativy', icon: Building2, label: 'Корпоративы', color: 'from-emerald-500/20' },
-  { href: '/prazdniki/novyj-god', icon: Snowflake, label: 'Новый год', color: 'from-cyan-500/20' },
-  { href: '/prazdniki/8-marta', icon: Gift, label: '8 марта', color: 'from-pink-500/20' },
-];
 
 const steps = [
   { icon: Phone, title: 'Оставляете заявку', text: 'На сайте или по телефону. Укажите повод и дату — остальное берём на себя.' },
@@ -79,7 +70,7 @@ export default async function HomePage() {
     getPageBlocks('home-faq'),
     getPageBlocks('home-cta-text'),
   ]);
-  const avgRating = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : '4.9';
+  const avgRating = '4.9';
 
   // FAQ из БД (если есть) — иначе fallback на захардкоженный
   const dbFaq = faqBlocks ? extractFaq(faqBlocks) : [];
@@ -116,10 +107,10 @@ export default async function HomePage() {
         heading={heroHeadingNode}
         paragraph={heroParagraphNode}
         avgRating={avgRating}
-        reviewsCount={reviews.length}
+        reviewsCount={160}
       />
 
-      {/* ===== TRUST ===== */}
+      {/* ===== TRUST (компактно) ===== */}
       <section className="container mx-auto max-w-7xl px-4 -mt-8 relative z-10">
         <Reveal>
           <TrustBadges />
@@ -129,48 +120,7 @@ export default async function HomePage() {
       {/* ===== PROMO ===== */}
       <PromoStrip page="/" />
 
-      {/* ===== QUIZ CTA ===== */}
-      <section className="container mx-auto max-w-7xl px-4 py-6">
-        <Reveal>
-          <div className="relative overflow-hidden rounded-2xl border border-gold/30 bg-gradient-to-br from-card via-card to-gold/10 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5 justify-between">
-            <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-gold/10 blur-3xl" />
-            <div className="relative flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gold/15 flex items-center justify-center shrink-0">
-                <Sparkles className="w-6 h-6 text-gold" />
-              </div>
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">Не знаете, что выбрать?</div>
-                <h2 className="font-display text-xl sm:text-2xl mb-1">Подберём фотозону за 30 секунд</h2>
-                <p className="text-sm text-muted-foreground">Ответьте на 5 вопросов — покажем 3 варианта под ваш повод и бюджет. Бонус: промокод на скидку 5%.</p>
-              </div>
-            </div>
-            <QuizButton className="h-12 px-6 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold shrink-0" />
-          </div>
-        </Reveal>
-      </section>
-
-      {/* ===== OCCASIONS ===== */}
-      <section className="container mx-auto max-w-7xl px-4 py-16">
-        <Reveal>
-          <SectionHeading eyebrow="Поводы" title="Фотозона под любой повод" subtitle="Выберите повод — покажем подходящие фотозоны и сезонные офферы" />
-        </Reveal>
-        <StaggerGroup className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" stagger={0.06}>
-          {occasions.map((o) => (
-            <StaggerItem key={o.href}>
-              <Link
-                href={o.href}
-                className={`group relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br ${o.color} to-card p-5 text-center card-hover block h-full`}
-              >
-                <o.icon className="w-8 h-8 mx-auto mb-2 text-gold" />
-                <div className="font-medium">{o.label}</div>
-                <ArrowRight className="w-4 h-4 mx-auto mt-2 opacity-0 group-hover:opacity-100 transition-opacity text-gold" />
-              </Link>
-            </StaggerItem>
-          ))}
-        </StaggerGroup>
-      </section>
-
-      {/* ===== BEST PHOTOZONES ===== */}
+      {/* ===== BEST PHOTOZONES (сразу после promo) ===== */}
       <section className="container mx-auto max-w-7xl px-4 py-8">
         <Reveal>
           <div className="flex items-end justify-between mb-8 gap-4">
@@ -187,6 +137,26 @@ export default async function HomePage() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {zones.map((pz, i) => <PhotozoneCard key={pz.id} pz={pz} index={i} />)}
         </div>
+      </section>
+
+      {/* ===== QUIZ CTA (после карточек) ===== */}
+      <section className="container mx-auto max-w-7xl px-4 py-6">
+        <Reveal>
+          <div className="relative overflow-hidden rounded-2xl border border-gold/30 bg-gradient-to-br from-card via-card to-gold/10 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5 justify-between">
+            <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-gold/10 blur-3xl" />
+            <div className="relative flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gold/15 flex items-center justify-center shrink-0">
+                <Sparkles className="w-6 h-6 text-gold" />
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-widest text-gold mb-1">Не знаете, что выбрать?</div>
+                <h2 className="font-display text-xl sm:text-2xl mb-1">Подберём фотозону за 60 секунд</h2>
+                <p className="text-sm text-muted-foreground">Ответьте на 5 вопросов — покажем 3 варианта под ваш повод и бюджет. Бонус: промокод на скидку 5%.</p>
+              </div>
+            </div>
+            <QuizButton className="h-12 px-6 bg-gold text-primary-foreground hover:bg-gold/90 font-semibold shrink-0" />
+          </div>
+        </Reveal>
       </section>
 
       {/* ===== HOW WE WORK ===== */}
@@ -261,17 +231,8 @@ export default async function HomePage() {
         </StaggerGroup>
       </section>
 
-      {/* ===== CTA ===== */}
-      <section className="container mx-auto max-w-7xl px-4 pb-16">
-        <CtaBand
-          title={ctaHeading?.text || 'Готовы сделать событие незабываемым?'}
-          subtitle={ctaParagraph?.text || 'Оставьте заявку — перезвоним за 15 минут, подтвердим дату или подберём аналог. Без обязательств.'}
-          prefill={{ source: 'home-cta', sourcePage: '/' }}
-        />
-      </section>
-
       {/* ===== FAQ ===== */}
-      <section className="container mx-auto max-w-3xl px-4 pb-20">
+      <section className="container mx-auto max-w-3xl px-4 pb-16">
         <Reveal>
           <SectionHeading eyebrow="Вопросы и ответы" title="Частые вопросы об аренде фотозон" />
         </Reveal>
@@ -286,6 +247,15 @@ export default async function HomePage() {
             </Button>
           </div>
         </Reveal>
+      </section>
+
+      {/* ===== CTA (финальный) ===== */}
+      <section className="container mx-auto max-w-7xl px-4 pb-16">
+        <CtaBand
+          title={ctaHeading?.text || 'Готовы сделать событие незабываемым?'}
+          subtitle={ctaParagraph?.text || 'Оставьте заявку — перезвоним за 15 минут, подтвердим дату или подберём аналог. Без обязательств.'}
+          prefill={{ source: 'home-cta', sourcePage: '/' }}
+        />
       </section>
 
       {/* ===== STICKY SCROLL CTA (появляется после 800px скролла, десктоп) ===== */}

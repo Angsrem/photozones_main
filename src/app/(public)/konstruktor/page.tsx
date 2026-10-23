@@ -47,7 +47,7 @@ export default function KonstruktorPage() {
               <Clock className="w-4 h-4 text-gold" /> Живая цена
             </span>
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-gold" /> 100+ меропр./мес
+              <ShieldCheck className="w-4 h-4 text-gold" /> 30+ меропр./мес
             </span>
             <span className="flex items-center gap-1.5">
               <Star className="w-4 h-4 fill-gold text-gold" /> 4.9 / 5 — средняя оценка

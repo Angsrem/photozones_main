@@ -43,7 +43,7 @@ export function CtaBand({
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4 mt-5 text-xs text-muted-foreground">
           <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-gold" /> Перезвон за {SITE.workTimeMin} мин</span>
-          <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-gold" /> 100+ меропр./мес</span>
+          <span className="flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5 text-gold" /> 30+ меропр./мес</span>
         </div>
       </div>
     </motion.section>

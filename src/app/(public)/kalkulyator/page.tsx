@@ -45,7 +45,7 @@ export default function KalkulyatorPage() {
           </p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5"><Clock className="w-4 h-4 text-gold" /> Расчёт за 1 минуту</span>
-            <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-gold" /> 100+ меропр./мес</span>
+            <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-gold" /> 30+ меропр./мес</span>
             <span className="flex items-center gap-1.5"><Star className="w-4 h-4 fill-gold text-gold" /> 4.9 / 5 — средняя оценка</span>
           </div>
         </div>

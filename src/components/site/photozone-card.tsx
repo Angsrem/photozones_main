@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, Play } from 'lucide-react';
+import { ArrowRight, Sparkles, Play, Calendar, Clock, Phone, Star } from 'lucide-react';
 import { formatPriceFrom } from '@/lib/format';
 import { useQuickOrder } from './quick-order-store';
 import { CATEGORIES } from '@/lib/constants';
@@ -138,17 +138,19 @@ export function PhotozoneCard({ pz, index = 0 }: { pz: PhotoZone; index?: number
 
 export function TrustBadges({ className = '' }: { className?: string }) {
   const items = [
-    { v: '100+', l: 'мероприятий в месяц' },
-    { v: '1 час', l: 'монтаж фотозоны' },
-    { v: '15 мин', l: 'перезвон менеджера' },
-    { v: '4.9★', l: 'средняя оценка' },
+    { icon: Calendar, v: '30+', l: 'мероприятий в месяц' },
+    { icon: Clock, v: '1 час', l: 'монтаж фотозоны' },
+    { icon: Phone, v: '15 мин', l: 'перезвон менеджера' },
+    { icon: Star, v: '4.9★', l: 'средняя оценка' },
   ];
   return (
-    <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 ${className}`}>
-      {items.map((i) => (
-        <div key={i.l} className="rounded-xl border border-border bg-card/50 p-4 text-center">
-          <div className="font-display text-2xl text-gold">{i.v}</div>
-          <div className="text-xs text-muted-foreground mt-1">{i.l}</div>
+    <div className={`flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5 sm:gap-x-7 rounded-2xl border border-border bg-card/40 backdrop-blur-sm px-4 py-3 sm:px-6 sm:py-3.5 ${className}`}>
+      {items.map((i, idx) => (
+        <div key={i.l} className="flex items-center gap-2">
+          <i.icon className="w-4 h-4 text-gold shrink-0" />
+          <span className="font-display text-base sm:text-lg text-foreground leading-none">{i.v}</span>
+          <span className="text-xs sm:text-sm text-muted-foreground leading-none">{i.l}</span>
+          {idx < items.length - 1 && <span className="hidden sm:inline-block w-px h-5 bg-border/60 ml-3" aria-hidden />}
         </div>
       ))}
     </div>

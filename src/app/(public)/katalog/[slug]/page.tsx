@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     ],
     alternates: { canonical: `/katalog/${pz.slug}` },
     openGraph: {
-      title: `${pz.title} — от ${pz.basePrice.toLocaleString('ru-RU')} ₽ | ФотоЗона24`,
+      title: `${pz.title} — от ${pz.basePrice.toLocaleString('ru-RU')} ₽ | Fotoarka`,
       description,
       url: `${SITE.url}/katalog/${pz.slug}`,
       siteName: SITE.name,

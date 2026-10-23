@@ -26,8 +26,9 @@ export function StickyCta() {
   return (
     <>
       {/* Плавающие кнопки мессенджеров (десктоп + моб) */}
-      {/* На мобильном поднимаем выше, чтобы не перекрывать sticky-CTA-бар */}
-      <div className={`fixed right-4 z-30 flex flex-col gap-2 ${isPhotozoneCard ? 'bottom-[88px] sm:bottom-6' : 'bottom-[88px] sm:bottom-6'}`}>
+      {/* На мобильном и десктопе поднимаем выше (bottom-24), чтобы не перекрывать
+          hero-кнопку «Рассчитать стоимость» и HomeScrollCta (bottom-52 на десктопе). */}
+      <div className={`fixed right-4 z-30 flex flex-col gap-2 ${isPhotozoneCard ? 'bottom-[88px] sm:bottom-24' : 'bottom-24 sm:bottom-24'}`}>
         <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noopener noreferrer"
           aria-label="WhatsApp"
           className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
