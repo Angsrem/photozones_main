@@ -42,6 +42,9 @@ function getChatIds(): string[] {
 async function sendTelegram(text: string, replyMarkup?: object) {
   const token = process.env.TELEMER_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
   const chatIds = getChatIds();
+  // Прокси для обхода блокировки api.telegram.org в РФ.
+  // По умолчанию — напрямую. Для прода в РФ задайте TELEGRAM_API_BASE (например, Cloudflare Worker URL).
+  const apiBase = process.env.TELEGRAM_API_BASE || 'https://api.telegram.org';
   if (!token || chatIds.length === 0) {
     // Полный текст уведомления печатаем только в dev — в prod это утечка PII.
     if (process.env.NODE_ENV !== 'production') {
@@ -61,7 +64,7 @@ async function sendTelegram(text: string, replyMarkup?: object) {
         disable_web_page_preview: true,
       };
       if (replyMarkup) body.reply_markup = replyMarkup;
-      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      const res = await fetch(`${apiBase}/bot${token}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
