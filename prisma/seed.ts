@@ -647,39 +647,9 @@ async function main() {
   const pzLove = await db.photoZone.findUnique({ where: { slug: 'love-installyaciya' } });
   const pzNy = await db.photoZone.findUnique({ where: { slug: 'novogodnyaya-mishura' } });
   const pzEd = await db.photoZone.findUnique({ where: { slug: 'edonorog' } });
-  const d = (offset: number) => {
-    const x = new Date(); x.setDate(x.getDate() + offset); return x.toISOString().slice(0, 10);
-  };
-  const leads = [
-    { name: 'Иван Петров', phone: '+7 (913) 555-12-34', eventDate: d(14), occasion: 'WEDDING', photozoneId: pzLove?.id, source: '/katalog/love-installyaciya', sourcePage: '/katalog/love-installyaciya', status: 'NEW', comment: 'Свадьба на 40 человек, ресторан в Центральном районе.' },
-    { name: 'Светлана', phone: '+7 (950) 421-88-09', eventDate: d(30), occasion: 'NEW_YEAR', photozoneId: pzNy?.id, source: '/prazdniki/novyj-god', sourcePage: '/prazdniki/novyj-god', status: 'CALLED', comment: 'Корпоратив 30 человек.' },
-    { name: 'Олег', phone: '+7 (902) 100-77-21', eventDate: d(7), occasion: 'BIRTHDAY', photozoneId: pzEd?.id, source: '/detskie-prazdniki', sourcePage: '/detskie-prazdniki', status: 'CONFIRMED', comment: 'День рождения 6 лет, Подгорный.' },
-    { name: 'Мария', phone: '+7 (923) 338-11-50', eventDate: d(2), occasion: 'BIRTHDAY', source: '/kalkulyator', sourcePage: '/kalkulyator', status: 'NEW', comment: 'Расчёт из калькулятора.', config: { occasion: 'BIRTHDAY', style: 'neon', base: 'frame-m', extras: ['neon'], date: d(2), address: 'Красноярск, Свободный пр.', surcharge: 0 }, priceEstimate: 27020 },
-    { name: 'Алексей', phone: '+7 (913) 909-44-10', eventDate: d(45), occasion: 'CORPORATE', source: '/korporativy', sourcePage: '/korporativy', status: 'NEW', comment: 'Корпоратив 80 человек, нужен бренд.' },
-    { name: 'Татьяна', phone: '+7 (960) 771-23-05', eventDate: d(-3), occasion: 'WEDDING', source: '/svadby', sourcePage: '/svadby', status: 'DONE', comment: 'Свадьба прошла отлично.' },
-    { name: 'Денис', phone: '+7 (983) 158-90-66', eventDate: d(21), occasion: 'GRADUATION', source: '/vypusknie', sourcePage: '/vypusknie', status: 'DECLINED', comment: 'Дата занята, подобрали аналог.' },
-  ];
-  for (const l of leads) {
-    const created = await db.lead.create({
-      data: {
-        name: l.name, phone: l.phone, eventDate: l.eventDate, occasion: l.occasion,
-        comment: l.comment, photozoneId: l.photozoneId ?? null, source: l.source,
-        sourcePage: l.sourcePage, status: l.status as any,
-        utm: { source: 'google', medium: 'cpc', campaign: 'krasnoyarsk_photozones' } as any,
-        config: (l as any).config ?? null, priceEstimate: (l as any).priceEstimate ?? null,
-      } as any,
-    });
-    // для CONFIRMED/DONE — создаём бронирование
-    if ((l.status === 'CONFIRMED' || l.status === 'DONE') && l.photozoneId) {
-      await db.booking.create({
-        data: {
-          leadId: created.id, photozoneId: l.photozoneId, date: l.eventDate,
-          note: 'Из заявки',
-        } as any,
-      });
-    }
-  }
-
+  // Тестовые заявки НЕ создаём — админка должна быть чистой.
+  // Реальные заявки будут появляться через формы на сайте.
+  
   // ===== Промо =====
   await db.promo.create({
     data: {
