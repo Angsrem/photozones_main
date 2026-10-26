@@ -1,16 +1,53 @@
 import { SITE } from './constants';
 import { db } from './db';
 
-// ===== Уведомления менеджеру: Telegram + Email =====
+// ===== Уведомления менеджеру: Telegram + Max + Email =====
 // Если env-ключи не заданы — graceful fallback в лог (для dev/демо).
 // Для боевого режима задайте в .env:
 //   TELEGRAM_BOT_TOKEN=123456:ABC...        (создать бота через @BotFather)
 //   TELEGRAM_MANAGER_CHAT_ID=123456789      (свой chat_id — узнать у @userinfobot)
+//   MAX_BOT_TOKEN=1001.ABC...               (создать бота через @masterbot в Max)
+//   MAX_CHAT_ID=1234567890                  (ID канала в Max)
 //   MANAGER_EMAIL=order@fotoarka.ru       (куда дублировать письмом)
 //   RESEND_API_KEY=re_...                    (https://resend.com — бесплатно 3000/мес)
 
 function escapeHtml(s: string): string {
   return String(s || '').replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]!));
+}
+
+// ===== Max (VK Teams) API =====
+// Max — российский мессенджер от VK, API работает в РФ без блокировок.
+// Документация: https://dev.max.ru
+async function sendMax(text: string) {
+  const token = process.env.MAX_BOT_TOKEN;
+  const chatId = process.env.MAX_CHAT_ID;
+  if (!token || !chatId) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[notify:max] (нет MAX_BOT_TOKEN/MAX_CHAT_ID — fallback в лог) ->\n', text);
+    }
+    return { ok: false, reason: 'no-credentials' };
+  }
+  try {
+    // Max API: отправка текстового сообщения в чат/канал
+    // Сначала получаем URI для загрузки (не нужно для текста), сразу шлём сообщение
+    const res = await fetch(`https://botapi.max.ru/messages?access_token=${token}&chat_id=${chatId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        format: 'html',
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.code !== 'ok') {
+      console.error('[notify:max] API error:', JSON.stringify(data).slice(0, 200));
+      return { ok: false, reason: 'api-error', data };
+    }
+    return { ok: true };
+  } catch (e: any) {
+    console.error('[notify:max] network error', e?.message);
+    return { ok: false, reason: 'network', error: e?.message };
+  }
 }
 
 // Получаем список chat_id для отправки уведомлений.
@@ -174,6 +211,8 @@ export async function notifyNewLead(data: {
   };
 
   const telegramResult = await sendTelegram(lines.join('\n'), replyMarkup);
+  // Также отправляем в Max (если настроен) — Max работает в РФ без блокировок
+  const maxResult = await sendMax(lines.join('\n'));
 
   const email = process.env.MANAGER_EMAIL || SITE.email;
   await sendEmail(
@@ -206,7 +245,7 @@ export async function notifyNewLead(data: {
     </div>`
   );
 
-  return { telegram: telegramResult, emailSent: !!process.env.RESEND_API_KEY };
+  return { telegram: telegramResult, max: maxResult, emailSent: !!process.env.RESEND_API_KEY };
 }
 
 // ===== Дожим-цепочка для лид-магнитов (3 касания) =====
