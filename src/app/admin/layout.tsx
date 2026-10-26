@@ -112,7 +112,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   const NavList = ({ onNavigate }: { onNavigate?: () => void }) => (
-    <nav className="flex flex-col gap-1 p-3">
+    <nav className="flex flex-col gap-0.5 p-2">
       {NAV.filter((item) => item.href !== '/admin/managers' || manager.role === 'ADMIN').map((item) => {
         const active = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
         const Icon = item.icon;
@@ -121,14 +121,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             key={item.href}
             href={item.href}
             onClick={onNavigate}
-            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors ${
               active
                 ? 'bg-primary text-primary-foreground'
                 : 'text-foreground/80 hover:bg-accent hover:text-accent-foreground'
             }`}
           >
-            <Icon className="size-4" />
-            <span>{item.label}</span>
+            <Icon className="size-4 shrink-0" />
+            <span className="truncate">{item.label}</span>
           </Link>
         );
       })}
@@ -160,18 +160,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="light min-h-screen bg-background text-foreground">
       <div className="flex min-h-screen">
         {/* Десктоп-сайдбар */}
-        <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r bg-sidebar">
-          <div className="flex items-center gap-2 px-5 h-16 border-b">
-            <div className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <ShieldCheck className="size-5" />
+        <aside className="hidden lg:flex w-56 shrink-0 flex-col border-r bg-sidebar">
+          <div className="flex items-center gap-2 px-4 h-14 border-b">
+            <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <ShieldCheck className="size-4" />
             </div>
             <div className="leading-tight">
-              <div className="font-display text-base font-semibold">Fotoarka</div>
-              <div className="text-xs text-muted-foreground">Админ-панель</div>
+              <div className="font-display text-sm font-semibold">Fotoarka</div>
+              <div className="text-[10px] text-muted-foreground">Админ-панель</div>
             </div>
           </div>
           <NavList />
-          <div className="mt-auto p-3 text-xs text-muted-foreground border-t">
+          <div className="mt-auto p-2 text-[10px] text-muted-foreground border-t">
             Версия 1.0 · {new Date().getFullYear()}
           </div>
         </aside>
@@ -179,7 +179,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Мобильный сайдбар */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <div className="flex-1 flex flex-col min-w-0">
-            <header className="h-16 border-b flex items-center justify-between px-3 sm:px-6 bg-card">
+            <header className="h-14 border-b flex items-center justify-between px-3 sm:px-4 bg-card">
               <div className="flex items-center gap-2">
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="lg:hidden">
@@ -200,7 +200,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               {HeaderRight}
             </header>
-            <main className="flex-1 p-4 sm:p-6 max-w-[1400px] w-full mx-auto">{children}</main>
+            <main className="flex-1 p-3 sm:p-4 max-w-[1400px] w-full mx-auto">{children}</main>
           </div>
           <SheetContent side="left" className="w-72 p-0">
             <SheetTitle className="sr-only">Меню</SheetTitle>
