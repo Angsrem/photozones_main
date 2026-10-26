@@ -8,8 +8,58 @@ import { db } from './db';
 //   TELEGRAM_MANAGER_CHAT_ID=123456789      (свой chat_id — узнать у @userinfobot)
 //   MAX_BOT_TOKEN=1001.ABC...               (создать бота через @masterbot в Max)
 //   MAX_CHAT_ID=1234567890                  (ID канала в Max)
-//   MANAGER_EMAIL=order@fotoarka.ru       (куда дублировать письмом)
-//   RESEND_API_KEY=re_...                    (https://resend.com — бесплатно 3000/мес)
+//   MANAGER_EMAIL=order@fotoarka.ru         (fallback — куда дублировать письмом)
+//
+// ===== Email через Beget SMTP (Nodemailer) =====
+// Beget: https://beget.com — российский хостинг, почта работает в РФ без блокировок.
+// Настройки SMTP задаются в .env:
+//   SMTP_HOST=smtp.beget.com (или smtp.beget.ru)
+//   SMTP_PORT=465 (SSL) или 587 (STARTTLS)
+//   SMTP_USER=order@fotoarka.ru
+//   SMTP_PASSWORD=********
+//   SMTP_FROM="Fotoarka <order@fotoarka.ru>"
+//
+// Список получателей email-уведомлений хранится в БД (Setting с ключом notify_emails,
+// JSON-массив адресов). Управляется через админку (/admin/settings).
+// Если в БД пусто — fallback на process.env.MANAGER_EMAIL.
+
+const NOTIFY_EMAILS_KEY = 'notify_emails';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Получаем список адресов для уведомлений из БД (Setting.notify_emails). */
+export async function getNotifyEmails(): Promise<string[]> {
+  try {
+    const row = await db.setting.findUnique({ where: { key: NOTIFY_EMAILS_KEY } });
+    if (row?.value) {
+      try {
+        const parsed = JSON.parse(row.value);
+        if (Array.isArray(parsed)) {
+          const list = parsed
+            .map((x: unknown) => String(x || '').trim().toLowerCase())
+            .filter((x: string) => EMAIL_RE.test(x));
+          if (list.length > 0) return Array.from(new Set(list));
+        }
+      } catch {
+        // некорректный JSON — fallback ниже
+      }
+    }
+  } catch (e) {
+    // БД может быть недоступна — fallback ниже
+    console.warn('[notify:emails] не удалось прочитать Setting.notify_emails', (e as Error)?.message);
+  }
+  // Fallback на env
+  const envList = (process.env.MANAGER_EMAIL || SITE.email)
+    .split(',')
+    .map((x) => x.trim().toLowerCase())
+    .filter((x) => EMAIL_RE.test(x));
+  return Array.from(new Set(envList));
+}
+
+/** Проверка, что SMTP-настройки заданы в .env. */
+export function isSmtpConfigured(): boolean {
+  return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD);
+}
 
 function escapeHtml(s: string): string {
   return String(s || '').replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]!));
@@ -121,31 +171,87 @@ async function sendTelegram(text: string, replyMarkup?: object) {
   return { ok: anyOk, results };
 }
 
-async function sendEmail(to: string, subject: string, html: string) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.RESEND_FROM || `Fotoarka <noreply@${SITE.url.replace('https://', '')}>`;
-  if (!apiKey) {
-    // В prod не печатаем тему/получателя — это PII.
+let nodemailerPromise: Promise<typeof import('nodemailer')> | null = null;
+async function getNodemailer() {
+  if (!nodemailerPromise) {
+    nodemailerPromise = import('nodemailer');
+  }
+  return nodemailerPromise;
+}
+
+/**
+ * Базовая отправка email через Beget SMTP (Nodemailer).
+ * Если SMTP не настроен — лог + не падаем (graceful).
+ */
+async function sendMailSmtp(recipients: string[], subject: string, html: string): Promise<boolean> {
+  if (!isSmtpConfigured()) {
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[notify:email] (нет RESEND_API_KEY — fallback в лог) ->', to, subject);
+      console.warn('[notify:email] SMTP не настроен — добавьте SMTP_HOST/SMTP_USER/SMTP_PASSWORD в .env. Письмо не отправлено.');
     } else {
-      console.warn('[notify:email] нет RESEND_API_KEY — письмо не отправлено');
+      console.warn('[notify:email] SMTP не настроен — письмо не отправлено');
     }
-    return;
+    return false;
   }
+  if (recipients.length === 0) {
+    console.warn('[notify:email] нет получателей');
+    return false;
+  }
+
+  const host = process.env.SMTP_HOST!;
+  const portRaw = Number(process.env.SMTP_PORT) || 465;
+  const user = process.env.SMTP_USER!;
+  const pass = process.env.SMTP_PASSWORD!;
+  const from = process.env.SMTP_FROM || `Fotoarka <${user}>`;
+
+  // 465 → SSL, 587 → STARTTLS (по конвенции Beget).
+  const useSsl = portRaw === 465;
+
   try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ from, to: [to], subject, html }),
+    const nm = await getNodemailer();
+    const transporter = nm.createTransport({
+      host,
+      port: portRaw,
+      secure: useSsl,
+      requireTLS: !useSsl,
+      auth: { user, pass },
     });
-    if (!res.ok) console.error('[notify:email] resend error', (await res.text()).slice(0, 200));
+
+    const info = await transporter.sendMail({
+      from,
+      to: recipients.join(', '),
+      subject,
+      html,
+    });
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[notify:email] → ${recipients.join(', ')} | id=${info.messageId}`);
+    }
+    return true;
   } catch (e: any) {
-    console.error('[notify:email] error', e?.message);
+    console.error('[notify:email] SMTP error', e?.message || e);
+    return false;
   }
+}
+
+/**
+ * Отправка email-уведомления менеджерам (о новой заявке).
+ * Получателей берёт из БД (Setting.notify_emails), fallback на env MANAGER_EMAIL.
+ */
+async function sendEmail(subject: string, html: string): Promise<boolean> {
+  const recipients = await getNotifyEmails();
+  if (recipients.length === 0) {
+    console.warn('[notify:email] нет получателей (ни в БД, ни в MANAGER_EMAIL)');
+    return false;
+  }
+  return sendMailSmtp(recipients, subject, html);
+}
+
+/**
+ * Отправка email конкретному адресату (клиенту — дожим-цепочка лид-магнитов).
+ */
+async function sendEmailTo(to: string, subject: string, html: string): Promise<boolean> {
+  const list = to.split(',').map((x) => x.trim()).filter(Boolean);
+  return sendMailSmtp(list, subject, html);
 }
 
 // occasion → человекочитаемый
@@ -214,9 +320,7 @@ export async function notifyNewLead(data: {
   // Также отправляем в Max (если настроен) — Max работает в РФ без блокировок
   const maxResult = await sendMax(lines.join('\n'));
 
-  const email = process.env.MANAGER_EMAIL || SITE.email;
-  await sendEmail(
-    email,
+  const emailSent = await sendEmail(
     `🔔 Новая заявка: ${data.name} — ${data.eventDate}`,
     `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;background:#faf7f2;padding:24px;border-radius:12px">
       <div style="background:#1a1428;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0;text-align:center">
@@ -245,7 +349,7 @@ export async function notifyNewLead(data: {
     </div>`
   );
 
-  return { telegram: telegramResult, max: maxResult, emailSent: !!process.env.RESEND_API_KEY };
+  return { telegram: telegramResult, max: maxResult, emailSent };
 }
 
 // ===== Дожим-цепочка для лид-магнитов (3 касания) =====
@@ -369,7 +473,7 @@ export async function sendDripEmail(
       console.log(`[notify:drip] step ${step} → ${to} (magnet=${leadMagnetSlug}, lead=${ctx.leadId || '—'})`);
     }
 
-    await sendEmail(to, subject, html);
+    await sendEmailTo(to, subject, html);
     return { ok: true, step, to, magnet: leadMagnetSlug };
   } catch (e: any) {
     console.error('[notify:drip] error', e?.message);
@@ -378,19 +482,25 @@ export async function sendDripEmail(
 }
 
 // Статус конфигурации уведомлений (для админки — чтобы видеть, настроено ли)
-export function getNotifyConfigStatus() {
+export async function getNotifyConfigStatus() {
   // Поддержка обоих форматов: TELEMER_* (новый) и TELEGRAM_* (старый)
   const botToken = process.env.TELEMER_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
   const chatIds = getChatIds();
   const chatIdForDisplay = chatIds[0] || null;
+  const emails = await getNotifyEmails();
   return {
     telegram: {
       configured: !!(botToken && chatIds.length > 0),
       chatId: chatIdForDisplay ? `…${chatIdForDisplay.slice(-4)}` : null,
     },
     email: {
-      configured: !!process.env.RESEND_API_KEY,
-      to: process.env.MANAGER_EMAIL || SITE.email,
+      configured: isSmtpConfigured(),
+      // показываем только первые 2 адреса, остальные скрыто (без PII в логах)
+      to: emails.slice(0, 2).join(', ') + (emails.length > 2 ? `, +${emails.length - 2}` : ''),
+      count: emails.length,
+      from: process.env.SMTP_FROM || process.env.SMTP_USER || null,
+      host: process.env.SMTP_HOST || null,
+      port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : null,
     },
   };
 }

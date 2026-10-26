@@ -8,5 +8,5 @@ export const runtime = 'nodejs';
 export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
-  return NextResponse.json(getNotifyConfigStatus());
+  return NextResponse.json(await getNotifyConfigStatus());
 }

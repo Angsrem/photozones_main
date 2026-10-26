@@ -20,9 +20,18 @@ export async function POST(req: NextRequest) {
     const { email, password, totpCode } = await req.json().catch(() => ({}));
     if (!email || !password) return NextResponse.json({ error: 'Введите email и пароль' }, { status: 422 });
 
-    const manager = await db.manager.findUnique({ where: { email: String(email).toLowerCase().trim() } });
+    const manager = await db.manager.findUnique({
+      where: { email: String(email).toLowerCase().trim() },
+      select: {
+        id: true, email: true, name: true, role: true,
+        passwordHash: true, totpSecret: true, isActive: true, avatar: true,
+      },
+    });
     if (!manager || !verifyPassword(String(password), manager.passwordHash)) {
       return NextResponse.json({ error: 'Неверный email или пароль' }, { status: 401 });
+    }
+    if (!manager.isActive) {
+      return NextResponse.json({ error: 'Аккаунт отключен. Обратитесь к администратору.' }, { status: 403 });
     }
 
     // Если у менеджера включена 2FA — требуем totpCode.
@@ -42,8 +51,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    await setSessionCookie({ id: manager.id, email: manager.email, name: manager.name, role: manager.role });
-    return NextResponse.json({ ok: true, manager: { id: manager.id, email: manager.email, name: manager.name, role: manager.role } });
+    await setSessionCookie({
+      id: manager.id,
+      email: manager.email,
+      name: manager.name,
+      role: manager.role,
+      avatar: manager.avatar,
+    });
+    return NextResponse.json({
+      ok: true,
+      manager: {
+        id: manager.id,
+        email: manager.email,
+        name: manager.name,
+        role: manager.role,
+        avatar: manager.avatar,
+      },
+    });
   } catch (e: any) {
     console.error('[admin/login]', e);
     return NextResponse.json({ error: 'Ошибка сервера' }, { status: 500 });

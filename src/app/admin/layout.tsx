@@ -17,10 +17,11 @@ import {
   Loader2,
   Settings,
   Calculator,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from '@/components/ui/sheet';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { api, type Manager } from './_lib';
 
 const NAV = [
@@ -32,6 +33,7 @@ const NAV = [
   { href: '/admin/promo', label: 'Акции', icon: Tag },
   { href: '/admin/reviews', label: 'Отзывы', icon: Star },
   { href: '/admin/pages', label: 'Страницы', icon: FileText },
+  { href: '/admin/managers', label: 'Менеджеры', icon: Users },
   { href: '/admin/settings', label: 'Настройки', icon: Settings },
 ];
 
@@ -111,7 +113,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const NavList = ({ onNavigate }: { onNavigate?: () => void }) => (
     <nav className="flex flex-col gap-1 p-3">
-      {NAV.map((item) => {
+      {NAV.filter((item) => item.href !== '/admin/managers' || manager.role === 'ADMIN').map((item) => {
         const active = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
         const Icon = item.icon;
         return (
@@ -137,6 +139,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex items-center gap-3">
       <div className="hidden sm:flex items-center gap-2">
         <Avatar className="size-8">
+          {manager.avatar && <AvatarImage src={manager.avatar} alt={manager.name} />}
           <AvatarFallback className="bg-primary/15 text-primary text-xs font-semibold">
             {initials(manager.name)}
           </AvatarFallback>

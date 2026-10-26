@@ -40,7 +40,15 @@ export function verifyPassword(plain: string, stored: string): boolean {
 }
 
 // ===== Подписанные токены (HMAC) =====
-type TokenPayload = { id: string; email: string; name: string; role: string; exp: number };
+type TokenPayload = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  // Аватар (опционально). Относительный путь, например /avatars/{id}.jpg
+  avatar?: string | null;
+  exp: number;
+};
 
 function b64url(s: string | Buffer): string {
   const b = typeof s === 'string' ? Buffer.from(s) : s;

@@ -21,12 +21,25 @@ model Manager {
   telegramId   String?
   // 2FA (TOTP, RFC 6238). base32-секрет. null = 2FA выключена.
   totpSecret   String?
+  // Мягкое отключение: если false — менеджер не может войти, но запись остаётся.
+  isActive     Boolean  @default(true)
+  // Аватар: относительный путь вида /avatars/{id}.jpg
+  avatar       String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   leads     Lead[]     @relation("ManagerLeads")
   bookings  Booking[]
   blocks    DateBlock[]
+}
+
+// ===== Настройки сайта (key-value) =====
+// Используется для хранения списка адресов для уведомлений (notify_emails),
+// позже можно расширить другими настройками.
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }
 
 // ===== Фотозоны =====

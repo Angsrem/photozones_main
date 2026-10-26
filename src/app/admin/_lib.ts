@@ -1,6 +1,14 @@
 // Shared admin client helpers (типы + API-обёртки)
 
-export type Manager = { id: string; email: string; name: string; role: string };
+export type Manager = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  avatar?: string | null;
+  phone?: string | null;
+  isActive?: boolean;
+};
 
 export type LeadStatus = 'NEW' | 'CALLED' | 'CONFIRMED' | 'DECLINED' | 'DONE';
 export type BookingStatus = 'RESERVED' | 'DONE' | 'CANCELED';

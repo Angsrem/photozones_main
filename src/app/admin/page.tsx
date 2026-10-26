@@ -225,13 +225,13 @@ export default function AdminDashboardPage() {
             <div className={`rounded-lg border p-3 ${notifyStatus?.email.configured ? 'border-emerald-300 bg-emerald-50' : 'border-amber-300 bg-amber-50'}`}>
               <div className="flex items-center gap-2 mb-1">
                 {notifyStatus?.email.configured ? <CheckCircle className="size-4 text-emerald-600" /> : <XCircle className="size-4 text-amber-600" />}
-                <span className="text-sm font-medium">Email (Resend)</span>
+                <span className="text-sm font-medium">Email (SMTP)</span>
                 <Badge variant="outline" className={notifyStatus?.email.configured ? 'bg-emerald-100 text-emerald-700 border-emerald-300' : 'bg-amber-100 text-amber-700 border-amber-300'}>
                   {notifyStatus?.email.configured ? 'Активен' : 'Не настроен'}
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground">
-                {notifyStatus?.email.configured ? `Дублирование на ${notifyStatus?.email.to}` : 'Добавьте RESEND_API_KEY в .env'}
+                {notifyStatus?.email.configured ? `Дублирование на ${notifyStatus?.email.to}` : 'Добавьте SMTP_HOST/SMTP_USER/SMTP_PASSWORD в .env'}
               </p>
             </div>
           </div>
