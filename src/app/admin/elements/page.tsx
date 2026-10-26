@@ -255,8 +255,8 @@ export default function AdminElementsPage() {
             </div>
           )}
           {!err && !loading && (
-            <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
-              <Table>
+            <div className="overflow-x-auto overflow-y-auto max-h-[70vh] -mx-3 sm:mx-0">
+              <Table className="min-w-[720px]">
                 <TableHeader className="sticky top-0 bg-card z-10">
                   <TableRow>
                     <TableHead className="w-16">Превью</TableHead>

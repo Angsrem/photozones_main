@@ -153,20 +153,21 @@ export default function AdminManagersPage() {
               Менеджеров пока нет.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Менеджер</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Телефон</TableHead>
-                  <TableHead>Роль</TableHead>
-                  <TableHead>2FA</TableHead>
-                  <TableHead>Активность</TableHead>
-                  <TableHead>Создан</TableHead>
-                  <TableHead className="text-right">Действия</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <div className="overflow-x-auto overflow-y-auto max-h-[70vh] -mx-3 sm:mx-0">
+              <Table className="min-w-[760px]">
+                <TableHeader className="sticky top-0 bg-card z-10">
+                  <TableRow>
+                    <TableHead>Менеджер</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Телефон</TableHead>
+                    <TableHead>Роль</TableHead>
+                    <TableHead>2FA</TableHead>
+                    <TableHead>Активность</TableHead>
+                    <TableHead>Создан</TableHead>
+                    <TableHead className="text-right">Действия</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                 {items.map((m) => {
                   const isSelf = self?.id === m.id;
                   return (
@@ -256,8 +257,9 @@ export default function AdminManagersPage() {
                     </TableRow>
                   );
                 })}
-              </TableBody>
-            </Table>
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

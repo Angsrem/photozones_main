@@ -250,11 +250,11 @@ export default function AdminLeadsPage() {
             </div>
           )}
           {!err && !loading && items.length > 0 && (
-            <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
-              <Table>
+            <div className="overflow-x-auto overflow-y-auto max-h-[70vh] -mx-3 sm:mx-0">
+              <Table className="min-w-[720px]">
                 <TableHeader className="sticky top-0 bg-card z-10">
                   <TableRow>
-                    <TableHead className="w-28">Создана</TableHead>
+                    <TableHead className="w-28 hidden sm:table-cell">Создана</TableHead>
                     <TableHead>Клиент</TableHead>
                     <TableHead className="w-32">Телефон</TableHead>
                     <TableHead className="w-32">Мероприятие</TableHead>
@@ -270,7 +270,7 @@ export default function AdminLeadsPage() {
                       onClick={() => setSelectedId(l.id)}
                       className="cursor-pointer hover:bg-accent/50"
                     >
-                      <TableCell className="text-xs text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground hidden sm:table-cell">
                         {formatDateShort(l.createdAt)}
                       </TableCell>
                       <TableCell className="font-medium">{l.name || '—'}</TableCell>

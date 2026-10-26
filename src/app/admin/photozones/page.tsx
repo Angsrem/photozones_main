@@ -167,8 +167,8 @@ export default function AdminPhotozonesPage() {
             </div>
           )}
           {!err && !loading && (
-            <div className="overflow-x-auto max-h-[70vh] overflow-y-auto">
-              <Table>
+            <div className="overflow-x-auto overflow-y-auto max-h-[70vh] -mx-3 sm:mx-0">
+              <Table className="min-w-[860px]">
                 <TableHeader className="sticky top-0 bg-card z-10">
                   <TableRow>
                     <TableHead className="w-16">Превью</TableHead>
@@ -835,22 +835,22 @@ function PhotozoneEditor({
           {/* Элементы / опции */}
           <div className="space-y-2">
             <Label>Дополнительные опции (буквы, декор, освещение, реквизит)</Label>
-            <p className="text-xs text-muted-foreground">Опции с категорией «Освещение» можно сделать глобальными (доступны всем фотозонам) — оставьте category=lighting. Опции группируются в карточке фотозоны по category.</p>
+            <p className="text-xs text-muted-foreground break-words">Опции с категорией «Освещение» можно сделать глобальными (доступны всем фотозонам) — оставьте category=lighting. Опции группируются в карточке фотозоны по category.</p>
             <div className="rounded-md border divide-y">
               {elements.length === 0 && (
                 <div className="p-3 text-xs text-muted-foreground">Пока нет опций</div>
               )}
               {elements.map((el, idx) => (
                 <div key={idx} className="flex items-center gap-2 p-2 text-sm">
-                  <GripVertical className="size-4 text-muted-foreground" />
-                  {el.image && <img src={el.image} alt="" className="size-8 rounded object-cover" />}
-                  <span className="flex-1">{el.name}</span>
-                  {el.category && <Badge variant="outline" className="text-[10px]">{el.category}</Badge>}
-                  <span className="text-muted-foreground">{formatPrice(el.price)}</span>
+                  <GripVertical className="size-4 text-muted-foreground shrink-0" />
+                  {el.image && <img src={el.image} alt="" className="size-8 rounded object-cover shrink-0" />}
+                  <span className="flex-1 min-w-0 truncate">{el.name}</span>
+                  {el.category && <Badge variant="outline" className="text-[10px] shrink-0">{el.category}</Badge>}
+                  <span className="text-muted-foreground whitespace-nowrap shrink-0">{formatPrice(el.price)}</span>
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="size-7 text-muted-foreground hover:text-destructive"
+                    className="size-7 text-muted-foreground hover:text-destructive shrink-0"
                     onClick={() => removeElement(idx)}
                   >
                     <X className="size-3.5" />
@@ -859,7 +859,7 @@ function PhotozoneEditor({
               ))}
             </div>
             {/* Форма добавления новой опции */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Input
                 placeholder="Название опции *"
                 value={newElName}
@@ -891,7 +891,7 @@ function PhotozoneEditor({
                 placeholder="Описание (необязательно)"
                 value={newElDesc}
                 onChange={(e) => setNewElDesc(e.target.value)}
-                className="col-span-2"
+                className="sm:col-span-2"
               />
             </div>
             <Button variant="outline" onClick={addElement} className="gap-1 w-full">
@@ -915,7 +915,7 @@ function PhotozoneEditor({
                     Состав фотозоны (из калькулятора)
                   </Label>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1 break-words">
                   Выберите глобальные элементы калькулятора, которые входят в эту фотозону.
                   Авто-расчёт: calc_price = сумма + доставка (2000 ₽) + монтаж (3000 ₽ фикс / 20% если ≥ 15 000 ₽).
                   basePrice = calc_price × 0.85 − 10 («психологическая» цена карточки фотозоны).

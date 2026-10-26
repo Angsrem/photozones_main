@@ -103,18 +103,19 @@ export default function AdminPromoPage() {
               Пока нет акций. Нажмите «Добавить».
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Название</TableHead>
-                  <TableHead>Скидка</TableHead>
-                  <TableHead>Период</TableHead>
-                  <TableHead>Страницы</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead className="text-right">Действия</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <div className="overflow-x-auto overflow-y-auto max-h-[70vh] -mx-3 sm:mx-0">
+              <Table className="min-w-[640px]">
+                <TableHeader className="sticky top-0 bg-card z-10">
+                  <TableRow>
+                    <TableHead>Название</TableHead>
+                    <TableHead>Скидка</TableHead>
+                    <TableHead>Период</TableHead>
+                    <TableHead>Страницы</TableHead>
+                    <TableHead>Статус</TableHead>
+                    <TableHead className="text-right">Действия</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                 {items.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell>
@@ -146,8 +147,9 @@ export default function AdminPromoPage() {
                     </TableCell>
                   </TableRow>
                 ))}
-              </TableBody>
-            </Table>
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -236,7 +238,7 @@ function PromoForm({ promo, onClose, onSaved }: { promo: Promo | null; onClose: 
             <Label htmlFor="p-desc">Описание</Label>
             <Textarea id="p-desc" value={form.description} rows={2} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Короткое описание акции" />
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="p-disc">Скидка, %</Label>
               <Input id="p-disc" type="number" min="0" max="100" value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} placeholder="10" />
@@ -253,7 +255,7 @@ function PromoForm({ promo, onClose, onSaved }: { promo: Promo | null; onClose: 
           <div className="space-y-1.5">
             <Label>Страницы показа</Label>
             <p className="text-xs text-muted-foreground">Не выбрано = показывается везде</p>
-            <div className="grid grid-cols-2 gap-2 mt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
               {PAGE_OPTIONS.map((pg) => (
                 <label key={pg} className="flex items-center gap-2 text-sm cursor-pointer rounded-md border p-2 hover:bg-accent">
                   <input type="checkbox" checked={form.pages.includes(pg)} onChange={() => togglePage(pg)} className="accent-primary" />
