@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Save,
   X,
+  Trash2,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
@@ -83,6 +94,8 @@ export default function AdminLeadsPage() {
   const [loading, setLoading] = React.useState(false);
   const [err, setErr] = React.useState<string | null>(null);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
 
   // debounce для поиска
   const [qInput, setQInput] = React.useState(filters.q);
@@ -118,6 +131,33 @@ export default function AdminLeadsPage() {
     setQInput('');
   };
 
+  // Удаление заявок: если выбран статус (не ALL) — удаляет все с этим статусом.
+  // Если ALL — удаляет ВСЕ заявки.
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const body: any = {};
+      if (filters.status && filters.status !== 'ALL') {
+        body.status = filters.status;
+      }
+      const res = await api<{ ok: boolean; deleted: number }>('/api/admin/leads', {
+        method: 'DELETE',
+        body: JSON.stringify(body),
+      });
+      toast.success(`Удалено заявок: ${res.deleted}`);
+      setDeleteOpen(false);
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message || 'Ошибка удаления');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const deleteLabel = filters.status && filters.status !== 'ALL'
+    ? `Удалить все (${STATUS_TABS.find((t) => t.value === filters.status)?.label || filters.status})`
+    : 'Удалить все заявки';
+
   return (
     <div className="space-y-5">
       <div className="flex items-end justify-between gap-3 flex-wrap">
@@ -127,9 +167,20 @@ export default function AdminLeadsPage() {
             Обработка обращений клиентов · {items.length} найдено
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading} className="gap-2">
-          <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} /> Обновить
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={load} disabled={loading} className="gap-2">
+            <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} /> Обновить
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDeleteOpen(true)}
+            disabled={items.length === 0 || deleting}
+            className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+          >
+            <Trash2 className="size-4" /> {deleteLabel}
+          </Button>
+        </div>
       </div>
 
       {/* Фильтры */}
@@ -255,6 +306,33 @@ export default function AdminLeadsPage() {
           load();
         }}
       />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="size-5 text-destructive" />
+              {deleteLabel}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {filters.status && filters.status !== 'ALL'
+                ? `Будут удалены все заявки со статусом «${STATUS_TABS.find((t) => t.value === filters.status)?.label}». Это действие необратимо.`
+                : 'Будут удалены ВСЕ заявки. Это действие необратимо. Убедитесь, что вы хотите это сделать.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+            >
+              {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+              Удалить
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

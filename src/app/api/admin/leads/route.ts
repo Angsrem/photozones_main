@@ -88,3 +88,31 @@ export async function PATCH(req: NextRequest) {
 
   return NextResponse.json({ ok: true, lead: updated });
 }
+
+/** DELETE — массовое удаление заявок.
+ * Body: { ids?: string[], status?: string } — либо по списку id, либо все с указанным status.
+ * Если пустой body — удалить ВСЕ заявки (с подтверждением на клиенте).
+ */
+export async function DELETE(req: NextRequest) {
+  const session = await guard();
+  if (!session) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+
+  const body = await req.json().catch(() => ({}));
+  const { ids, status } = body as { ids?: string[]; status?: string };
+
+  let where: any = {};
+  if (ids && Array.isArray(ids) && ids.length > 0) {
+    where.id = { in: ids };
+  } else if (status && status !== 'ALL') {
+    where.status = status;
+  }
+  // Если ни ids, ни status — where пустой → удалит все
+
+  // Сначала удалим связанные бронирования (если есть)
+  const leadIds = (await db.lead.findMany({ where, select: { id: true } })).map((l) => l.id);
+  if (leadIds.length > 0) {
+    await db.booking.deleteMany({ where: { leadId: { in: leadIds } } });
+  }
+  const result = await db.lead.deleteMany({ where });
+  return NextResponse.json({ ok: true, deleted: result.count });
+}
