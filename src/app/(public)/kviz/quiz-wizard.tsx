@@ -13,6 +13,7 @@ import {
   Sparkles, Heart, Cake, GraduationCap, Building2, Snowflake, Flower2, Shield,
   PartyPopper, ArrowRight, ArrowLeft, Loader2, CheckCircle2, Copy, Send,
   MessageCircle, Phone, Mail, Gift, Users, Wallet, Calendar, ChevronRight,
+  FileText, Download,
 } from 'lucide-react';
 import { useQuickOrder } from '@/components/site/quick-order-store';
 import { formatPriceFrom } from '@/lib/format';
@@ -355,7 +356,7 @@ export function QuizWizard() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gold/15 mb-5">
                 <Sparkles className="w-8 h-8 text-gold" />
               </div>
-              <h1 className="font-display text-3xl sm:text-4xl mb-3">Подберём идеальную фотозону за 30 секунд</h1>
+              <h1 className="font-display text-3xl sm:text-4xl mb-3">Подберём идеальную фотозону за 60 секунд</h1>
               <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
                 Ответьте на 5 простых вопросов — покажем 3 варианта под ваш повод и бюджет.
                 Результат сразу на экране, без обязательств. Бонус за прохождение: <b className="text-gold">промокод на скидку 5%</b> 🎁
@@ -497,6 +498,24 @@ export function QuizWizard() {
                   Промокод <b className="text-gold font-mono text-base">{result.promoCode}</b> — скидка 5%, активен 7 дней. Назовите менеджеру при заказе.
                 </div>
               </div>
+
+              {/* Сезонный бонус: новогодний чек-лист (если повод — Новый год) */}
+              {answers.occasion === 'NEW_YEAR' && (
+                <div className="mb-5 rounded-xl border border-emerald-300/40 bg-emerald-50 dark:bg-emerald-950/30 p-4 flex items-center gap-3">
+                  <FileText className="w-6 h-6 text-emerald-600 shrink-0" />
+                  <div className="flex-1 text-sm">
+                    <b className="text-emerald-700 dark:text-emerald-400">Бонус: 20 идей новогодней фотозоны</b>
+                    <span className="text-muted-foreground"> — PDF-гайд под любой бюджет, от 5 000 ₽ до премиум-решений.</span>
+                  </div>
+                  <a
+                    href="/api/lead-magnets"
+                    data-magnet-slug="ng-20-idey"
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Скачать PDF
+                  </a>
+                </div>
+              )}
 
               {/* 3 карточки */}
               <div className="grid gap-4 sm:grid-cols-3 mb-6">
