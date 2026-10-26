@@ -89,13 +89,14 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ ok: true, lead: updated });
 }
 
-/** DELETE — массовое удаление заявок.
+/** DELETE — массовое удаление заявок (только ADMIN).
  * Body: { ids?: string[], status?: string } — либо по списку id, либо все с указанным status.
  * Если пустой body — удалить ВСЕ заявки (с подтверждением на клиенте).
  */
 export async function DELETE(req: NextRequest) {
   const session = await guard();
   if (!session) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
+  if (session.role !== 'ADMIN') return NextResponse.json({ error: 'Удаление заявок доступно только администратору' }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
   const { ids, status } = body as { ids?: string[]; status?: string };

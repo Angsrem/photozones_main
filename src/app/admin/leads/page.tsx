@@ -96,6 +96,15 @@ export default function AdminLeadsPage() {
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
+  const [isAdmin, setIsAdmin] = React.useState(false);
+  const [deleteOneId, setDeleteOneId] = React.useState<string | null>(null);
+
+  // Проверяем роль (для доступа к удалению)
+  React.useEffect(() => {
+    api<{ manager: { role: string } | null }>('/api/admin/me').then((data) => {
+      setIsAdmin(data.manager?.role === 'ADMIN');
+    }).catch(() => {});
+  }, []);
 
   // debounce для поиска
   const [qInput, setQInput] = React.useState(filters.q);
@@ -154,6 +163,18 @@ export default function AdminLeadsPage() {
     }
   };
 
+  // Удаление одной заявки
+  const handleDeleteOne = async (id: string) => {
+    try {
+      await api(`/api/admin/leads/${id}`, { method: 'DELETE' });
+      toast.success('Заявка удалена');
+      setDeleteOneId(null);
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message || 'Ошибка удаления');
+    }
+  };
+
   const deleteLabel = filters.status && filters.status !== 'ALL'
     ? `Удалить все (${STATUS_TABS.find((t) => t.value === filters.status)?.label || filters.status})`
     : 'Удалить все заявки';
@@ -171,15 +192,17 @@ export default function AdminLeadsPage() {
           <Button variant="outline" size="sm" onClick={load} disabled={loading} className="gap-2">
             <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} /> Обновить
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setDeleteOpen(true)}
-            disabled={items.length === 0 || deleting}
-            className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
-          >
-            <Trash2 className="size-4" /> {deleteLabel}
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteOpen(true)}
+              disabled={items.length === 0 || deleting}
+              className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+            >
+              <Trash2 className="size-4" /> {deleteLabel}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -290,6 +313,21 @@ export default function AdminLeadsPage() {
                           {LEAD_STATUS_LABEL[l.status as LeadStatus]}
                         </Badge>
                       </TableCell>
+                      {isAdmin && (
+                        <TableCell className="text-right pr-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7 text-muted-foreground hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteOneId(l.id);
+                            }}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -328,6 +366,31 @@ export default function AdminLeadsPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
             >
               {deleting ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+              Удалить
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Подтверждение удаления одной заявки */}
+      <AlertDialog open={!!deleteOneId} onOpenChange={(v) => !v && setDeleteOneId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="size-5 text-destructive" />
+              Удалить заявку?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Заявка будет удалена безвозвратно. Если есть бронирование — оно также будет удалено.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteOneId && handleDeleteOne(deleteOneId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+            >
+              <Trash2 className="size-4" />
               Удалить
             </AlertDialogAction>
           </AlertDialogFooter>
