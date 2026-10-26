@@ -25,6 +25,7 @@ export const SITE = {
 };
 
 export const NAV_LINKS = [
+  { href: '/prazdniki/novyj-god', label: 'Новогодние', highlight: true },
   { href: '/katalog', label: 'Каталог' },
   { href: '/svadby', label: 'Свадьбы' },
   { href: '/detskie-prazdniki', label: 'Детские' },

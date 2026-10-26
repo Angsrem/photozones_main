@@ -42,7 +42,7 @@ export const metadata = {
     siteName: 'Fotoarka',
     locale: 'ru_RU',
     type: 'website',
-    images: [{ url: '/images/hero.jpg', width: 1344, height: 768, alt: 'Аренда фотозон в Красноярске' }],
+    images: [{ url: '/images/hero-newyear.jpg', width: 1344, height: 768, alt: 'Новогодняя фотозона в аренду в Красноярске' }],
   },
 };
 
@@ -62,14 +62,24 @@ const fallbackFaq = [
 ];
 
 export default async function HomePage() {
-  const [zones, reviews, heroBlocks, howBlocks, faqBlocks, ctaBlocks] = await Promise.all([
-    getPhotozones({ sort: 'hit', limit: 6 }),
+  const [allZones, reviews, heroBlocks, howBlocks, faqBlocks, ctaBlocks] = await Promise.all([
+    getPhotozones({ sort: 'hit', limit: 20 }),
     getReviews(6),
     getPageBlocks('home-hero'),
     getPageBlocks('home-how-we-work'),
     getPageBlocks('home-faq'),
     getPageBlocks('home-cta-text'),
   ]);
+
+  // Новогодние фотозоны — первыми (в сезон)
+  const newYearZones = allZones.filter((z) =>
+    Array.isArray(z.occasions) && (z.occasions as string[]).includes('NEW_YEAR')
+  );
+  const otherZones = allZones.filter((z) =>
+    !(Array.isArray(z.occasions) && (z.occasions as string[]).includes('NEW_YEAR'))
+  );
+  // Новогодние первыми, потом остальные, всего 6
+  const zones = [...newYearZones, ...otherZones].slice(0, 6);
   const avgRating = '4.9';
 
   // FAQ из БД (если есть) — иначе fallback на захардкоженный

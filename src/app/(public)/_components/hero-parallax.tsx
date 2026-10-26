@@ -129,8 +129,8 @@ export function HeroParallax({ heading, paragraph, avgRating, reviewsCount }: He
         className="absolute inset-[-4%] will-change-transform"
       >
         <Image
-          src="/images/hero.png"
-          alt="Свадебная фотозона в аренду в Красноярске"
+          src="/images/hero-newyear.jpg"
+          alt="Новогодняя фотозона в аренду в Красноярске"
           fill
           priority
           sizes="100vw"

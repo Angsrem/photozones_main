@@ -36,7 +36,8 @@ export function SiteHeader() {
                 href={l.href}
                 className={cn(
                   'px-2.5 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors whitespace-nowrap',
-                  pathname === l.href && 'text-foreground bg-accent'
+                  pathname === l.href && 'text-foreground bg-accent',
+                  (l as any).highlight && 'text-gold font-semibold hover:text-gold'
                 )}
               >
                 {l.label}
@@ -78,7 +79,8 @@ export function SiteHeader() {
                         href={l.href}
                         className={cn(
                           'px-3 py-3 rounded-md text-base hover:bg-accent transition-colors min-h-[44px] flex items-center',
-                          pathname === l.href && 'bg-accent text-foreground'
+                          pathname === l.href && 'bg-accent text-foreground',
+                          (l as any).highlight && 'text-gold font-semibold'
                         )}
                       >
                         {l.label}
