@@ -96,6 +96,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const session = await getSession();
   const guard = requireAdmin(session);
   if (!guard.ok) return NextResponse.json({ error: guard.error }, { status: guard.status });
+  if (!session) return NextResponse.json({ error: 'Не авторизован' }, { status: 401 });
 
   const { id } = await params;
   if (id === session.id) {

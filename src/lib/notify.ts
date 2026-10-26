@@ -284,7 +284,7 @@ export async function notifyNewLead(data: {
   source?: string | null;
   priceEstimate?: number | null;
   id: string;
-}): Promise<{ telegram: any; emailSent: boolean }> {
+}): Promise<{ telegram: any; max: any; emailSent: boolean }> {
   const occasionLabel = data.occasion ? (OCCASION_LABEL[data.occasion] || data.occasion) : null;
   const digits = phoneDigits(data.phone);
   const adminUrl = `${SITE.url}/admin/leads`;
