@@ -690,7 +690,7 @@ async function main() {
   });
   await db.promo.create({
     data: {
-      title: 'Новогодний оффер: 2 фотозоны по цене одной',
+      title: 'Новогодний оффер: вторая фотозона со скидкой 50%',
       description: 'При заказе двух новогодних фотозон — вторая со скидкой 50%.',
       discount: 50, isActive: true, pages: ['/prazdniki/novyj-god'] as any,
     },

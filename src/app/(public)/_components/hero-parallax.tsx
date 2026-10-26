@@ -14,7 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { OrderButton } from '@/components/site/quick-order-modal';
-import { Sparkles, Camera, Star, Clock, ShieldCheck } from 'lucide-react';
+import { Sparkles, Camera, Star, Clock, ShieldCheck, ChevronDown } from 'lucide-react';
 
 export type HeroParallaxProps = {
   heading?: React.ReactNode;
@@ -64,6 +64,8 @@ const PARTICLES: Array<{
 export function HeroParallax({ heading, paragraph, avgRating, reviewsCount }: HeroParallaxProps) {
   const reduceMotion = useReducedMotion();
   const [parallaxOn, setParallaxOn] = React.useState(false);
+  // Позиция мыши в пикселях (для эффекта "огоньки за мышкой")
+  const [mousePos, setMousePos] = React.useState<{ x: number; y: number } | null>(null);
 
   // Активируем параллакс только на устройствах с fine pointer (мышь/трекпад) и md+.
   React.useEffect(() => {
@@ -105,12 +107,26 @@ export function HeroParallax({ heading, paragraph, avgRating, reviewsCount }: He
     const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
     mx.set(nx);
     my.set(ny);
+    // Сохраняем позицию мыши для эффекта "огоньки за мышкой"
+    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   }
 
   function handleMouseLeave() {
     mx.set(0);
     my.set(0);
+    setMousePos(null);
   }
+
+  // Вычисляем яркость частицы в зависимости от близости к мыши
+  const getParticleBrightness = (left: string, top: string) => {
+    if (!mousePos || !parallaxOn) return 1; // базовая яркость
+    const px = parseFloat(left) / 100 * (typeof window !== 'undefined' ? window.innerWidth : 1200);
+    const py = parseFloat(top) / 100 * 800; // примерно
+    const dist = Math.sqrt((px - mousePos.x) ** 2 + (py - mousePos.y) ** 2);
+    // Чем ближе мышь — тем ярче (радиус 200px)
+    const brightness = Math.max(1, 3 - dist / 100);
+    return brightness;
+  };
 
   const layerStyle = (x: MotionValue<number>, y: MotionValue<number>) =>
     parallaxOn ? { x, y } : undefined;
@@ -134,11 +150,11 @@ export function HeroParallax({ heading, paragraph, avgRating, reviewsCount }: He
           fill
           priority
           sizes="100vw"
-          className="object-cover scale-110 blur-[3px] opacity-60"
+          className="object-cover scale-105 blur-[1px] opacity-80"
         />
         {/* Тёмные градиенты для читабельности текста + premium dark feel */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-background/30" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/30 to-transparent" />
         {/* Тёплая виньетка золотом */}
         <div className="absolute inset-0 hero-vignette" />
       </motion.div>
@@ -168,21 +184,25 @@ export function HeroParallax({ heading, paragraph, avgRating, reviewsCount }: He
         style={layerStyle(particleX, particleY)}
         className="absolute inset-0 pointer-events-none will-change-transform"
       >
-        {PARTICLES.map((p, i) => (
-          <span
-            key={i}
-            className="absolute rounded-full bg-gold/70 animate-float-hero"
-            style={{
-              left: p.left,
-              top: p.top,
-              width: p.size,
-              height: p.size,
-              animationDelay: `${p.delay}s`,
-              animationDuration: `${p.duration}s`,
-              boxShadow: '0 0 8px rgba(255, 200, 100, 0.5)',
-            }}
-          />
-        ))}
+        {PARTICLES.map((p, i) => {
+          const brightness = getParticleBrightness(p.left, p.top);
+          return (
+            <span
+              key={i}
+              className="absolute rounded-full bg-gold/70 animate-float-hero transition-[box-shadow,opacity] duration-300"
+              style={{
+                left: p.left,
+                top: p.top,
+                width: p.size,
+                height: p.size,
+                animationDelay: `${p.delay}s`,
+                animationDuration: `${p.duration}s`,
+                boxShadow: `0 0 ${8 * brightness}px rgba(255, 200, 100, ${0.5 * brightness})`,
+                opacity: brightness > 1 ? 0.9 : undefined,
+              }}
+            />
+          );
+        })}
       </motion.div>
 
       {/* ===== Слой 4: передний план — текст, CTA, badge (быстрый) ===== */}
@@ -219,7 +239,7 @@ export function HeroParallax({ heading, paragraph, avgRating, reviewsCount }: He
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut', delay: 0.15 }}
-            className="text-lg text-muted-foreground mb-7 max-w-xl"
+            className="text-lg text-foreground/90 mb-7 max-w-xl drop-shadow-sm"
           >
             {paragraph ??
               'Свадебные, детские и корпоративные фотозоны с доставкой и монтажом. Перезвоним за 15 минут.'}
@@ -240,7 +260,7 @@ export function HeroParallax({ heading, paragraph, avgRating, reviewsCount }: He
             <Button
               asChild
               variant="outline"
-              className="h-14 px-8 text-base backdrop-blur-sm bg-background/40"
+              className="h-14 px-8 text-base backdrop-blur-sm bg-background/20 border-foreground/40 text-foreground hover:bg-foreground/10"
             >
               <Link href="/katalog">
                 <Camera className="w-5 h-5 mr-2" /> Смотреть каталог
@@ -252,7 +272,7 @@ export function HeroParallax({ heading, paragraph, avgRating, reviewsCount }: He
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut', delay: 0.35 }}
-            className="flex flex-wrap items-center gap-5 mt-8 text-sm text-muted-foreground"
+            className="flex flex-wrap items-center gap-5 mt-8 text-sm text-foreground/80"
           >
             <span className="flex items-center gap-1.5">
               <Star className="w-4 h-4 fill-gold text-gold" /> {avgRating} / 5 — {reviewsCount}+ отзывов
@@ -272,9 +292,10 @@ export function HeroParallax({ heading, paragraph, avgRating, reviewsCount }: He
 
       {/* Индикатор скролла (только при включённой анимации) */}
       {!reduceMotion && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 text-muted-foreground/70 pointer-events-none">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-2 text-foreground/60 pointer-events-none">
           <span className="text-[10px] uppercase tracking-[0.25em]">Листайте</span>
-          <span className="w-px h-10 bg-gradient-to-b from-gold/60 to-transparent animate-scroll-line" />
+          <span className="w-px h-8 bg-gradient-to-b from-gold/60 to-transparent animate-scroll-line" />
+          <ChevronDown className="w-4 h-4 text-gold/60 animate-bounce" style={{ animationDuration: '1.5s' }} />
         </div>
       )}
     </section>

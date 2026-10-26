@@ -191,7 +191,7 @@
 
   /* ===== Hero parallax: лёгкие частицы и индикатор скролла ===== */
   .animate-float-hero {
-    animation: float-hero 11s ease-in-out infinite;
+    animation: float-hero 11s ease-in-out infinite, flicker-hero 3s ease-in-out infinite;
     will-change: transform, opacity;
   }
   .animate-scroll-line {
@@ -208,6 +208,14 @@
 @keyframes float-hero {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.45; }
   50% { transform: translate3d(0, -22px, 0) scale(1.4); opacity: 0.9; }
+}
+
+/* Мерцание огоньков — эффект гирлянды */
+@keyframes flicker-hero {
+  0%, 100% { opacity: 0.45; box-shadow: 0 0 8px rgba(255, 200, 100, 0.5); }
+  25% { opacity: 0.85; box-shadow: 0 0 14px rgba(255, 220, 120, 0.8); }
+  50% { opacity: 0.55; box-shadow: 0 0 6px rgba(255, 200, 100, 0.4); }
+  75% { opacity: 0.75; box-shadow: 0 0 12px rgba(255, 210, 110, 0.7); }
 }
 
 @keyframes scroll-line {
