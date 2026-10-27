@@ -189,7 +189,7 @@ export function HeroParallax({ heading, paragraph, avgRating, reviewsCount }: He
           return (
             <span
               key={i}
-              className="absolute rounded-full bg-gold/70 animate-float-hero transition-[box-shadow,opacity] duration-300"
+              className="absolute rounded-full bg-gold/70 animate-float-hero flicker-hero transition-[box-shadow,opacity] duration-300"
               style={{
                 left: p.left,
                 top: p.top,

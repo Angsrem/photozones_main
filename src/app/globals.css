@@ -191,8 +191,13 @@
 
   /* ===== Hero parallax: лёгкие частицы и индикатор скролла ===== */
   .animate-float-hero {
-    animation: float-hero 11s ease-in-out infinite, flicker-hero 3s ease-in-out infinite;
+    animation: float-hero 11s ease-in-out infinite;
     will-change: transform, opacity;
+  }
+  /* Отдельный класс для мерцания — не отключается при reduced-motion */
+  .flicker-hero {
+    animation: flicker-hero 1.8s ease-in-out infinite alternate;
+    will-change: opacity, box-shadow;
   }
   .animate-scroll-line {
     animation: scroll-line 2.6s ease-in-out infinite;
@@ -210,12 +215,14 @@
   50% { transform: translate3d(0, -22px, 0) scale(1.4); opacity: 0.9; }
 }
 
-/* Мерцание огоньков — эффект гирлянды */
+/* Мерцание огоньков — эффект гирлянды (заметная пульсация) */
 @keyframes flicker-hero {
-  0%, 100% { opacity: 0.45; box-shadow: 0 0 8px rgba(255, 200, 100, 0.5); }
-  25% { opacity: 0.85; box-shadow: 0 0 14px rgba(255, 220, 120, 0.8); }
-  50% { opacity: 0.55; box-shadow: 0 0 6px rgba(255, 200, 100, 0.4); }
-  75% { opacity: 0.75; box-shadow: 0 0 12px rgba(255, 210, 110, 0.7); }
+  0% { opacity: 0.3; box-shadow: 0 0 4px rgba(255, 200, 100, 0.3); }
+  20% { opacity: 0.9; box-shadow: 0 0 16px rgba(255, 220, 120, 0.9); }
+  40% { opacity: 0.5; box-shadow: 0 0 8px rgba(255, 200, 100, 0.5); }
+  60% { opacity: 0.95; box-shadow: 0 0 20px rgba(255, 220, 120, 1); }
+  80% { opacity: 0.4; box-shadow: 0 0 6px rgba(255, 200, 100, 0.4); }
+  100% { opacity: 0.85; box-shadow: 0 0 14px rgba(255, 210, 110, 0.8); }
 }
 
 @keyframes scroll-line {
@@ -230,4 +237,5 @@
   .animate-scroll-line {
     animation: none;
   }
+  /* flicker-hero НЕ отключаем — это декоративное мерцание, безопасно */
 }
