@@ -1,0 +1,481 @@
+{
+  "partial": true,
+  "results": [
+    {
+      "path": "public/images/photozones/23-fevralya.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Праздничная композиция ко Дню защитника Отечества (23 февраля) на фоне камуфляжной стены. На стене надпись 'February 23', золотые звезды, ордена с лентами. На столе стоят три бронзовых бюста мужчин в военной форме.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/23-fevralya.png",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Праздничная композиция ко Дню защитника Отечества (23 февраля) на фоне камуфляжной стены: надпись 'February 23', золотые звезды, ордена с лентами и три бронзовых бюста военных на столе.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/8-marta.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Декоративная фотозона на открытом воздухе с розовым фоном, круглым вырезом, занавеской, воздушными шарами и цветочными композициями",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/8-marta.png",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Декоративная фотозона на открытом воздухе с розовым фоном, круглым вырезом с драпировкой, воздушными шарами и цветочными композициями.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/bukvy-tsifry.jpg",
+      "status": "ok",
+      "has_people": true,
+      "count": 2,
+      "description": "На переднем плане находится большая светящаяся инсталляция с цифрами 350. На заднем плане справа видны силуэты двух людей.",
+      "people_description": "В правой части изображения на заднем плане видны два человека: один мужчина в костюме, стоящий лицом к камере, и частично видимый второй человек рядом с ним."
+    },
+    {
+      "path": "public/images/photozones/bukvy-tsifry.png",
+      "status": "ok",
+      "has_people": true,
+      "count": 2,
+      "description": "В центре изображения находится большая светящаяся инсталляция с цифрами 350 на коричневом фоне. В правой части кадра, в проходе, видны силуэты двух людей.",
+      "people_description": "На заднем плане справа видны два человека: один мужчина в темном костюме стоит лицом к камере, рядом с ним частично видна фигура другого человека."
+    },
+    {
+      "path": "public/images/photozones/detskaya-edinorog.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Декоративная композиция с воздушными шарами в пастельных тонах, фоном с изображением единорога на радуге и облаках, а также подвесными звездочками.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/detskaya-edinorog.png",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Декоративная композиция для вечеринки с единорогом: на заднем плане — панно с изображением радуги и белого единорога на облаках, по бокам — арки из фиолетовых, розовых и пастельных воздушных шариков, сверху свисают золотые звезды и гирлянда, внизу расположены белые облачные декорации.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop/den-rozhdeniya-molebert-shary.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Декоративная композиция из воздушных шаров белого, золотого и бежевого цветов, украшенная звездами и круглой табличкой с надписью 'С юбилеем!', установленная на мольберте на фоне серой стены.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop/dr-asimmetriya-shary.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Праздничная фотозона с аркой из воздушных шаров разных цветов (золотой, синий, розовый, бордовый, кремовый) на фоне бордовой панели с надписью 'С днём рождения!' и подарочными коробками на полу.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop/dr-bordo-zoloto-arka.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Праздничная фотозона с аркой из разноцветных воздушных шаров (бордовых, золотистых, розовых и черных), бархатным бордовым фоном с надписью 'С днём рождения!' и подарочными коробками внизу.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop/dr-zeleno-zolotaya-arka.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Декоративная фотозона для праздника с аркой из зеленых и золотых воздушных шариков, зеленым фоном и золотой мозаичной панелью со светящейся надписью 'С днем рождения!'",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop/happy-birthday-bordo-neon.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Интерьер помещения с праздничным оформлением: композиция из тёмных воздушных шаров, неоновая надпись 'Happy Birthday', мозаичная стена и подсвечники со свечами.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop/ng-belye-perya-zoloto.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Внутри магазина товаров для дома стоит большая украшенная белая и золотая елка с гирляндами, под ней разложены подарочные коробки. Вокруг расположены стеллажи с домашним текстилем, ароматическими свечами и декоративными предметами.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop/ng-vitrina-octin.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Фасад магазина одежды O'STIN, украшенный новогодними гирляндами с красными шарами и еловыми ветками. Перед входом стоит красная скамейка и два небольших декоративных елочных дерева в горшках. В витрине видны манекены.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop/yubilej-45-chyorno-zoloto.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Праздничная фотозона, оформленная в виде арки из черных, белых и золотых шаров с серебряными звездами. Справа расположена золотая панель с надписью '45', слева на белом фоне написано 'С юбилеем!'. На полу виден конфетти.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop/yubilej-50-izumrud-zoloto.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Праздничная композиция из воздушных шаров зеленого, белого и золотого цветов, золотистые надувные цифры 50, табличка с надписью 'С днём рождения!' на мольберте.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop/yubilej-50-sin-zoloto-lyuks.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Декоративная композиция для празднования 50-летия: синяя панель с золотой цифрой 50, золотая мозаичная вставка, черно-золотые декоративные листья, черный торт и бокалы на золотых подставках.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop2/dr-belaya-arka-zvezdy.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Праздничная фотозона с белым круглым фоном, золотыми звездными шарами с бахромой, надписью «Сюбисеем!», цветами в вазе и свечами на подставках.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop2/kamin-yolka-kantri.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Декорированная рождественская сцена с деревянной стеной, наряженной елкой, камином, креслами, гирляндами и подарками. На полке стоит фигурка Санта-Клауса.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop2/ng2027-arka-1.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Новогодняя фотозона с белым круглым фоном, надписью «С новым 2027 годом!», аркой из золотых и белых шаров, красной дорожкой и ограждением с бархатными веревками.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop2/ng2027-arka-2.jpg",
+      "status": "ok",
+      "has_people": false,
+      "count": 0,
+      "description": "Праздничная фотозона, украшенная аркой из белых и золотых шаров, белой панелью с надписью «С Новым 2027 годом!» золотыми буквами и панелью с блестящей мозаикой. У подножия конструкции стоят подарочные коробки в белой и золотой обертке.",
+      "people_description": ""
+    },
+    {
+      "path": "public/images/photozones/dop2/ng2027-gollivud-1.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/dop2/ng2027-gollivud-2.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/dop2/rustik-arhka-elvye.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/korporativ-brand.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/korporativ-brand.png",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/love.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/love.png",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/neon-party.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/neon-party.png",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie-dop/fioletovo-zolotaya-yolka.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie-dop/kamin-yolka-lyuks.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie-dop/khrustalnaya-yolka.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie-dop/skan-pryanichnye-domiki.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie-dop/skazochnyj-zamok.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie-dop/snezhnaya-yolka-fiolet.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie-dop/zimnyaya-skazka-yolka.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie-dop/zoloto-barkhka.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie/novyj-god-arhka-elve.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie/novyj-god-arhka-zvezdy.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie/novyj-god-shale.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie/novyj-god-vitrina-pompony.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novogodnie/novyj-god-vitrina-skan.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novyj-god.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/novyj-god.png",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/press-wall.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/press-wall.png",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/rustic-garden.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/rustic-garden.png",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/shary-arka.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/shary-arka.png",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/stilyagi.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/stilyagi.png",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/svadebnaya-flora.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/svadebnaya-flora.png",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/tekstilnaya-uzhur.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/tekstilnaya-uzhur.png",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknoj.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknoj.png",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page1_img1.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page1_img2.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page1_img3.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page2_img4.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page2_img5.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page2_img6.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page3_img7.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page3_img8.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page4_img10.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page4_img11.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page4_img9.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page5_img12.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page5_img13.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page5_img14.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page5_img15.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page6_img16.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/vypusknye/page6_img17.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/yubilei/den-rozhdeniya-molebert-shary.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/yubilei/yubilej-klassika-molebert.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/yubilei/yubilej-molebert-shary.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/yubilei/yubilej-rozovo-zolotoj.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    },
+    {
+      "path": "public/images/photozones/yubilei/yubilej-zvezdy-shary.jpg",
+      "status": "error",
+      "error": "API request failed with status 429: {\"error\":\"Too many requests, please try again later\"}"
+    }
+  ]
+}
