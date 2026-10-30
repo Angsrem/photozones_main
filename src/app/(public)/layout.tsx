@@ -3,6 +3,7 @@ import { SiteFooter } from '@/components/site/site-footer';
 import { QuickOrderModal } from '@/components/site/quick-order-modal';
 import { StickyCta } from '@/components/site/sticky-cta';
 import { CookieConsent } from '@/components/site/cookie-consent';
+import { PageViewTracker } from '@/components/site/page-view-tracker';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +14,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <QuickOrderModal />
       <StickyCta />
       <CookieConsent />
+      <PageViewTracker />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
   Settings,
   Calculator,
   Users,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from '@/components/ui/sheet';
@@ -26,6 +27,7 @@ import { api, type Manager } from './_lib';
 
 const NAV = [
   { href: '/admin', label: 'Дашборд', icon: LayoutDashboard },
+  { href: '/admin/analytics', label: 'Аналитика', icon: BarChart3 },
   { href: '/admin/leads', label: 'Заявки', icon: Inbox },
   { href: '/admin/calendar', label: 'Календарь', icon: CalendarDays },
   { href: '/admin/photozones', label: 'Фотозоны', icon: Images },

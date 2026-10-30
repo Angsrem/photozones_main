@@ -309,3 +309,15 @@ model QuizPartial {
   converted   Boolean  @default(false) // дошёл ли до результата
   sessionId   String?  // если дошёл — id QuizSession
 }
+
+// ===== Аналитика посещаемости (собственная) =====
+model PageView {
+  id        String   @id @default(cuid())
+  path      String   // URL без query (/, /katalog, /katalog/love-installyaciya)
+  referer   String?  // откуда пришёл (google.com, vk.com, direct)
+  ip        String?  // хэш IP (для уникальности, не храним raw IP)
+  userAgent String?  // браузер/ОС (коротко)
+  sessionId String?  // идентификатор сессии (cookie)
+  isUnique  Boolean  @default(false) // первый визит этого sessionId
+  createdAt DateTime @default(now())
+}
