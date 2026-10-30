@@ -650,22 +650,8 @@ async function main() {
   // Тестовые заявки НЕ создаём — админка должна быть чистой.
   // Реальные заявки будут появляться через формы на сайте.
   
-  // ===== Промо =====
-  await db.promo.create({
-    data: {
-      title: 'Раннее бронирование — скидка 10%',
-      description: 'При заказе фотозоны за 30 дней до мероприятия — скидка 10% на аренду.',
-      discount: 10, isActive: true, pages: ['/', '/katalog', '/ceny'] as any,
-    },
-  });
-  await db.promo.create({
-    data: {
-      title: 'Новогодний оффер: вторая фотозона со скидкой 50%',
-      description: 'При заказе двух новогодних фотозон — вторая со скидкой 50%.',
-      discount: 50, isActive: true, pages: ['/prazdniki/novyj-god'] as any,
-    },
-  });
-
+  // Промо-акции НЕ создаём — управляются через админку (/admin/promo).
+  
   // ===== Блог =====
   await db.article.upsert({
     where: { slug: 'kak-vybrat-fotozonu-na-svadbu' },
